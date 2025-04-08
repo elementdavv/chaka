@@ -9,7 +9,7 @@
         >
 		<activity
 			android:name=".DocumentActivity"
-			android:configChanges="orientation|screenSize|keyboardHidden"
+			android:configChanges="keyboard|keyboardHidden|screenSize|smallestScreenSize|screenLayout|orientation|uiMode"
 			android:exported="true"
             android:theme="@style/Theme.MyApp"
 			>
@@ -32,7 +32,7 @@
 		</activity>
 		<activity
 			android:name=".OutlineActivity"
-			android:configChanges="orientation|screenSize|keyboardHidden"
+			android:configChanges="keyboard|keyboardHidden|screenSize|smallestScreenSize|screenLayout|orientation|uiMode"
             android:parentActivityName=".DocumentActivity"
 			>
 		</activity>
