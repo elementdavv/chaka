@@ -1,24 +1,24 @@
 package net.timelegend.chaka.viewer;
 
-import android.app.Activity;
 import android.app.ActionBar;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.Build;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.TextView;
 
+import androidx.activity.ComponentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class OutlineActivity extends Activity
+public class OutlineActivity extends ComponentActivity
 {
 	public static class Item implements Serializable {
 		public String title;
@@ -78,7 +78,9 @@ public class OutlineActivity extends Activity
                                 changeOutline(item, position, outline2, getAdapter());
                             }
                             else {
-		                        setResult(RESULT_FIRST_USER + item.page);
+                                Intent data = new Intent();
+                                data.putExtra("pagetogo", RESULT_FIRST_USER + item.page);
+                                setResult(RESULT_OK, data);
 		                        finish();
                             }
                         }
@@ -95,7 +97,9 @@ public class OutlineActivity extends Activity
 
                 if (position != RecyclerView.NO_POSITION) {
                     Item item = outline2.get(position);
-		            setResult(RESULT_FIRST_USER + item.page);
+                    Intent data = new Intent();
+                    data.putExtra("pagetogo", RESULT_FIRST_USER + item.page);
+                    setResult(RESULT_OK, data);
 		            finish();
                 }
             }
@@ -151,7 +155,7 @@ public class OutlineActivity extends Activity
         ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP,
                 ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_USE_LOGO);
         ab.setTitle(R.string.contents);
-		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        Tool.fullScreen(getWindow());
         setContentView(R.layout.outline_activity);
 
         RecyclerView rvOutline = (RecyclerView)findViewById(R.id.rvOutline);
@@ -185,7 +189,15 @@ public class OutlineActivity extends Activity
 
 		if (bundle != null) {
 			int currentPage = bundle.getInt("POSITION");
-			outline = (ArrayList<Item>)bundle.getSerializable("OUTLINE");
+
+            // below android 13 (api33)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ArrayList<Item> ai = new ArrayList<>();
+                outline = (ArrayList<Item>)bundle.getSerializable("OUTLINE", ai.getClass());
+            }
+            else {
+                outline = (ArrayList<Item>)bundle.getSerializable("OUTLINE");
+            }
 
             for (int i = 0; i < outline.size(); ++i) {
 				Item item = outline.get(i);

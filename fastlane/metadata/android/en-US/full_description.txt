@@ -1,7 +1,7 @@
 Read book fluently and comfortably, with simple and clear interface.
 
 Supported Document Types:
-Pdf, Epub, Mobi, Cbz, Fb2 and Xps
+PDF, EPUB, MOBI, CBZ, FB2 and XPS
 
 Features:
 Horizontal / Vertical Flip

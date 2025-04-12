@@ -14,7 +14,6 @@ import com.artifex.mupdf.fitz.SeekableInputStream;
 import com.artifex.mupdf.fitz.StructuredText;
 import com.artifex.mupdf.fitz.android.AndroidDrawDevice;
 
-import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.RectF;
@@ -50,7 +49,7 @@ public class MuPDFCore
 	private MuPDFCore(Document doc) {
 		this.doc = doc;
 		reflowable = doc.isReflowable();
-		// for flowable docs, count page is slow, spare once call
+		// for flowable docs, count page is slow and incorrect now, spare once call
 		if (!reflowable) {
 			doc.layout(layoutW, layoutH, layoutEM);
 			correctPageCount(true);

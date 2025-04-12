@@ -22,18 +22,18 @@ public class Pallet {
 		int i = instance.sequenceNumber++;
 		if (instance.sequenceNumber < 0)
 			instance.sequenceNumber = 0;
-		instance.pallet.put(new Integer(i), bundle);
+		instance.pallet.put(Integer.valueOf(i), bundle);
 		return i;
 	}
 
 	public static Bundle receiveBundle(int number) {
-		Bundle bundle = (Bundle) getInstance().pallet.get(new Integer(number));
+		Bundle bundle = (Bundle) getInstance().pallet.get(Integer.valueOf(number));
 		if (bundle != null)
-			getInstance().pallet.remove(new Integer(number));
+			getInstance().pallet.remove(Integer.valueOf(number));
 		return bundle;
 	}
 
 	public static boolean hasBundle(int number) {
-		return getInstance().pallet.containsKey(new Integer(number));
+		return getInstance().pallet.containsKey(Integer.valueOf(number));
 	}
 }

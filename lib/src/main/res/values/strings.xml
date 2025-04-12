@@ -18,7 +18,7 @@
     <string name="flip_vertical">Flip Vertical</string>
     <string name="lock">Lock Stray</string>
     <string name="crop_margin">Crop Margin</string>
-    <string name="focus">Focus Mode</string>
+    <string name="focus">Focus</string>
     <string name="smart_focus">Smart Focus</string>
     <string name="link">Activate Links</string>
     <string name="text_search">Search</string>
@@ -26,6 +26,8 @@
     <string name="toc">Table of Contents</string>
 
     <string name="contents">Contents</string>
+    <string name="help">Help</string>
+    <string name="readme">https://raw.githubusercontent.com/elementdavv/chaka/refs/heads/master/README.md</string>
     <string name="is_not_wide">Single Column mode works only in wide page</string>
     <string name="first_last_page">Change to another page</string>
 

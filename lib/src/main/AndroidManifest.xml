@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
 	>
 	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+	<uses-permission android:name="android.permission.INTERNET" />
 	<application
         android:allowBackup="false"
         android:largeHeap="true"
@@ -10,6 +11,7 @@
 		<activity
 			android:name=".DocumentActivity"
 			android:configChanges="keyboard|keyboardHidden|screenSize|smallestScreenSize|screenLayout|orientation|uiMode"
+			android:windowSoftInputMode="stateHidden|adjustNothing"
 			android:exported="true"
             android:theme="@style/Theme.MyApp"
 			>
@@ -34,6 +36,12 @@
 			android:name=".OutlineActivity"
 			android:configChanges="keyboard|keyboardHidden|screenSize|smallestScreenSize|screenLayout|orientation|uiMode"
             android:parentActivityName=".DocumentActivity"
+			>
+		</activity>
+		<activity
+			android:name=".HelpActivity"
+			android:configChanges="keyboard|keyboardHidden|screenSize|smallestScreenSize|screenLayout|orientation|uiMode"
+			android:parentActivityName=".DocumentActivity"
 			>
 		</activity>
 	</application>

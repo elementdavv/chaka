@@ -1,7 +1,5 @@
 package net.timelegend.chaka.viewer;
 
-import com.artifex.mupdf.fitz.Link;
-
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Stack;
@@ -11,7 +9,6 @@ import android.content.ClipData;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.SparseArray;
@@ -20,7 +17,6 @@ import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewConfiguration;
-import android.view.WindowManager;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.Scroller;
@@ -134,9 +130,10 @@ public class ReaderView
 		// less than 100 pixels (the smallest Android device screen
 		// dimension I've seen is 480 pixels or so). Then we check
 		// to ensure we are never more than 1/5 of the screen width.
-		DisplayMetrics dm = new DisplayMetrics();
-		WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-		wm.getDefaultDisplay().getMetrics(dm);
+		DisplayMetrics dm = ((DocumentActivity)context).getResources().getDisplayMetrics();
+		// DisplayMetrics dm = new DisplayMetrics();
+		// WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+		// wm.getDefaultDisplay().getMetrics(dm);
 		tapPageMargin = (int)dm.xdpi;
 		if (tapPageMargin < 100)
 			tapPageMargin = 100;
@@ -388,7 +385,6 @@ public class ReaderView
 		/* All page views need recreating since both page and screen has changed size,
 		 * invalidating both sizes and bitmaps. */
 		mAdapter.refresh();
-		int numChildren = mChildViews.size();
 		for (int i = 0; i < mChildViews.size(); i++) {
 			View v = mChildViews.valueAt(i);
 			onNotInUse(v);
@@ -655,7 +651,6 @@ public class ReaderView
         if (mSelecting != SELECT.NO_SELECT)
             mSelecting = SELECT.SELECTING;
 
-		PageView pageView = (PageView)getDisplayedView();
 		if (!tapDisabled)
 			onDocMotion();
 		if (!mScaling) {
@@ -986,11 +981,10 @@ public class ReaderView
                 else
                     lrv2 = rightView(lrv, -2, true);
                 if (lrv2 != null && mCurrent > 2) {
-                    View lrv3 = null;
                     if (!mTextLeft)
-                        lrv3 = leftView(lrv2, -3, false);
+                        leftView(lrv2, -3, false);
                     else
-                        lrv3 = rightView(lrv2, -3, false);
+                        rightView(lrv2, -3, false);
                 }
             }
         }
@@ -1008,11 +1002,10 @@ public class ReaderView
                 else
                     lrv2 = leftView(lrv, 2, true);
                 if (lrv != null && mCurrent + 3 < mAdapter.getCount()) {
-                    View lrv3 = null;
                     if (!mTextLeft)
-                        lrv3 = rightView(lrv2, 3, false);
+                        rightView(lrv2, 3, false);
                     else
-                        lrv3 = leftView(lrv2, 3, false);
+                        leftView(lrv2, 3, false);
                 }
             }
         }
@@ -1263,7 +1256,6 @@ public class ReaderView
         if (mSelecting != SELECT.NO_SELECT)
             mSelecting = SELECT.SELECTING;
 
-		Link link = null;
 		if (!tapDisabled) {
 			PageView pageView = (PageView) getDisplayedView();
 			if (mLinksEnabled && pageView != null) {

@@ -2,19 +2,13 @@ package net.timelegend.chaka.viewer;
 
 import com.artifex.mupdf.fitz.SeekableInputStream;
 
-import android.util.Log;
 import android.content.ContentResolver;
 import android.net.Uri;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
 public class ContentInputStream implements SeekableInputStream {
-	private final String APP = "Chaka";
-
 	protected ContentResolver cr;
 	protected Uri uri;
 	protected InputStream is;
@@ -55,7 +49,7 @@ public class ContentInputStream implements SeekableInputStream {
 				try {
 					is.skip(newp - p);
 				} catch (IOException x) {
-					Log.i(APP, "Unable to skip backwards, reopening input stream");
+					Tool.i("Unable to skip backwards, reopening input stream");
 					mustReopenStream = true;
 				}
 			}

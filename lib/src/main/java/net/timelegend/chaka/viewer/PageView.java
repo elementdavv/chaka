@@ -4,14 +4,7 @@ import com.artifex.mupdf.fitz.Cookie;
 import com.artifex.mupdf.fitz.Link;
 import com.artifex.mupdf.fitz.Quad;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import android.annotation.TargetApi;
-import android.app.AlertDialog;
-import android.content.ClipData;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap.Config;
 import android.graphics.Bitmap;
@@ -28,20 +21,16 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.FileUriExposedException;
 import android.os.Handler;
-import android.text.method.PasswordTransformationMethod;
-import android.util.Log;
-import android.view.LayoutInflater;
+import android.os.Looper;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import android.os.AsyncTask;
 
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 
 // Make our ImageViews opaque to optimize redraw
 class OpaqueImageView extends ImageView {
@@ -57,13 +46,11 @@ class OpaqueImageView extends ImageView {
 }
 
 public class PageView extends ViewGroup {
-	private final String APP = "Chaka";
 	private final MuPDFCore mCore;
 
 	private static final int HIGHLIGHT_COLOR = 0x80cc6600;
 	private static final int LINK_COLOR = 0x800066cc;
 	private static final int SELECTION_COLOR = 0x8090EE90;            // lightgreen
-	private static final int BOX_COLOR = 0xFF4444FF;
 	private static final int BACKGROUND_COLOR = 0xFFFFFFFF;
 	private static final int PROGRESS_DIALOG_DELAY = 200;
 
@@ -99,7 +86,7 @@ public class PageView extends ViewGroup {
 	private       ImageView mErrorIndicator;
 
 	private       ProgressBar mBusyIndicator;
-	private final Handler   mHandler = new Handler();
+	private final Handler   mHandler = new Handler(Looper.getMainLooper());
 
 	public PageView(Context c, MuPDFCore core, Point parentSize, Bitmap sharedHqBm) {
 		super(c);
@@ -224,7 +211,7 @@ public class PageView extends ViewGroup {
 			mErrorIndicator = new OpaqueImageView(mContext);
 			mErrorIndicator.setScaleType(ImageView.ScaleType.CENTER);
 			addView(mErrorIndicator);
-			Drawable mErrorIcon = getResources().getDrawable(R.drawable.ic_error_red_24dp);
+			Drawable mErrorIcon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_error_red_24dp, null);
 			mErrorIndicator.setImageDrawable(mErrorIcon);
 			mErrorIndicator.setBackgroundColor(BACKGROUND_COLOR);
 		}
@@ -236,8 +223,16 @@ public class PageView extends ViewGroup {
 
     // the page is correctPage, the size is full size
 	public void setPage(int page, RectF rSize) {
-        PointF size = new PointF(rSize.left, rSize.top);
-        mRenderOff = new PointF(rSize.right, rSize.bottom);
+        PointF size;
+        if (rSize == null) {
+            setRenderError("Error loading page");
+            size = new PointF(612, 792);
+            mRenderOff = new PointF(0, 0);
+        }
+        else {
+            size = new PointF(rSize.left, rSize.top);
+            mRenderOff = new PointF(rSize.right, rSize.bottom);
+        }
 
 		// Cancel pending render task
 		if (mDrawEntire != null) {
@@ -251,11 +246,6 @@ public class PageView extends ViewGroup {
 			mSearchView.invalidate();
 
 		mPageNumber = page;
-
-		if (size == null) {
-			setRenderError("Error loading page");
-			size = new PointF(612, 792);
-		}
 
 		// Calculate scaled size that fits within the screen limits
 		// This is the size at minimum zoom
@@ -719,14 +709,14 @@ public class PageView extends ViewGroup {
 	public int hitLink(Link link) {
 		if (link.isExternal()) {
 			Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link.getURI()));
-			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET); // API>=21: FLAG_ACTIVITY_NEW_DOCUMENT
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
 			try {
 				mContext.startActivity(intent);
 			} catch (FileUriExposedException x) {
-				Log.e(APP, x.toString());
+				Tool.e(x.toString());
 				Toast.makeText(getContext(), "Android does not allow following file:// link: " + link.getURI(), Toast.LENGTH_LONG).show();
 			} catch (Throwable x) {
-				Log.e(APP, x.toString());
+				Tool.e(x.toString());
 				Toast.makeText(getContext(), x.getMessage(), Toast.LENGTH_LONG).show();
 			}
 			return -1;
@@ -881,7 +871,7 @@ public class PageView extends ViewGroup {
 			@Override
 			public Boolean doInBackground(Cookie cookie, Void ... params) {
 				if (bm == null)
-					return new Boolean(false);
+					return false;
 				// Workaround bug in Android Honeycomb 3.x, where the bitmap generation count
 				// is not incremented when drawing.
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
@@ -889,9 +879,9 @@ public class PageView extends ViewGroup {
 					bm.eraseColor(0);
 				try {
 					mCore.drawPage(bm, mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight, cookie);
-					return new Boolean(true);
+					return true;
 				} catch (RuntimeException e) {
-					return new Boolean(false);
+					return false;
 				}
 			}
 		};
@@ -905,7 +895,7 @@ public class PageView extends ViewGroup {
 			@Override
 			public Boolean doInBackground(Cookie cookie, Void ... params) {
 				if (bm == null)
-					return new Boolean(false);
+					return false;
 				// Workaround bug in Android Honeycomb 3.x, where the bitmap generation count
 				// is not incremented when drawing.
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
@@ -913,9 +903,9 @@ public class PageView extends ViewGroup {
 					bm.eraseColor(0);
 				try {
 					mCore.updatePage(bm, mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight, cookie);
-					return new Boolean(true);
+					return true;
 				} catch (RuntimeException e) {
-					return new Boolean(false);
+					return false;
 				}
 			}
 		};

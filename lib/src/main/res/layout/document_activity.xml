@@ -158,6 +158,15 @@
                 android:tooltipText="@string/toc"
 				/>
 
+			<ImageButton
+				android:id="@+id/helpButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="@drawable/button"
+				android:src="@drawable/ic_help_white_24dp"
+				android:tooltipText="@string/help"
+				/>
+
 		    </LinearLayout>
 
             </HorizontalScrollView>

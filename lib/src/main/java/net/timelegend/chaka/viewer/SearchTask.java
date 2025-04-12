@@ -6,8 +6,9 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.os.Handler;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 
 class ProgressDialogX extends ProgressDialog {
 	public ProgressDialogX(Context context) {
@@ -38,7 +39,7 @@ public abstract class SearchTask {
 	public SearchTask(Context context, MuPDFCore core) {
 		mContext = context;
 		mCore = core;
-		mHandler = new Handler();
+		mHandler = new Handler(Looper.getMainLooper());
 		mAlertBuilder = new AlertDialog.Builder(context, R.style.MyDialog);
 	}
 
