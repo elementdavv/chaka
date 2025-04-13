@@ -1285,11 +1285,6 @@ public class ReaderView
 		return true;
 	}
 
-    public boolean isWide() {
-        View v = mChildViews.get(mCurrent);
-        return (v == null) ? false : v.getMeasuredWidth() > v.getMeasuredHeight();
-    }
-
     /*
      * both even or odd page
      */
@@ -1650,8 +1645,7 @@ public class ReaderView
 		((PageView) v).updateHq(false);
         if (mCurrent == ((PageView) v).getPage() && !mAdapter.isReflowable()) {
             boolean vis = mCurrent > 0
-                    && mCurrent < (mAdapter.getCount() - 1)
-                    && (mSingleColumn || v.getWidth() > v.getHeight());
+                    && mCurrent < (mAdapter.getCount() - 1);
             ((DocumentActivity)mContext).showSingleColumnButton(vis ? View.VISIBLE : View.GONE);
         }
 	}

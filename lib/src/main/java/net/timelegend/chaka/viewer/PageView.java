@@ -576,11 +576,6 @@ public class PageView extends ViewGroup {
 			// Offset patch area to be relative to the view top left
 			patchArea.offset(-viewArea.left, -viewArea.top);
 
-            // offset patch area for split right page
-            if (mCore.isSplitPage(mPageNumber) && mCore.isRightPage(mPageNumber)) {
-                patchArea.offset(-viewArea.width(), 0);
-            }
-
 			boolean area_unchanged = patchArea.equals(mPatchArea) && patchViewSize.equals(mPatchViewSize);
 
 			// If being asked for the same area as last time and not because of an update then nothing to do
@@ -604,15 +599,21 @@ public class PageView extends ViewGroup {
 					mSearchView.bringToFront();
 			}
 
+            // offset patch area for split right page
+            int splitleft = patchArea.left;
+            if (mCore.isSplitPage(mPageNumber) && mCore.isRightPage(mPageNumber)) {
+                splitleft += viewArea.width();
+            }
+
 			CancellableTaskDefinition<Void, Boolean> task;
 
 			if (completeRedraw)
 				task = getDrawPageTask(mPatchBm, patchViewSize.x, patchViewSize.y,
-								patchArea.left, patchArea.top,
+								splitleft, patchArea.top,
 								patchArea.width(), patchArea.height());
 			else
 				task = getUpdatePageTask(mPatchBm, patchViewSize.x, patchViewSize.y,
-						patchArea.left, patchArea.top,
+						splitleft, patchArea.top,
 						patchArea.width(), patchArea.height());
 
 			mDrawPatch = new CancellableAsyncTask<Void, Boolean>(task) {
@@ -623,7 +624,7 @@ public class PageView extends ViewGroup {
 						mPatchArea = patchArea;
 						clearRenderError();
                         if (mCore.isSplitPage(mPageNumber)) {
-                            int cx = getColumnX(patchViewSize.x, mPatchBm.getWidth());
+                            int cx = 0;
                             mColumnBm = Bitmap.createBitmap(mPatchBm, cx, 0, mPatchBm.getWidth() / 2, mPatchBm.getHeight());
 					        mPatch.setImageBitmap(mColumnBm);
                         }

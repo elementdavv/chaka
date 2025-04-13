@@ -349,6 +349,7 @@ public class DocumentActivity extends AppCompatActivity
 
 		createUI(savedInstanceState);
 		mOrientation = getResources().getConfiguration().orientation;
+		Tool.mContext = this;
 		Tool.delay = 600;
 	}
 
@@ -907,17 +908,6 @@ public class DocumentActivity extends AppCompatActivity
 
     private void toggleSingleColumnHighlight() {
         int index;
-        if (!mSingleColumnHighlight) {
-            if (!mDocView.isWide()) {
-                show(R.string.is_not_wide);
-                return;
-            }
-		    index = mDocView.getDisplayedViewIndex();
-            if (index == 0 || index == (core.countPages() - 1)) {
-                show(R.string.first_last_page);
-                return;
-            }
-        }
         mSingleColumnHighlight = !mSingleColumnHighlight;
 		// COLOR tint
 		mSingleColumnButton.setColorFilter(mSingleColumnHighlight ? highlightColor : highunlightColor);
@@ -1205,6 +1195,9 @@ public class DocumentActivity extends AppCompatActivity
     public void showSingleColumnButton(int vis) {
         if (mOrientationChanged) {
             mOrientationChanged = false;
+        }
+        else if (core.isReflowable()) {
+            return;
         }
         else if (mSingleColumnButton.getVisibility() != vis) {
             mSingleColumnButton.setVisibility(vis);

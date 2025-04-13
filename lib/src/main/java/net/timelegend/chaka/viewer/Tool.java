@@ -1,6 +1,8 @@
 package net.timelegend.chaka.viewer;
 
 import android.content.ContentResolver;
+import android.content.Context;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
@@ -9,6 +11,8 @@ import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.MessageDigest;
@@ -16,8 +20,9 @@ import java.security.NoSuchAlgorithmException;
 
 public class Tool
 {
-	public final static String TAG = "Chaka";
+    public final static String TAG = "Chaka";
     public static int delay = 600;
+    public static Context mContext;
 
     public final static <T> void i(T v) {
         Log.i(TAG, v.toString());
@@ -87,4 +92,16 @@ public class Tool
         return digest;
     }
 
+    public static void saveBitmap(Bitmap bm, String fn) {
+        File dir = mContext.getExternalFilesDir(null);
+        File f = new File(dir, fn);
+        i("downloadpath:"+f.getAbsolutePath());
+        f.delete();
+        try (FileOutputStream fos = new FileOutputStream(f)) {
+            bm.compress(Bitmap.CompressFormat.PNG, 100, fos);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
