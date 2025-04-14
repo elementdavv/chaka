@@ -1445,29 +1445,37 @@ public class ReaderView
 
         int xOffset = 0, yOffset = 0, smart = 0;
 
-        if (mHorizontalScrolling) {
-            if ((mTextLeft && dir == 1) || (!mTextLeft && dir == -1)) {
-                // only when zoomed in
-                if (mSmartFocus && nv.getWidth() > getWidth()) {
-                    // account its width to left and right value
-                    smart = nv.getRight() - getWidth() + nv.getLeft() + 2 * nv.getWidth();
-                }
-                xOffset += nv.getWidth() - smart;
-            }
-            else {
-                if (mSmartFocus && v.getWidth() > getWidth()) {
-                    smart = v.getRight() - getWidth() + v.getLeft();
-                }
-                xOffset -= v.getWidth() + smart;
+        if ((mTextLeft && dir == 1) || (!mTextLeft && dir == -1)) {
+            if (mSmartFocus && nv.getWidth() > getWidth()) {
+                smart = nv.getRight() - getWidth() + nv.getLeft() + 2 * nv.getWidth();
             }
         }
         else {
-            if ((mTextLeft && dir == 1) || (!mTextLeft && dir == -1))
-                yOffset += nv.getHeight();
-            else
-                yOffset -= v.getHeight();
+            if (mSmartFocus && v.getWidth() > getWidth()) {
+                smart = v.getRight() - getWidth() + v.getLeft();
+            }
         }
 
+        if (mHorizontalScrolling) {
+            if ((mTextLeft && dir == 1) || (!mTextLeft && dir == -1)) {
+                xOffset += nv.getWidth();
+            }
+            else {
+                xOffset -= v.getWidth();
+            }
+        }
+        else {
+            if ((mTextLeft && dir == 1) || (!mTextLeft && dir == -1)) {
+                yOffset += nv.getHeight();
+                if (mSmartFocus && nv.getWidth() > getWidth())
+                    smart -= 2 * nv.getWidth();
+            }
+            else {
+                yOffset -= v.getHeight();
+            }
+        }
+
+		xOffset -= smart;
 		mScrollerLastX = mScrollerLastY = 0;
 		mScroller.startScroll(0, 0, xOffset, yOffset, 400);
 		mStepper.prod();
