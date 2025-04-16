@@ -181,7 +181,7 @@ public class OutlineActivity extends ComponentActivity
     protected ArrayList<Item> outline;
 	protected int found = -1;
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "deprecation"})
     protected ArrayList<Item> getOutline() {
         ArrayList<Item> result = new ArrayList<Item>();
 		int idx = getIntent().getIntExtra("PALLETBUNDLE", -1);

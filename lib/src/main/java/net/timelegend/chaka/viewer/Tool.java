@@ -10,6 +10,9 @@ import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.widget.Toast;
+
+import androidx.core.content.ContextCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -44,6 +47,17 @@ public class Tool
         Log.v(TAG, v.toString());
     }
 
+    public static <T> void toast(T t) {
+        String s = null;
+        if (t instanceof String) {
+            s = (String)t;
+        }
+        else {
+            s = String.valueOf(t);
+        }
+        Toast.makeText(mContext, s, Toast.LENGTH_SHORT).show();
+    }
+
 	public static String toHex(byte[] digest) {
 		StringBuilder builder = new StringBuilder(2 * digest.length);
 
@@ -53,6 +67,7 @@ public class Tool
 		return builder.toString();
 	}
 
+    @SuppressWarnings("deprecation")
     public static void fullScreen(Window window) {
         // below android 11 (api30)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -103,5 +118,10 @@ public class Tool
         catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static String colorHex(int color) {
+        String hex = Integer.toHexString(ContextCompat.getColor(mContext, color) & 0x00ffffff);
+        return hex;
     }
 }

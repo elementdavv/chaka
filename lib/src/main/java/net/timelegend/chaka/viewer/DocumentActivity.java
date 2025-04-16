@@ -44,7 +44,6 @@ import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ViewAnimator;
 
 import androidx.activity.result.ActivityResult;
@@ -388,7 +387,9 @@ public class DocumentActivity extends AppCompatActivity
 		mDocView.refresh();
 
         if (lastPage > -1 ) {
-            if (lastPage < core.countPages()) loc = lastPage;
+            HelpActivity.updateReadme(this);
+            if (lastPage < core.countPages())
+                loc = lastPage;
             lastPage = -1;
         }
 
@@ -752,8 +753,12 @@ public class DocumentActivity extends AppCompatActivity
 		mLayoutEM = prefs.getInt("layoutem"+mDocKey, 7);
 		lastPage = core.correctPage(prefs.getInt("page"+mDocKey, 0));
 
-		if (lastPage >= 0 && lastPage < core.countPages() && !core.isReflowable())
-			mDocView.setDisplayedViewIndex(lastPage);
+        if (!core.isReflowable()) {
+            HelpActivity.updateReadme(this);
+            if (lastPage < core.countPages())
+                mDocView.setDisplayedViewIndex(lastPage);
+            lastPage = -1;
+        }
 
 		if (savedInstanceState == null || !savedInstanceState.getBoolean("ButtonsHidden", false))
 			showButtons();
@@ -795,6 +800,7 @@ public class DocumentActivity extends AppCompatActivity
 		button.setColorFilter(enabled ? enabledColor : disabledColor);
 	}
 
+    @SuppressWarnings("deprecation")
     private void watchNavigationBar() {
         View decorView = getWindow().getDecorView();
         // below android 11 (api30)
@@ -1154,6 +1160,7 @@ public class DocumentActivity extends AppCompatActivity
         }
     };
 
+    @SuppressWarnings("deprecation")
     public void updateTopBar(Integer w) {
         if (w == null) {
 
@@ -1214,10 +1221,6 @@ public class DocumentActivity extends AppCompatActivity
             mOrientationChanged = true;
             searchModeOff();
         }
-    }
-
-    public void show(int sid) {
-        Toast.makeText(this, getString(sid), Toast.LENGTH_SHORT).show();
     }
 
 	private void search(int direction) {

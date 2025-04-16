@@ -22,11 +22,18 @@ android {
         namespace 'net.timelegend.chaka.viewer'
 		minSdkVersion 21
 		targetSdkVersion 34
+		versionName '1.24.9a.12'
+		versionCode 158
+		buildConfigField "String", "VERSION_NAME", "\"${defaultConfig.versionName}\""
+		buildConfigField "long", "VERSION_CODE", "${defaultConfig.versionCode}"
 	}
 	publishing {
 		singleVariant("release") {
 			withSourcesJar()
 		}
+	}
+	buildFeatures {
+		buildConfig true
 	}
 }
 

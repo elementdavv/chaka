@@ -49,7 +49,7 @@ public class MuPDFCore
 	private MuPDFCore(Document doc) {
 		this.doc = doc;
 		reflowable = doc.isReflowable();
-		// for flowable docs, count page is slow and incorrect now, spare once call
+		// PDFs use default pocket book size
 		if (!reflowable) {
 			doc.layout(layoutW, layoutH, layoutEM);
 			correctPageCount(true);
@@ -87,6 +87,7 @@ public class MuPDFCore
 		return reflowable;
 	}
 
+	// flowable documents use custom book size
 	public synchronized int layout(int oldPage, int w, int h, int em) {
 		if (w != layoutW || h != layoutH || em != layoutEM) {
             oldPage = realPage(oldPage);
@@ -369,6 +370,7 @@ public class MuPDFCore
     private void correctPageCount(boolean refresh) {
         if (refresh || basePageCount == -1) {
             basePageCount = doc.countPages();
+            // until now, layout complete and UI reaady
         }
         if (singleColumnMode)
             // divide every page into 2 pages, except first and last page

@@ -28,5 +28,6 @@
     <string name="contents">Contents</string>
     <string name="help">Help</string>
     <string name="readme">https://raw.githubusercontent.com/elementdavv/chaka/refs/heads/master/README.md</string>
+    <string name="api">https://api.github.com/repos/elementdavv/chaka/releases/latest</string>
 
 </resources>
