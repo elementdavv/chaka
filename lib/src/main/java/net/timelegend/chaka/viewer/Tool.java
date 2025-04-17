@@ -24,7 +24,6 @@ import java.security.NoSuchAlgorithmException;
 public class Tool
 {
     public final static String TAG = "Chaka";
-    public static int delay = 600;
     public static Context mContext;
 
     public final static <T> void i(T v) {

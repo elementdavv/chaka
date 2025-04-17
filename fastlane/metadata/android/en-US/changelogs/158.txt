@@ -1,4 +1,3 @@
 Add online help
-Fix toolbar alignment issue on switching orientation
-Fix last page remembering issue with non flowable books
-improve toolbar interface
+improve interface
+Fix bugs

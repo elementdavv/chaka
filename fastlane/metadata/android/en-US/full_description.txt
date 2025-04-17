@@ -1,4 +1,4 @@
-Read book fluently and comfortably, with simple and clear interface.
+Read fluently and comfortably, with simple and clear interface.
 
 Supported Document Types:
 PDF, EPUB, MOBI, CBZ, FB2 and XPS

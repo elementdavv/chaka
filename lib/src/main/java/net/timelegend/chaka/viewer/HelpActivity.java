@@ -37,6 +37,8 @@ import com.mittsu.markedview.MarkedView;
 
 public class HelpActivity extends ComponentActivity
 {
+    public static int delay;
+
     @Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -78,12 +80,12 @@ public class HelpActivity extends ComponentActivity
                     public void run() {
                         View mvOverlay = (View)findViewById(R.id.mvOverlay);
                         mvOverlay.setVisibility(View.INVISIBLE);
-                        if (Tool.delay > 300)
-                            Tool.delay -= 300;
-                        else if (Tool.delay > 200)
-                            Tool.delay -= 200;
+                        if (delay > 300)
+                            delay -= 300;
+                        else if (delay > 200)
+                            delay -= 200;
                     }
-                }, Tool.delay);
+                }, delay);
             }
         }, 200);
     }

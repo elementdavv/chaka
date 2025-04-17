@@ -4,13 +4,13 @@ default: debug
 
 debug:
 	./gradlew --warning-mode=all assembleDebug
-release:
+r:
 	./gradlew --warning-mode=all assembleRelease
 bundle:
 	./gradlew --warning-mode=all bundle
-install:
+i:
 	./gradlew --warning-mode=all installDebug
-installRelease:
+ir:
 	./gradlew --warning-mode=all installRelease
 run: install
 	adb shell am start -n net.timelegend.chaka.viewer.app/.LibraryActivity
@@ -31,5 +31,5 @@ tarball: release
 		chaka-$(shell git describe --tags).apk
 tasks:
 	./gradlew tasks
-clean:
+c:
 	./gradlew clean

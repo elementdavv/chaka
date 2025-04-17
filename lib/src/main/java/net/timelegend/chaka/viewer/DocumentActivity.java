@@ -349,7 +349,7 @@ public class DocumentActivity extends AppCompatActivity
 		createUI(savedInstanceState);
 		mOrientation = getResources().getConfiguration().orientation;
 		Tool.mContext = this;
-		Tool.delay = 600;
+		HelpActivity.delay = 600;
 	}
 
 	public void requestPassword(final Bundle savedInstanceState) {
