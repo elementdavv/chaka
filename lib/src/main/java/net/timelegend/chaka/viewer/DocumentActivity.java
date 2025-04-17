@@ -227,7 +227,6 @@ public class DocumentActivity extends AppCompatActivity
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-		Tool.fullScreen(getWindow());
 
 		DisplayMetrics metrics = getResources().getDisplayMetrics();
 		// DisplayMetrics metrics = new DisplayMetrics();
@@ -350,6 +349,12 @@ public class DocumentActivity extends AppCompatActivity
 		mOrientation = getResources().getConfiguration().orientation;
 		Tool.mContext = this;
 		HelpActivity.delay = 600;
+	}
+
+	@Override
+	public void onAttachedToWindow() {
+		super.onAttachedToWindow();
+		Tool.fullScreen(getWindow());
 	}
 
 	public void requestPassword(final Bundle savedInstanceState) {

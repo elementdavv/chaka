@@ -73,7 +73,7 @@ public class Tool
             final WindowInsetsController controller = window.getInsetsController();
 
             if(controller != null) {
-                controller.hide(WindowInsets.Type.statusBars() | WindowInsets.Type.navigationBars());
+                controller.hide(WindowInsets.Type.statusBars());
                 controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
             }
         } else {

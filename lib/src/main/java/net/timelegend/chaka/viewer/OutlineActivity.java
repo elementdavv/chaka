@@ -155,7 +155,6 @@ public class OutlineActivity extends ComponentActivity
         ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP,
                 ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_USE_LOGO);
         ab.setTitle(R.string.contents);
-        Tool.fullScreen(getWindow());
         setContentView(R.layout.outline_activity);
 
         RecyclerView rvOutline = (RecyclerView)findViewById(R.id.rvOutline);
@@ -165,6 +164,12 @@ public class OutlineActivity extends ComponentActivity
 
         if (found > 0)
             rvOutline.scrollToPosition(found);
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        Tool.fullScreen(getWindow());
     }
 
     @Override

@@ -46,9 +46,14 @@ public class HelpActivity extends ComponentActivity
         ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP,
                 ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_USE_LOGO);
         ab.setTitle(R.string.help);
-        Tool.fullScreen(getWindow());
         setContentView(R.layout.help_activity);
         showReadme();
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        Tool.fullScreen(getWindow());
     }
 
     @Override
