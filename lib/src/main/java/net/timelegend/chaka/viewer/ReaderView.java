@@ -91,11 +91,12 @@ public class ReaderView
     private MotionEvent   mLongPressEvent;
     private Runnable      mLongPressRunnable;;
     private long          mMoveTime = 0L;
+    private boolean       mBookmarked = false;
 
 	protected Stack<Integer> mHistory;
 
-	static abstract class ViewMapper {
-		abstract void applyToView(View view);
+	public interface ViewMapper {
+		void applyToView(View view);
 	}
 
 	public ReaderView(Context context) {
@@ -150,6 +151,10 @@ public class ReaderView
 
 	public void pushHistory() {
 		mHistory.push(mCurrent);
+	}
+
+	public void clearHistory() {
+		mHistory.clear();
 	}
 
 	public int getDisplayedViewIndex() {
@@ -467,9 +472,12 @@ public class ReaderView
                     mSelecting = SELECT.SELECTING;
                     mSelectLeftView = mSelectRightView = mChildViews.keyAt(i);
                     ((DocumentActivity)mContext).showCopyButton(View.VISIBLE);
+                    return;
                 }
             }
         }
+        mBookmarked = true;
+        ((DocumentActivity)mContext).createBookmark();
     }
 
     private void inSelect(float x, float y) {
@@ -1249,6 +1257,10 @@ public class ReaderView
             mLongPress = false;
         if (mSelecting == SELECT.SELECTING)
             return true;
+        if (mBookmarked) {
+            mBookmarked = false;
+            return true;
+        }
         if (mSelecting == SELECT.MOVE_NONE) {
             endSelect();
             return true;

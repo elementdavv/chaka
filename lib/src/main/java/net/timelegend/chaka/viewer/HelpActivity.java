@@ -99,19 +99,19 @@ public class HelpActivity extends ComponentActivity
     private static String tag, published;
 
     // called when book layout completed
-    public static void updateReadme(Context context) {
+    public static void updateReadme() {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
         executor.schedule(new Runnable() {
             @Override
             public void run() {
                 try {
-                    File dir = context.getExternalFilesDir(null);
+                    File dir = Tool.getDataDir(null);
                     File f = new File(dir, README);
 
                     if (testReadme(f)) return;
-                    getApi(context);
-                    getReadme(context, f);
+                    getApi();
+                    getReadme(f);
                 }
                 catch (MalformedURLException e) {
                     e.printStackTrace();
@@ -140,9 +140,9 @@ public class HelpActivity extends ComponentActivity
         return false;
     }
 
-    private static void getApi(Context context)
+    private static void getApi()
             throws MalformedURLException, IOException {
-        URL url = new URL(context.getResources().getString(R.string.api));
+        URL url = new URL(Tool.getResourceString(R.string.api));
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setDoInput(true);
         conn.connect();
@@ -165,10 +165,10 @@ public class HelpActivity extends ComponentActivity
         conn.disconnect();
     }
 
-    private static void getReadme(Context context, File f)
+    private static void getReadme(File f)
             throws MalformedURLException, FileNotFoundException, IOException {
         f.delete();
-        URL url = new URL(context.getResources().getString(R.string.readme));
+        URL url = new URL(Tool.getResourceString(R.string.readme));
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setDoInput(true);
         conn.connect();
@@ -205,7 +205,15 @@ public class HelpActivity extends ComponentActivity
         int cp = cv.compareTo(tag);
 
         if (cp == -1) {
-            res = "```release " + cv + "(update available: " + tag + ", published " + published + ")```";
+            StringBuilder sb = new StringBuilder();
+            sb.append("```release ");
+            sb.append(cv);
+            sb.append("(update available: ");
+            sb.append(tag);
+            sb.append(", published ");
+            sb.append(published);
+            sb.append(")```");
+            res = sb.toString();
         }
         else if (cp == 1) {
             res = "```unknown release```";

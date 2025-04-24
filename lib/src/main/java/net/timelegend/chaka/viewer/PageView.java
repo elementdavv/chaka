@@ -26,7 +26,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 import android.os.AsyncTask;
 
 import androidx.core.content.ContextCompat;
@@ -715,10 +714,10 @@ public class PageView extends ViewGroup {
 				mContext.startActivity(intent);
 			} catch (FileUriExposedException x) {
 				Tool.e(x.toString());
-				Toast.makeText(getContext(), "Android does not allow following file:// link: " + link.getURI(), Toast.LENGTH_LONG).show();
+				Tool.toast("Android does not allow following file:// link: " + link.getURI());
 			} catch (Throwable x) {
 				Tool.e(x.toString());
-				Toast.makeText(getContext(), x.getMessage(), Toast.LENGTH_LONG).show();
+				Tool.toast(x.getMessage());
 			}
 			return -1;
 		} else {

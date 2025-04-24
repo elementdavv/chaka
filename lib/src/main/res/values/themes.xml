@@ -32,4 +32,8 @@
     <style name="MyDialog" parent="android:Theme.Material.Dialog.Alert">
         <item name="android:windowNoTitle">false</item>
     </style>
+
+    <style name="MyDialog2" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorSurface">@android:color/white</item>
+    </style>
 </resources>

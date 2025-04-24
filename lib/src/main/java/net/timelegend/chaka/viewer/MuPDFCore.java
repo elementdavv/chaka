@@ -4,6 +4,7 @@ import com.artifex.mupdf.fitz.Cookie;
 import com.artifex.mupdf.fitz.DisplayList;
 import com.artifex.mupdf.fitz.Document;
 import com.artifex.mupdf.fitz.Link;
+import com.artifex.mupdf.fitz.Location;
 import com.artifex.mupdf.fitz.Matrix;
 import com.artifex.mupdf.fitz.Outline;
 import com.artifex.mupdf.fitz.Page;
@@ -48,6 +49,10 @@ public class MuPDFCore
 
 	private MuPDFCore(Document doc) {
 		this.doc = doc;
+		if (!doc.needsPassword()) setup();
+	}
+
+	private void setup() {
 		reflowable = doc.isReflowable();
 		// PDFs use default pocket book size
 		if (!reflowable) {
@@ -56,12 +61,11 @@ public class MuPDFCore
 		}
 		// apply consistent css to all flowable docs
 		else {
-			String css = ""
-					+ "@page{margin:2em !important;}"
-					+ "body{display:block;margin:0 !important;padding:0 !important;}"
-					+ "p{display:block;margin:0.6em 0 !important;}"
-					;
-			com.artifex.mupdf.fitz.Context.setUserCSS(css);
+			StringBuilder sb = new StringBuilder();
+			sb.append("@page{margin:2em !important;}");
+			sb.append("body{display:block;margin:0 !important;padding:0 !important;}");
+			sb.append("p{display:block;margin:0.6em 0 !important;}");
+			com.artifex.mupdf.fitz.Context.setUserCSS(sb.toString());
 		}
 		resolution = 160;
 		currentPage = -1;
@@ -90,12 +94,11 @@ public class MuPDFCore
 	// flowable documents use custom book size
 	public synchronized int layout(int oldPage, int w, int h, int em) {
 		if (w != layoutW || h != layoutH || em != layoutEM) {
-            oldPage = realPage(oldPage);
 			System.out.println("LAYOUT: " + w + "," + h);
 			layoutW = w;
 			layoutH = h;
 			layoutEM = em;
-			long mark = doc.makeBookmark(doc.locationFromPageNumber(oldPage));
+			long mark = doc.makeBookmark(doc.locationFromPageNumber(realPage(oldPage)));
 			doc.layout(layoutW, layoutH, layoutEM);
 			correctPageCount(true);
 			currentPage = -1;
@@ -287,7 +290,7 @@ public class MuPDFCore
 		return outline != null;
 	}
 
-	private void flattenOutlineNodes(ArrayList<OutlineActivity.Item> result, Outline list[], int level) {
+	private void flattenOutlineNodes(ArrayList<TocItem> result, Outline list[], int level) {
 		for (Outline node : list) {
 			if (node.title != null) {
 				int pageNum = correctPage(doc.pageNumberFromLocation(doc.resolveLink(node)));
@@ -295,18 +298,41 @@ public class MuPDFCore
                 if (node.down != null) {
                     count = node.down.length;
                 }
-				result.add(new OutlineActivity.Item(node.title, pageNum, level, count));
+				result.add(new TocItem(node.title, pageNum, level, count));
 			    if (count > 0)
 				    flattenOutlineNodes(result, node.down, level + 1);
 			}
 		}
 	}
 
-	public synchronized ArrayList<OutlineActivity.Item> getOutline() {
-		ArrayList<OutlineActivity.Item> result = new ArrayList<OutlineActivity.Item>();
+	public synchronized ArrayList<TocItem> getOutline() {
+		ArrayList<TocItem> result = new ArrayList<TocItem>();
 		flattenOutlineNodes(result, outline, 0);
 		return result;
 	}
+
+    public long makeBookmark(int page) {
+        return doc.makeBookmark(doc.locationFromPageNumber(page));
+    }
+
+    public int findBookmark(long mark) {
+        return doc.pageNumberFromLocation(doc.findBookmark(mark));
+    }
+
+    public ChapterPage locatePage(int page) {
+        Location loc = doc.locationFromPageNumber(page);
+        return new ChapterPage(loc.chapter, loc.page, doc.countPages(loc.chapter));
+    }
+
+    public int estimatePage(ChapterPage cp) {
+        int pageCount = doc.countPages(cp.chapter);
+        int page = Math.round(pageCount * (cp.page + 1) / cp.pageCount) - 1;
+
+        if (page < 0 || page >= pageCount) {
+            page = (page < 0) ? 0 : pageCount - 1;
+        }
+        return doc.pageNumberFromLocation(new Location(cp.chapter, page));
+    }
 
     private synchronized Rect getBBox(Rect b) {
         Rect r = page.getBBox();
@@ -398,7 +424,9 @@ public class MuPDFCore
 	}
 
 	public synchronized boolean authenticatePassword(String password) {
-		return doc.authenticatePassword(password);
+		boolean authenticated = doc.authenticatePassword(password);
+		if (authenticated) setup();
+		return authenticated;
 	}
 
     public TextSelectionModel getTSModel(int pageNum) {

@@ -411,6 +411,7 @@ public abstract class AsyncTask<Params, Progress, Result> {
      * @see #publishProgress
      */
     @WorkerThread
+    @SuppressWarnings("unchecked")
     protected abstract Result doInBackground(Params... params);
     /**
      * Runs on the UI thread before {@link #doInBackground}.
@@ -452,7 +453,7 @@ public abstract class AsyncTask<Params, Progress, Result> {
      * @see #publishProgress
      * @see #doInBackground
      */
-    @SuppressWarnings({"UnusedDeclaration"})
+    @SuppressWarnings({"UnusedDeclaration", "unchecked"})
     @MainThread
     protected void onProgressUpdate(Progress... values) {
     }

@@ -37,5 +37,6 @@ public abstract class MuPDFCancellableTaskDefinition<Params, Result> implements 
 		return doInBackground(cookie, params);
 	}
 
+	@SuppressWarnings("unchecked")
 	public abstract Result doInBackground(Cookie cookie, Params ... params);
 }

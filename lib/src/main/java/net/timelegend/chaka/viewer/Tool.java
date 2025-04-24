@@ -46,6 +46,18 @@ public class Tool
         Log.v(TAG, v.toString());
     }
 
+    public static String getResourceString(int id) {
+       return mContext.getResources().getString(id);
+    }
+
+    public static void toastFromResource(int id) {
+        Toast.makeText(mContext, getResourceString(id), Toast.LENGTH_SHORT).show();
+    }
+
+    public static File getDataDir(String folder) {
+        return mContext.getExternalFilesDir(folder);
+    }
+
     public static <T> void toast(T t) {
         String s = null;
         if (t instanceof String) {
@@ -107,7 +119,7 @@ public class Tool
     }
 
     public static void saveBitmap(Bitmap bm, String fn) {
-        File dir = mContext.getExternalFilesDir(null);
+        File dir = getDataDir(null);
         File f = new File(dir, fn);
         i("downloadpath:"+f.getAbsolutePath());
         f.delete();
@@ -123,4 +135,5 @@ public class Tool
         String hex = Integer.toHexString(ContextCompat.getColor(mContext, color) & 0x00ffffff);
         return hex;
     }
+
 }
