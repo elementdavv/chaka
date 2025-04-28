@@ -16,7 +16,7 @@ run: install
 	adb shell am start -n net.timelegend.chaka.viewer.app/.LibraryActivity
 runRelease: installRelease
 	adb shell am start -n net.timelegend.chaka.viewer.app/.LibraryActivity
-uninstall:
+ui:
 	./gradlew --warning-mode=all uninstallDebug
 uninstallRelease:
 	./gradlew --warning-mode=all uninstallRelease

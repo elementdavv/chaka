@@ -204,7 +204,7 @@ public class HelpActivity extends ComponentActivity
         String res = "```release " + cv + "```";
         int cp = cv.compareTo(tag);
 
-        if (cp == -1) {
+        if (cp < 0) {
             StringBuilder sb = new StringBuilder();
             sb.append("```release ");
             sb.append(cv);
@@ -215,7 +215,7 @@ public class HelpActivity extends ComponentActivity
             sb.append(")```");
             res = sb.toString();
         }
-        else if (cp == 1) {
+        else if (cp > 0) {
             res = "```unknown release```";
         }
 
