@@ -10,7 +10,7 @@ PDF, EPUB, MOBI, CBZ, FB2 and XPS documents are supported.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/text_left.png"> RtL Text
 
-  In top-to-bottom, right-to-left script (TB-RL or vertical), writing starts from the top of the page and continues to the bottom, proceeding from right to left for new lines, pages numbered from right to left. The **RtL Text** mode can be applied to some traditional Chinese, Japanese and Korean books.
+  In top-to-bottom, right-to-left script (TB-RL or vertical), writing starts from the top of the page and continues to the bottom, proceeding from right to left for new lines, pages numbered from right to left (from Wikipedia). The **RtL Text** mode can be applied to some traditional Chinese, Japanese and Korean books.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/single_column.png"> Single Column
 
@@ -34,7 +34,7 @@ PDF, EPUB, MOBI, CBZ, FB2 and XPS documents are supported.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/focus.png"> Focus
 
-  **Focus** mode can retent page position across zoomed pages. On moving to a definite page, ie. tap to next/prev page, tap content table, tap links, search text, navigate on page slider etc., it presents visible content area of new page in same position as the old one. Note that it does not work with scroll operation.
+  **Focus** mode can retent page position across zoomed pages. On moving to a definite page, ie. tapping to next/prev page, choosing on Toc/bookmark table, navigating on links, searching text, and skimming on page slider etc., it presents visible content area of new page in same position as the old one. Note that scroll operation is an exception.
 
   On entering **Focus** mode, current page will zoom automatically to match screen in shorter dimension and center itself.
 
@@ -46,7 +46,9 @@ PDF, EPUB, MOBI, CBZ, FB2 and XPS documents are supported.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/copy.png"> Copy Text
 
-  **Text Copy** can be achived by selecting text and tap **Copy** button. In **Vertical Flip** mode, text selection can spread on multi-pages. It does not disturb page navigation.
+  **Text Copy** can be accomplished by selecting text and tap **Copy** button. In **Vertical Flip** mode, text selection can cross page boundry.
+
+  While text selecting, page navigation still work.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/format.png"> Font size
 
@@ -90,7 +92,7 @@ PDF, EPUB, MOBI, CBZ, FB2 and XPS documents are supported.
 
 ### Credits
 - [MuPDF Android Viewer](https://github.com/ArtifexSoftware/mupdf-android-viewer) and developers
-- [MarkedView](https://github.com/mittsu333/MarkedView-for-Android) for help page render
+- [MarkedView](https://github.com/mittsu333/MarkedView-for-Android) for help document rendering
 
 ### Contacts
 - GitHub repo: [https://github.com/elementdavv/chaka](https://github.com/elementdavv/chaka)
