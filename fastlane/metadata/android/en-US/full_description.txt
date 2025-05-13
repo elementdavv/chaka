@@ -12,11 +12,11 @@ Focus Mode: Retent page position on flipping zoomed pages
 Smarty Focus: Recognize border bias in Focus Mode
 RtL Text: Support Top-to-Bottom, Right-to-Left(TB-RL) text
 Single Column: Support scanned dual-spread PDF page
-Links
-Search
-Font Size
+Links navigation
+Text Search
+Font Size Selection
 Table of Contents
 Bookmarks
-Text Selection Copy
+Text Copy
 
 The project is under active development.

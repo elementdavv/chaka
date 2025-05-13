@@ -52,13 +52,21 @@ PDF, EPUB, MOBI, CBZ, FB2 and XPS documents are supported.
 
   Current font size was indicated in **Font Size** menu.
 
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/contents.png"> Contents
+
+  **Contents** menu includes following two functions:
+
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/toc.png"> Table of Contents
 
-  **Table of Contents** supports multi-level headings. Heading collapse and expand are also available. It always keep sync with current page.
+  **Table of Contents** will show up if the document has one. It supports multi-level headings, heading collapsing and expanding. It always keep sync with current page.
+
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/bookmark.png"> Bookmarks
+
+  **Bookmarks** works across reading sessions. To bookmark a page, just long press on blank area.
 
 - Scrollable Toobar
 
-  The Scrollable Top Toolbar can accommodate more buttons. A button will show up when the corresponding function is appliable, otherwise it will be hidden.
+  The Scrollable Top Toolbar can accommodate more buttons. A button will show up when the corresponding function is applicable, otherwise it will be hidden.
 
 - Pros and Cons
 
@@ -77,11 +85,12 @@ PDF, EPUB, MOBI, CBZ, FB2 and XPS documents are supported.
 - With the combination of **Flip Horizontal and Rtl Text** mode, or of **Flip Vertical and not Rtl Text** mode, pages can stay at any position.
 - Press down two fingers and move one, to zoom in/out page
 - Long press on text, to trigger a text selection session. Then press down on one of left/right handles and move, to change selection area. Tap in selection area, to show/hide Top Toolbar. Tap **Copy** button, to copy text and end the selection session. Tap out of selection area, to cancel the selection session.
+- Long press on blank area (not on text), to bookmark current page.
 - In general, one can get the best reading experience by combining mutiple function modes, adding appropriate screen orientation if needed.
 
 ### Credits
-- The project is based on [MuPDF Viewer](https://github.com/ArtifexSoftware/mupdf-android-viewer)
-- [MarkedView](https://github.com/mittsu333/MarkedView-for-Android)
+- [MuPDF Android Viewer](https://github.com/ArtifexSoftware/mupdf-android-viewer) and developers
+- [MarkedView](https://github.com/mittsu333/MarkedView-for-Android) for help page render
 
 ### Contacts
 - GitHub repo: [https://github.com/elementdavv/chaka](https://github.com/elementdavv/chaka)
@@ -89,5 +98,5 @@ PDF, EPUB, MOBI, CBZ, FB2 and XPS documents are supported.
 - Telegram: [@elementdavv](https://t.me/elementdavv)
 - X(Twitter): [@elementdavv](https://x.com/elementdavv)
 
-### Donation
-If you want to support my work you could donate by [![donate](https://raw.githubusercontent.com/elementdavv/chaka/master/resources/paypal-logo.png)](https://paypal.me/timelegend)
+### Support
+If you love Chaka, consider supporting or hiring the maintainer [@elementdavv](https://x.com/elementdavv) [![donate](https://raw.githubusercontent.com/elementdavv/chaka/master/resources/paypal-logo.png)](https://paypal.me/timelegend)
