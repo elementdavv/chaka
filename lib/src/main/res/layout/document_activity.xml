@@ -49,12 +49,22 @@
 				/>
 
 			<ImageButton
+				android:id="@+id/copyButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="@drawable/button"
+				android:src="@drawable/ic_copy_white_24dp"
+				android:visibility="gone"
+				android:tooltipText="@string/copy"
+				/>
+
+			<ImageButton
 				android:id="@+id/singleColumnButton"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:background="@drawable/button"
 				android:src="@drawable/ic_single_column_white_24dp"
-                android:tooltipText="@string/single_column"
+				android:tooltipText="@string/single_column"
 				/>
 
 			<ImageButton
@@ -144,8 +154,17 @@
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:background="@drawable/button"
-				android:src="@drawable/ic_toc_white_24dp"
-                android:tooltipText="@string/toc"
+				android:src="@drawable/ic_outlined_white_24dp"
+				android:tooltipText="@string/contents"
+				/>
+
+			<ImageButton
+				android:id="@+id/helpButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="@drawable/button"
+				android:src="@drawable/ic_help_white_24dp"
+				android:tooltipText="@string/help"
 				/>
 
 		    </LinearLayout>

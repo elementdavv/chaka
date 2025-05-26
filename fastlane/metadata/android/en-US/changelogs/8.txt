@@ -1,1 +1,0 @@
-Added crop margin function for all types of documents

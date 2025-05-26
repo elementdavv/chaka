@@ -22,11 +22,11 @@ public class PageAdapter extends BaseAdapter {
 	}
 
 	public int getCount() {
-		try {
-			return mCore.countPages();
-		} catch (RuntimeException e) {
-			return 0;
-		}
+		return mCore.countPages();
+	}
+
+	public boolean isReflowable() {
+		return mCore.isReflowable();
 	}
 
 	public Object getItem(int position) {
@@ -47,6 +47,7 @@ public class PageAdapter extends BaseAdapter {
 
 	public void refresh() {
 		mPageSizes.clear();
+		mCore.clearTSModel();
 	}
 
     /*

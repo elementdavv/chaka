@@ -4,14 +4,7 @@ import com.artifex.mupdf.fitz.Cookie;
 import com.artifex.mupdf.fitz.Link;
 import com.artifex.mupdf.fitz.Quad;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-
-import android.annotation.TargetApi;
-import android.app.AlertDialog;
-import android.content.ClipData;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap.Config;
 import android.graphics.Bitmap;
@@ -28,18 +21,15 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.FileUriExposedException;
 import android.os.Handler;
-import android.text.method.PasswordTransformationMethod;
-import android.util.Log;
-import android.view.LayoutInflater;
+import android.os.Looper;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
-import android.view.inputmethod.EditorInfo;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.Toast;
 import android.os.AsyncTask;
+
+import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 
 // Make our ImageViews opaque to optimize redraw
 class OpaqueImageView extends ImageView {
@@ -55,12 +45,11 @@ class OpaqueImageView extends ImageView {
 }
 
 public class PageView extends ViewGroup {
-	private final String APP = "Chaka";
 	private final MuPDFCore mCore;
 
 	private static final int HIGHLIGHT_COLOR = 0x80cc6600;
 	private static final int LINK_COLOR = 0x800066cc;
-	private static final int BOX_COLOR = 0xFF4444FF;
+	private static final int SELECTION_COLOR = 0x8090EE90;            // lightgreen
 	private static final int BACKGROUND_COLOR = 0xFFFFFFFF;
 	private static final int PROGRESS_DIALOG_DELAY = 200;
 
@@ -71,6 +60,9 @@ public class PageView extends ViewGroup {
 	protected     Point     mSize;   // Size of page at minimum zoom
 	protected     PointF    mRenderOff;   // crop margin render offset
 	protected     float     mSourceScale;
+    protected     int       mViewWidth;
+    protected     int       mViewHeight;
+    protected     float     mScale;                 // view vs source
 
 	private       ImageView mEntire; // Image rendered at minimum zoom
 	private       Bitmap    mEntireBm;
@@ -93,7 +85,7 @@ public class PageView extends ViewGroup {
 	private       ImageView mErrorIndicator;
 
 	private       ProgressBar mBusyIndicator;
-	private final Handler   mHandler = new Handler();
+	private final Handler   mHandler = new Handler(Looper.getMainLooper());
 
 	public PageView(Context c, MuPDFCore core, Point parentSize, Bitmap sharedHqBm) {
 		super(c);
@@ -218,7 +210,7 @@ public class PageView extends ViewGroup {
 			mErrorIndicator = new OpaqueImageView(mContext);
 			mErrorIndicator.setScaleType(ImageView.ScaleType.CENTER);
 			addView(mErrorIndicator);
-			Drawable mErrorIcon = getResources().getDrawable(R.drawable.ic_error_red_24dp);
+			Drawable mErrorIcon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_error_red_24dp, null);
 			mErrorIndicator.setImageDrawable(mErrorIcon);
 			mErrorIndicator.setBackgroundColor(BACKGROUND_COLOR);
 		}
@@ -230,8 +222,16 @@ public class PageView extends ViewGroup {
 
     // the page is correctPage, the size is full size
 	public void setPage(int page, RectF rSize) {
-        PointF size = new PointF(rSize.left, rSize.top);
-        mRenderOff = new PointF(rSize.right, rSize.bottom);
+        PointF size;
+        if (rSize == null) {
+            setRenderError("Error loading page");
+            size = new PointF(612, 792);
+            mRenderOff = new PointF(0, 0);
+        }
+        else {
+            size = new PointF(rSize.left, rSize.top);
+            mRenderOff = new PointF(rSize.right, rSize.bottom);
+        }
 
 		// Cancel pending render task
 		if (mDrawEntire != null) {
@@ -245,11 +245,6 @@ public class PageView extends ViewGroup {
 			mSearchView.invalidate();
 
 		mPageNumber = page;
-
-		if (size == null) {
-			setRenderError("Error loading page");
-			size = new PointF(612, 792);
-		}
 
 		// Calculate scaled size that fits within the screen limits
 		// This is the size at minimum zoom
@@ -341,15 +336,17 @@ public class PageView extends ViewGroup {
 					super.onDraw(canvas);
 					// Work out current total scale factor
 					// from source to view
-                    int viewWidth = getWidth();
-					final float scale = mSourceScale*(float)viewWidth/(float)mSize.x;
+		            mViewWidth = getWidth();
+		            mViewHeight = getHeight();
+		            mScale = mSourceScale*(float)mViewWidth/(float)mSize.x;
+
 					final Paint paint = new Paint();
 
 					if (!mIsBlank && mSearchBoxes != null) {
 						paint.setColor(HIGHLIGHT_COLOR);
 						for (Quad[] searchBox : mSearchBoxes) {
 							for (Quad q : searchBox) {
-                                drawRect(q.toRect(), scale, viewWidth, canvas, paint);
+								drawRect(q.toRect(), canvas, paint);
 							}
 						}
 					}
@@ -357,8 +354,26 @@ public class PageView extends ViewGroup {
 					if (!mIsBlank && mLinks != null && mHighlightLinks) {
 						paint.setColor(LINK_COLOR);
 						for (Link link : mLinks) {
-                            drawRect(link.getBounds(), scale, viewWidth, canvas, paint);
-                        }
+							drawRect(link.getBounds(), canvas, paint);
+						}
+					}
+
+					MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(mPageNumber);
+					if (tsmodel != null && tsmodel.selectionBoxes != null && tsmodel.selectionBoxes.length > 0) {
+						paint.setColor(SELECTION_COLOR);
+						for (Quad q : tsmodel.selectionBoxes) {
+							drawRect(q.toRect(), canvas, paint);
+						}
+						Rect l = null, r = null;
+						if ((tsmodel.dir & 1) > 0) {
+							l = drawLeftHandle(tsmodel.textHandles[0].x, tsmodel.textHandles[0].y, canvas);
+						}
+						if ((tsmodel.dir & 2) > 0) {
+							r = drawRightHandle(tsmodel.textHandles[1].x, tsmodel.textHandles[1].y, canvas);
+						}
+						tsmodel.rectHandles[0] = l;
+						tsmodel.rectHandles[1] = r;
+						mCore.putTSModel(mPageNumber, tsmodel);
 					}
 				}
 			};
@@ -368,24 +383,81 @@ public class PageView extends ViewGroup {
 		requestLayout();
 	}
 
-    private void drawRect(com.artifex.mupdf.fitz.Rect r, float scale, int viewWidth, Canvas canvas, Paint paint) {
-        r.offset(-mRenderOff.x, -mRenderOff.y);
-        float x0 = r.x0 * scale;
-        float x1 = r.x1 * scale;
-        float y0 = r.y0 * scale;
-        float y1 = r.y1 * scale;
+    private void drawRect(com.artifex.mupdf.fitz.Rect r, Canvas canvas, Paint paint) {
+        PointF p0 = src2View(r.x0, r.y0);
+        PointF p1 = src2View(r.x1, r.y1);
         if (mCore.isSplitPage(mPageNumber)) {
             if (mCore.isRightPage(mPageNumber)) {
-                if (x1 < viewWidth) return;
-                x1 -= viewWidth;
-                x0 -= viewWidth;
-                if (x0 < 0) x0 = 0;
+                if (p1.x < 0) return;
+                if (p0.x < 0) p0.x = 0;
             }
             else {
-                if (x0 > viewWidth) return;
+                if (p0.x > mViewWidth) return;
             }
         }
-        canvas.drawRect(x0, y0, x1, y1, paint);
+        canvas.drawRect(p0.x, p0.y, p1.x, p1.y, paint);
+    }
+
+    private Rect drawLeftHandle(float x0, float y0, Canvas canvas) {
+        PointF p = src2View(x0, y0);
+        int x = Math.round(p.x), y = Math.round(p.y);
+        // 176*88
+        int hx1 = 132, hx2= 44, hy = 88;
+        Drawable h;
+        Rect r;
+        if (x - hx1 >= 0 && y + hy <= mViewHeight) {
+            h = ContextCompat.getDrawable(mContext, R.drawable.text_select_handle_left_material);
+            h.setBounds(x - hx1, y, x + hx2, y + hy);
+            r = new Rect(x - hy, y, x, y + hy);
+        }
+        else if (x - hx1 >= 0) {
+            h = ContextCompat.getDrawable(mContext, R.drawable.text_select_handle_left_top_material);
+            h.setBounds(x - hx1, y - hy, x + hx2, y);
+            r = new Rect(x - hy, y - hy, x, y);
+        }
+        else if (y + hy <= mViewHeight) {
+            h = ContextCompat.getDrawable(mContext, R.drawable.text_select_handle_right_material);
+            h.setBounds(x - hx2, y, x + hx1, y + hy);
+            r = new Rect(x, y, x + hy, y + hy);
+        }
+        else {
+            h = ContextCompat.getDrawable(mContext, R.drawable.text_select_handle_right_top_material);
+            h.setBounds(x - hx2, y - hy, x + hx1, y);
+            r = new Rect(x, y - hy, x + hy, y);
+        }
+        h.draw(canvas);
+        return r;
+    }
+
+    private Rect drawRightHandle(float x1, float y1, Canvas canvas) {
+        PointF p = src2View(x1, y1);
+        int x = Math.round(p.x), y = Math.round(p.y);
+        // 176*88
+        int hx1 = 132, hx2= 44, hy = 88;
+        Drawable h;
+        Rect r;
+        if (x + hx1 <= mViewWidth && y + hy <= mViewHeight) {
+            h = ContextCompat.getDrawable(mContext, R.drawable.text_select_handle_right_material);
+            h.setBounds(x - hx2, y, x + hx1, y + hy);
+            r = new Rect(x, y, x + hy, y + hy);
+        }
+        else if (x + hx1 <= mViewWidth) {
+            h = ContextCompat.getDrawable(mContext, R.drawable.text_select_handle_right_top_material);
+            h.setBounds(x - hx2, y - hy, x + hx1, y);
+            r = new Rect(x, y - hy, x + hy, y);
+        }
+        else if (y + hy <= mViewHeight) {
+            h = ContextCompat.getDrawable(mContext, R.drawable.text_select_handle_left_material);
+            h.setBounds(x - hx1, y, x + hx2, y + hy);
+            r = new Rect(x - hy, y, x, y + hy);
+        }
+        else {
+            h = ContextCompat.getDrawable(mContext, R.drawable.text_select_handle_left_top_material);
+            h.setBounds(x - hx1, y - hy, x + hx2, y);
+            r = new Rect(x - hy, y - hy, x, y);
+        }
+        h.draw(canvas);
+        return r;
     }
 
 	public void setSearchBoxes(Quad searchBoxes[][]) {
@@ -503,11 +575,6 @@ public class PageView extends ViewGroup {
 			// Offset patch area to be relative to the view top left
 			patchArea.offset(-viewArea.left, -viewArea.top);
 
-            // offset patch area for split right page
-            if (mCore.isSplitPage(mPageNumber) && mCore.isRightPage(mPageNumber)) {
-                patchArea.offset(-viewArea.width(), 0);
-            }
-
 			boolean area_unchanged = patchArea.equals(mPatchArea) && patchViewSize.equals(mPatchViewSize);
 
 			// If being asked for the same area as last time and not because of an update then nothing to do
@@ -531,15 +598,21 @@ public class PageView extends ViewGroup {
 					mSearchView.bringToFront();
 			}
 
+            // offset patch area for split right page
+            int splitleft = patchArea.left;
+            if (mCore.isSplitPage(mPageNumber) && mCore.isRightPage(mPageNumber)) {
+                splitleft += viewArea.width();
+            }
+
 			CancellableTaskDefinition<Void, Boolean> task;
 
 			if (completeRedraw)
 				task = getDrawPageTask(mPatchBm, patchViewSize.x, patchViewSize.y,
-								patchArea.left, patchArea.top,
+								splitleft, patchArea.top,
 								patchArea.width(), patchArea.height());
 			else
 				task = getUpdatePageTask(mPatchBm, patchViewSize.x, patchViewSize.y,
-						patchArea.left, patchArea.top,
+						splitleft, patchArea.top,
 						patchArea.width(), patchArea.height());
 
 			mDrawPatch = new CancellableAsyncTask<Void, Boolean>(task) {
@@ -550,7 +623,7 @@ public class PageView extends ViewGroup {
 						mPatchArea = patchArea;
 						clearRenderError();
                         if (mCore.isSplitPage(mPageNumber)) {
-                            int cx = getColumnX(patchViewSize.x, mPatchBm.getWidth());
+                            int cx = 0;
                             mColumnBm = Bitmap.createBitmap(mPatchBm, cx, 0, mPatchBm.getWidth() / 2, mPatchBm.getHeight());
 					        mPatch.setImageBitmap(mColumnBm);
                         }
@@ -636,15 +709,15 @@ public class PageView extends ViewGroup {
 	public int hitLink(Link link) {
 		if (link.isExternal()) {
 			Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link.getURI()));
-			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET); // API>=21: FLAG_ACTIVITY_NEW_DOCUMENT
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
 			try {
 				mContext.startActivity(intent);
 			} catch (FileUriExposedException x) {
-				Log.e(APP, x.toString());
-				Toast.makeText(getContext(), "Android does not allow following file:// link: " + link.getURI(), Toast.LENGTH_LONG).show();
+				Tool.e(x.toString());
+				Tool.toast("Android does not allow following file:// link: " + link.getURI());
 			} catch (Throwable x) {
-				Log.e(APP, x.toString());
-				Toast.makeText(getContext(), x.getMessage(), Toast.LENGTH_LONG).show();
+				Tool.e(x.toString());
+				Tool.toast(x.getMessage());
 			}
 			return -1;
 		} else {
@@ -663,22 +736,134 @@ public class PageView extends ViewGroup {
 		// PageView has had sufficient information to be able to
 		// perform this method directly. Making that change would
 		// make MuPDFCore.hitLinkPage superfluous.
-        int viewWidth = getWidth();
-		float scale = mSourceScale*(float)viewWidth/(float)mSize.x;
-        if (mCore.isSplitPage(mPageNumber)) {
-            if (mCore.isRightPage(mPageNumber)) {
-                x += viewWidth;
-            }
-        }
-		float docRelX = (x - getLeft())/scale + mRenderOff.x;
-		float docRelY = (y - getTop())/scale + mRenderOff.y;
+		PointF p = view2Src(x, y);
 
 		if (mLinks != null)
 			for (Link l: mLinks)
-				if (l.getBounds().contains(docRelX, docRelY))
+				if (l.getBounds().contains(p.x, p.y))
 					return hitLink(l);
 		return -2;
 	}
+
+    public boolean beginSelect(float x, float y) {
+        MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(mPageNumber, true);
+        if (tsmodel.sText == null) return false;
+
+        PointF p = view2Src(x, y);
+        com.artifex.mupdf.fitz.Point fp1 = new com.artifex.mupdf.fitz.Point(p.x, p.y);
+        com.artifex.mupdf.fitz.Point fp2 = new com.artifex.mupdf.fitz.Point(p.x, p.y);
+        Quad q = tsmodel.sText.snapSelection(fp1, fp2, 1);     // 0:char, 1:word, 2:line
+
+        PointF ur = new PointF(q.ur_x, q.ur_y);
+        PointF ll = new PointF(q.ll_x, q.ll_y);
+        PointF lr = new PointF(q.lr_x, q.lr_y);
+        PointF ml = new PointF(q.ul_x, (q.ul_y + q.ll_y) / 2);
+        PointF mr = new PointF(q.lr_x, (q.lr_y + q.ur_y) / 2);
+        boolean sel = (!ur.equals(lr)) && q.contains(p.x, p.y);
+        if (sel) {
+            tsmodel.selectionBoxes = new Quad[1];
+            tsmodel.selectionBoxes[0] = q;
+            tsmodel.textHandles[0] = ll;
+            tsmodel.textHandles[1]= lr;
+            tsmodel.boundries[0]= ml;
+            tsmodel.boundries[1]= mr;
+            tsmodel.dir = 3;
+            mCore.putTSModel(mPageNumber, tsmodel);
+            mSearchView.invalidate();
+        }
+        return sel;
+    }
+
+    public void moveSelect(int dir, Float x, Float y) {
+        MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(mPageNumber, true);
+        PointF p1, p2;
+        if (dir == 1) {                 // left handle
+            if (x != null)
+                p1 = view2Src(x, y);
+            else
+                p1 = tsmodel.boundries[0];
+            p2 = view2Src(getRight() - 1, getBottom() - 1);
+        }
+        else if (dir == 2) {            // right handle
+            p1 = view2Src(getLeft() + 1, getTop() + 1);
+            if (x != null)
+                p2 = view2Src(x, y);
+            else
+                p2 = tsmodel.boundries[1];
+        }
+        else if (dir == 0) {            // no handle
+            p1 = view2Src(getLeft() + 1, getTop() + 1);
+            p2 = view2Src(getRight() - 1, getBottom() - 1);
+        }
+        else {                          // both handle
+            p1 = view2Src(x, y);
+            p2 = tsmodel.boundries[dir - 3];
+            if (p1.y > p2.y) {
+                PointF pt = p1;
+                p1 = p2;
+                p2 = pt;
+            }
+            dir = 3;
+        }
+        com.artifex.mupdf.fitz.Point fp1 = new com.artifex.mupdf.fitz.Point(p1.x, p1.y);
+        com.artifex.mupdf.fitz.Point fp2 = new com.artifex.mupdf.fitz.Point(p2.x, p2.y);
+        Quad[] qs = tsmodel.sText.highlight(fp1, fp2);
+        if (
+            (qs.length == 0)
+            || (p1.y < qs[0].ul_y && (qs[0].ul_y - p1.y < qs[0].ll_y - qs[0].ul_y))
+            || (p2.y > qs[qs.length - 1].lr_y && (p2.y - qs[qs.length - 1].lr_y < qs[qs.length - 1].lr_y - qs[qs.length - 1].ur_y))
+        )
+            return;
+
+        PointF ll = new PointF(qs[0].ll_x, qs[0].ll_y);
+        PointF lr = new PointF(qs[qs.length - 1].lr_x, qs[qs.length - 1].lr_y);
+        PointF ml = new PointF(qs[0].ul_x, (qs[0].ul_y + qs[0].ll_y) / 2);
+        PointF mr = new PointF(qs[qs.length - 1].lr_x, (qs[qs.length - 1].lr_y + qs[qs.length - 1].ur_y) / 2);
+        tsmodel.selectionBoxes = qs;
+        tsmodel.textHandles[0] = ll;
+        tsmodel.textHandles[1]= lr;
+        tsmodel.boundries[0]= ml;
+        tsmodel.boundries[1]= mr;
+        tsmodel.dir = dir;
+        mCore.putTSModel(mPageNumber, tsmodel);
+        mSearchView.invalidate();
+    }
+
+    public String copy(int position) {
+        MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(position);
+        if (tsmodel == null) return "";
+        PointF p1 = tsmodel.boundries[0];
+        PointF p2 = tsmodel.boundries[1];
+        com.artifex.mupdf.fitz.Point fp1 = new com.artifex.mupdf.fitz.Point(p1.x, p1.y);
+        com.artifex.mupdf.fitz.Point fp2 = new com.artifex.mupdf.fitz.Point(p2.x, p2.y);
+        return tsmodel.sText.copy(fp1, fp2);
+    }
+
+    public void unSelect() {
+        mCore.rmTSModel(mPageNumber);
+        mSearchView.invalidate();
+    }
+
+    public void unSelect(int position) {
+        mCore.rmTSModel(position);
+    }
+
+    public boolean isOnHandle(float x, float y, int ind) {
+        float x1 = x - getLeft();
+        float y1 = y - getTop();
+        MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(mPageNumber);
+        return tsmodel.rectHandles[ind].contains((int)x1, (int)y1);
+    }
+
+    public boolean isOnBox(float x, float y) {
+        PointF p = view2Src(x, y);
+        MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(mPageNumber);
+        for (Quad q : tsmodel.selectionBoxes) {
+            if (q.contains(p.x, p.y))
+                return true;
+        }
+        return false;
+    }
 
 	protected CancellableTaskDefinition<Void, Boolean> getDrawPageTask(final Bitmap bm, final int sizeX, final int sizeY,
 			final int patchX, final int patchY, final int patchWidth, final int patchHeight) {
@@ -686,7 +871,7 @@ public class PageView extends ViewGroup {
 			@Override
 			public Boolean doInBackground(Cookie cookie, Void ... params) {
 				if (bm == null)
-					return new Boolean(false);
+					return false;
 				// Workaround bug in Android Honeycomb 3.x, where the bitmap generation count
 				// is not incremented when drawing.
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
@@ -694,9 +879,9 @@ public class PageView extends ViewGroup {
 					bm.eraseColor(0);
 				try {
 					mCore.drawPage(bm, mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight, cookie);
-					return new Boolean(true);
+					return true;
 				} catch (RuntimeException e) {
-					return new Boolean(false);
+					return false;
 				}
 			}
 		};
@@ -710,7 +895,7 @@ public class PageView extends ViewGroup {
 			@Override
 			public Boolean doInBackground(Cookie cookie, Void ... params) {
 				if (bm == null)
-					return new Boolean(false);
+					return false;
 				// Workaround bug in Android Honeycomb 3.x, where the bitmap generation count
 				// is not incremented when drawing.
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB &&
@@ -718,9 +903,9 @@ public class PageView extends ViewGroup {
 					bm.eraseColor(0);
 				try {
 					mCore.updatePage(bm, mPageNumber, sizeX, sizeY, patchX, patchY, patchWidth, patchHeight, cookie);
-					return new Boolean(true);
+					return true;
 				} catch (RuntimeException e) {
-					return new Boolean(false);
+					return false;
 				}
 			}
 		};
@@ -733,6 +918,28 @@ public class PageView extends ViewGroup {
 			return null;
 		}
 	}
+
+    public PointF view2Src(float x, float y) {
+        if (mCore.isSplitPage(mPageNumber)) {
+            if (mCore.isRightPage(mPageNumber)) {
+                x += mViewWidth;
+            }
+        }
+        float x1 = (x - getLeft())/mScale + mRenderOff.x;
+        float y1 = (y - getTop())/mScale + mRenderOff.y;
+        return new PointF(x1, y1);
+    }
+
+    public PointF src2View(float x, float y) {
+        float x1 = (x - mRenderOff.x) * mScale;
+        float y1 = (y - mRenderOff.y) * mScale;
+        if (mCore.isSplitPage(mPageNumber)) {
+            if (mCore.isRightPage(mPageNumber)) {
+                x1 -= mViewWidth;
+            }
+        }
+        return new PointF(x1, y1);
+    }
 
     /*
      * for splitted page

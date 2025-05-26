@@ -1,1 +1,1 @@
-An excellent Android book reader based on MuPDF Android Viewer
+Committed to improving reading experience

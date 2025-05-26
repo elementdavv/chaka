@@ -4,6 +4,7 @@ import com.artifex.mupdf.fitz.Cookie;
 import com.artifex.mupdf.fitz.DisplayList;
 import com.artifex.mupdf.fitz.Document;
 import com.artifex.mupdf.fitz.Link;
+import com.artifex.mupdf.fitz.Location;
 import com.artifex.mupdf.fitz.Matrix;
 import com.artifex.mupdf.fitz.Outline;
 import com.artifex.mupdf.fitz.Page;
@@ -11,11 +12,13 @@ import com.artifex.mupdf.fitz.Quad;
 import com.artifex.mupdf.fitz.Rect;
 import com.artifex.mupdf.fitz.RectI;
 import com.artifex.mupdf.fitz.SeekableInputStream;
+import com.artifex.mupdf.fitz.StructuredText;
 import com.artifex.mupdf.fitz.android.AndroidDrawDevice;
 
-import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.PointF;
 import android.graphics.RectF;
+import android.util.SparseArray;
 
 import java.util.ArrayList;
 
@@ -24,6 +27,7 @@ public class MuPDFCore
 	private int resolution;
 	private Document doc;
 	private Outline[] outline;
+	private int basePageCount = -1;
 	private int pageCount = -1;
 	private boolean reflowable = false;
 	private int currentPage;
@@ -32,6 +36,7 @@ public class MuPDFCore
 	private float pageHeight;
     private float pageLeft;         // crop margin render offset left
     private float pageTop;          // crop margin render offset top
+    private final SparseArray<TextSelectionModel> tsModel = new SparseArray<>();
 	private DisplayList displayList;
     private boolean singleColumnMode = false;
     private boolean textLeftMode = false;
@@ -44,9 +49,24 @@ public class MuPDFCore
 
 	private MuPDFCore(Document doc) {
 		this.doc = doc;
-		doc.layout(layoutW, layoutH, layoutEM);
-        correctPageCount();
+		if (!doc.needsPassword()) setup();
+	}
+
+	private void setup() {
 		reflowable = doc.isReflowable();
+		// PDFs use default pocket book size
+		if (!reflowable) {
+			doc.layout(layoutW, layoutH, layoutEM);
+			correctPageCount(true);
+		}
+		// apply consistent css to all flowable docs
+		else {
+			StringBuilder sb = new StringBuilder();
+			sb.append("@page{margin:2em !important;}");
+			sb.append("body{display:block;margin:0 !important;padding:0 !important;}");
+			sb.append("p{display:block;margin:0.6em 0 !important;}");
+			com.artifex.mupdf.fitz.Context.setUserCSS(sb.toString());
+		}
 		resolution = 160;
 		currentPage = -1;
 	}
@@ -71,17 +91,17 @@ public class MuPDFCore
 		return reflowable;
 	}
 
+	// flowable documents use custom book size
 	public synchronized int layout(int oldPage, int w, int h, int em) {
 		if (w != layoutW || h != layoutH || em != layoutEM) {
-            oldPage = realPage(oldPage);
 			System.out.println("LAYOUT: " + w + "," + h);
 			layoutW = w;
 			layoutH = h;
 			layoutEM = em;
-			long mark = doc.makeBookmark(doc.locationFromPageNumber(oldPage));
+			long mark = doc.makeBookmark(doc.locationFromPageNumber(realPage(oldPage)));
 			doc.layout(layoutW, layoutH, layoutEM);
+			correctPageCount(true);
 			currentPage = -1;
-            correctPageCount();
 			outline = null;
 			try {
 				outline = doc.loadOutline();
@@ -112,7 +132,6 @@ public class MuPDFCore
 			pageHeight = 0;
             pageLeft = 0;
             pageTop = 0;
-			currentPage = pageNum;
 
 			if (doc != null) {
                 pageNum = realPage(pageNum);
@@ -129,6 +148,8 @@ public class MuPDFCore
 				pageWidth = b.x1 - b.x0;
 				pageHeight = b.y1 - b.y0;
 			}
+
+			currentPage = pageNum;
 		}
 	}
 
@@ -211,7 +232,7 @@ public class MuPDFCore
 
     public void toggleSingleColumn() {
         singleColumnMode = !singleColumnMode;
-        correctPageCount();
+        correctPageCount(false);
     }
 
     public void toggleTextLeft() {
@@ -269,7 +290,7 @@ public class MuPDFCore
 		return outline != null;
 	}
 
-	private void flattenOutlineNodes(ArrayList<OutlineActivity.Item> result, Outline list[], int level) {
+	private void flattenOutlineNodes(ArrayList<TocItem> result, Outline list[], int level) {
 		for (Outline node : list) {
 			if (node.title != null) {
 				int pageNum = correctPage(doc.pageNumberFromLocation(doc.resolveLink(node)));
@@ -277,18 +298,41 @@ public class MuPDFCore
                 if (node.down != null) {
                     count = node.down.length;
                 }
-				result.add(new OutlineActivity.Item(node.title, pageNum, level, count));
+				result.add(new TocItem(node.title, pageNum, level, count));
 			    if (count > 0)
 				    flattenOutlineNodes(result, node.down, level + 1);
 			}
 		}
 	}
 
-	public synchronized ArrayList<OutlineActivity.Item> getOutline() {
-		ArrayList<OutlineActivity.Item> result = new ArrayList<OutlineActivity.Item>();
+	public synchronized ArrayList<TocItem> getOutline() {
+		ArrayList<TocItem> result = new ArrayList<TocItem>();
 		flattenOutlineNodes(result, outline, 0);
 		return result;
 	}
+
+    public long makeBookmark(int page) {
+        return doc.makeBookmark(doc.locationFromPageNumber(page));
+    }
+
+    public int findBookmark(long mark) {
+        return doc.pageNumberFromLocation(doc.findBookmark(mark));
+    }
+
+    public ChapterPage locatePage(int page) {
+        Location loc = doc.locationFromPageNumber(page);
+        return new ChapterPage(loc.chapter, loc.page, doc.countPages(loc.chapter));
+    }
+
+    public int estimatePage(ChapterPage cp) {
+        int pageCount = doc.countPages(cp.chapter);
+        int page = Math.round(pageCount * (cp.page + 1) / cp.pageCount) - 1;
+
+        if (page < 0 || page >= pageCount) {
+            page = (page < 0) ? 0 : pageCount - 1;
+        }
+        return doc.pageNumberFromLocation(new Location(cp.chapter, page));
+    }
 
     private synchronized Rect getBBox(Rect b) {
         Rect r = page.getBBox();
@@ -325,6 +369,11 @@ public class MuPDFCore
         return r;
     }
 
+	public synchronized StructuredText getSText(int pageNum) {
+		gotoPage(pageNum);
+		return page != null ? page.toStructuredText() : null;
+	}
+
     public boolean isSingleColumn() {
         return singleColumnMode;
     }
@@ -344,12 +393,16 @@ public class MuPDFCore
         return textLeftMode;
     }
 
-    private void correctPageCount() {
+    private void correctPageCount(boolean refresh) {
+        if (refresh || basePageCount == -1) {
+            basePageCount = doc.countPages();
+            // until now, layout complete and UI reaady
+        }
         if (singleColumnMode)
             // divide every page into 2 pages, except first and last page
-		    pageCount = doc.countPages() * 2 - 2;
+            pageCount = basePageCount * 2 - 2;
         else
-		    pageCount = doc.countPages();
+            pageCount = basePageCount ;
     }
 
     public int correctPage(int p) {
@@ -371,6 +424,44 @@ public class MuPDFCore
 	}
 
 	public synchronized boolean authenticatePassword(String password) {
-		return doc.authenticatePassword(password);
+		boolean authenticated = doc.authenticatePassword(password);
+		if (authenticated) setup();
+		return authenticated;
 	}
+
+    public TextSelectionModel getTSModel(int pageNum) {
+        return getTSModel(pageNum, false);
+    }
+
+    public TextSelectionModel getTSModel(int pageNum, boolean create) {
+        TextSelectionModel tsmodel = tsModel.get(pageNum);
+        if (tsmodel == null) {
+            if (create) {
+                tsmodel = new TextSelectionModel();
+                tsmodel.sText = getSText(pageNum);
+            }
+        }
+        return tsmodel;
+    }
+
+    public void putTSModel(int pageNum, TextSelectionModel tsmodel) {
+        tsModel.put(pageNum, tsmodel);
+    }
+
+    public void rmTSModel(int pageNum) {
+        tsModel.remove(pageNum);
+    }
+
+    public void clearTSModel() {
+        tsModel.clear();
+    }
+
+    public static class TextSelectionModel {
+        public StructuredText sText;        // page text structure
+        public Quad[]    selectionBoxes;    // selection result on source
+        public PointF[]  textHandles = new PointF[2];       // handles point on source
+        public PointF[]  boundries= new PointF[2];          // boundries point on source
+        public int       dir;               // 0: none, 1: left, 2: right, 3: both
+        public android.graphics.Rect[]    rectHandles = new android.graphics.Rect[2];      // handles rect on view
+    }
 }

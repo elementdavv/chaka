@@ -1,5 +1,7 @@
-## Summary
-Chaka is an android app based on MuPDF Android Viewer, plus many new features that makes Chaka an excellent book reader. It dedicates to book reading experience, provides most expected functions.
+## Chaka Book Reader
+An Android reader app committed to improving reading experience.
+
+PDF, EPUB, MOBI, CBZ, FB2 and XPS documents are supported.
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
@@ -7,52 +9,102 @@ Chaka is an android app based on MuPDF Android Viewer, plus many new features th
 
 Or download the latest APK from the [Releases Section](https://github.com/elementdavv/chaka/releases/latest).
 
-## New Features
-- <img src="resources/flip_vertical.png"> Vertical Flipping
+### Features
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/flip_vertical.png"> Flip Vertical
 
-  The most popular reading mode.
+  **Flip Vertical** and **Flip Horizontal** modes supported.
 
-- <img src="resources/text_left.png"> Right-to-Left Forward
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/text_left.png"> RtL Text
 
-  In general, words in a book run from left to right (right to left for RtL text such as Arabic), lines top to down, page left to right. There is an exception in some Japanese and traditional Chinese books, where words run from top to down, lines right to left, page right to left. **Right-to-Left Forward** mode can be applied to these books.
+  In top-to-bottom, right-to-left script (TB-RL or vertical), writing starts from the top of the page and continues to the bottom, proceeding from right to left for new lines, pages numbered from right to left (from Wikipedia). The **RtL Text** mode can be applied to some traditional Chinese, Japanese and Korean books.
 
-- <img src="resources/single_column.png"> Single Column
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/single_column.png"> Single Column
 
-  Some PDF books were scanned in a way that the left and right pages were put in one image, resulting in a so called dual-spread page. In the scenario, **Single Column** mode plays a role. It splits a dual-spread page into two pages.
+  Some PDF books were scanned in a way that left and right pages were put in one image, resulting in a so called dual-spread page. In the scenario, **Single Column** mode plays a role. It splits a dual-spread page into two pages.
 
-  In **Single Column** mode, all pages except first and last page are splitted. Note that it works only on **WIDE** documents that page width is longer than page height.
+  The **WIDE** document restriction was removed now. **Single Column** mode can be a conveniency for magazines and scientific papers with two columns in a page.
 
-- <img src="resources/crop_margin.png"> Crop Margin
-
-  Crop page margin to get more efficient reading space. All documents types are supported.
-
-- <img src="resources/focus.png"> Focus
-
-  **Focus** mode can retent page display position across zoomed pages. When page changes. **Focus** mode present visible content area of new page the same as the old one.
-
-  On entering **Focus** mode, current page will zoom automatically to match screen in shorter dimension and center in screen.
-
-- <img src="resources/smart_focus.png"> Smart Focus
-
-  For scanned PDF books, content area scarcely appear exactly centered in a page. More likely it inclines toward left or right side. **Smart Focus** deals with this case. By adjusting the position of even or odd pages accordingly, it makes **Focus** mode behave smartly.
-
-  **Smart Focus** must work with **Focus** mode to make sense.
+  In **Single Column** mode, all pages except first and last page are splitted.
 
 - Continuous scroll
 
-  **Continuous scroll** is another must have feature for a book reader. It has been perfectly implemented in all scenarios.
+  **Continuous scroll** has been perfectly implemented in all scenarios.
 
-- <img src="resources/format.png"> Font size
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/lock.png"> Lock Stray
 
-  Current font size is indicated in **Font Size** menu. The **Font Size** button only appear when the document is flowable, e.g. epub.
+  When flinging or scrolling a zoomed page, it can hardly move in straight horizontal / vertical direction, and be annoying reading experience. Here the **Lock Stray** mode will make a help.
 
-- <img src="resources/toc.png"> Table of Contents
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/crop_margin.png"> Crop Margin
 
-  **Table of Contents** supports multi-level headings, and headings collapsing / expanding. The **Table of Contents** button only appear when the document has a ToC.
+  Crop page margins to get more efficient reading space. All document types are supported.
+
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/focus.png"> Focus
+
+  **Focus** mode can retent page position across zoomed pages. On moving to a definite page, ie. tapping to next/prev page, choosing on Toc/bookmark table, navigating on links, searching text, and skimming on page slider etc., it presents visible content area of new page in same position as the old one. Note that scroll operation is an exception.
+
+  On entering **Focus** mode, current page will zoom automatically to match screen in shorter dimension and center itself.
+
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/smart_focus.png"> Smart Focus
+
+  With scanned PDF books, content area scarcely appear exactly centered in a page. More probable it inclines toward left or right side. **Smart Focus** deals with the scenario. By adjusting the position of even or odd pages accordingly, it makes **Focus** mode behave smartly.
+
+  **Smart Focus** must work with **Focus** mode to make sense.
+
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/copy.png"> Copy Text
+
+  **Text Copy** can be accomplished by selecting text and tap **Copy** button. In **Vertical Flip** mode, text selection can cross page boundry.
+
+  While text selecting, page navigation still work.
+
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/format.png"> Font size
+
+  Current font size was indicated in **Font Size** menu.
+
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/contents.png"> Contents
+
+  **Contents** menu includes following two functions:
+
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/toc.png"> Table of Contents
+
+  **Table of Contents** will show up if the document has one. It supports multi-level headings, heading collapsing and expanding. It always keep sync with current page.
+
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/bookmark.png"> Bookmarks
+
+  **Bookmarks** works across reading sessions. To bookmark a page, just long press on blank area.
 
 - Scrollable Toobar
 
-  The top toolbar is made scrollable to accommodate more buttons.
+  The Scrollable Top Toolbar can accommodate more buttons. A button will show up when the corresponding function is applicable, otherwise it will be hidden.
 
-## Watch what the new functions look like
-<a src="https://www.youtube.com/watch?v=b-v8aNi6bc0">https://www.youtube.com/watch?v=b-v8aNi6bc0</a>
+- Pros and Cons
+
+  In case of Big books (thousands of pages), PDFs were opened very quick, and EPUBs badly slow.
+
+### Introduction in Youtube
+[![Chaka Book Reader](https://img.youtube.com/vi/KkB2vlDj_6g/0.jpg)](https://www.youtube.com/watch?v=KkB2vlDj_6g)
+
+### Usage
+- Long press on Top Toolbar buttons, to show button tooltip.
+- Tap in left/top side, to move a page backward
+- Tap in right/bottom side, to move a page forward
+- Tap in middle, to show/hide Top Toolbar and Page Indicator
+- Press down and move in any direction, to move page position
+- Fling horizontally/vertically, to scroll continuously
+- With the combination of **Flip Horizontal and Rtl Text** mode, or of **Flip Vertical and not Rtl Text** mode, pages can stay at any position.
+- Press down two fingers and move one, to zoom in/out page
+- Long press on text, to trigger a text selection session. Then press down on one of left/right handles and move, to change selection area. Tap in selection area, to show/hide Top Toolbar. Tap **Copy** button, to copy text and end the selection session. Tap out of selection area, to cancel the selection session.
+- Long press on blank area (not on text), to bookmark current page.
+- In general, one can get the best reading experience by combining mutiple function modes, adding appropriate screen orientation if needed.
+
+### Credits
+- [MuPDF Android Viewer](https://github.com/ArtifexSoftware/mupdf-android-viewer) and developers
+- [MarkedView](https://github.com/mittsu333/MarkedView-for-Android) for help document rendering
+
+### Contacts
+- GitHub repo: [https://github.com/elementdavv/chaka](https://github.com/elementdavv/chaka)
+- Email: elementdavv@hotmail.com
+- Telegram: [@elementdavv](https://t.me/elementdavv)
+- X(Twitter): [@elementdavv](https://x.com/elementdavv)
+
+### Support
+If you love Chaka, consider supporting or hiring the maintainer [@elementdavv](https://x.com/elementdavv) [![donate](https://raw.githubusercontent.com/elementdavv/chaka/master/resources/paypal-logo.png)](https://paypal.me/timelegend)

@@ -1,24 +1,25 @@
 apply plugin: 'com.android.application'
 
 group = 'net.timelegend.chaka'
-version = '1.24.9a.9'
+version = '1.24.9a.14'
 
 dependencies {
 	if (file('../lib/build.gradle').isFile())
 		api project(':lib')
 	else
-		api 'net.timelegend.chaka:viewer:1.24.9a.9'
+		api 'net.timelegend.chaka:viewer:1.24.9a.14'
 }
 
 android {
 	compileSdkVersion 34
+	buildToolsVersion '34.0.0'
 	defaultConfig {
         applicationId 'net.timelegend.chaka.viewer.app'
         namespace 'net.timelegend.chaka.viewer.app'
 		minSdkVersion 21
 		targetSdkVersion 34
-		versionName '1.24.9a.9'
-		versionCode 155
+		versionName '1.24.9a.14'
+		versionCode 160
 
         if (!project.hasProperty('noSplits')) {
 	        splits {
@@ -54,6 +55,7 @@ android {
 				keyPassword release_keyPassword
 			}
 		}
+		// ndkVersion "25.1.8937393"
 		buildTypes {
 			release {
 				signingConfig signingConfigs.release
@@ -62,5 +64,9 @@ android {
 				}
 			}
 		}
+	}
+	compileOptions {
+		sourceCompatibility JavaVersion.VERSION_1_8
+		targetCompatibility JavaVersion.VERSION_1_8
 	}
 }

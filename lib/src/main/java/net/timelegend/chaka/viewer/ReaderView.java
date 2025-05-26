@@ -1,15 +1,14 @@
 package net.timelegend.chaka.viewer;
 
-import com.artifex.mupdf.fitz.Link;
-
 import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.Stack;
 
+import android.content.ClipboardManager;
+import android.content.ClipData;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
-import android.net.Uri;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.SparseArray;
@@ -17,7 +16,7 @@ import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.view.WindowManager;
+import android.view.ViewConfiguration;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.Scroller;
@@ -44,6 +43,17 @@ public class ReaderView
 
     // private static final boolean HORIZONTAL_SCROLLING = true;
 
+    private static final int MOVE_DELAY         = 100;
+
+    public enum SELECT{
+        NO_SELECT,
+        SELECTING,
+        MOVE_LEFT,
+        MOVE_RIGHT,
+        MOVE_IN,
+        MOVE_NONE
+    }
+
 	private PageAdapter           mAdapter;
 	protected int               mCurrent;    // Adapter's index for the current view
 	private boolean           mResetLayout;
@@ -66,6 +76,7 @@ public class ReaderView
 	private int               mScrollerLastY;
 	private float		  mLastScaleFocusX;
 	private float		  mLastScaleFocusY;
+    private boolean       mSingleColumn = false;
     private boolean       mTextLeft = false;
     private boolean       mHorizontalScrolling = true;
     private boolean       mFocus = false;
@@ -73,11 +84,19 @@ public class ReaderView
     private boolean       mLock = false;
     private int           mPrevLeft;
     private int           mPrevTop;
+    private SELECT        mSelecting = SELECT.NO_SELECT;    // text select state
+    private int           mSelectLeftView;                  // view pageNumber with text select left handle
+    private int           mSelectRightView;                 // view pageNumber with text select right handle
+    private boolean       mLongPress = false;               // as longpress
+    private MotionEvent   mLongPressEvent;
+    private Runnable      mLongPressRunnable;;
+    private long          mMoveTime = 0L;
+    private boolean       mBookmarked = false;
 
 	protected Stack<Integer> mHistory;
 
-	static abstract class ViewMapper {
-		abstract void applyToView(View view);
+	public interface ViewMapper {
+		void applyToView(View view);
 	}
 
 	public ReaderView(Context context) {
@@ -99,6 +118,7 @@ public class ReaderView
 	{
 		mContext = context;
 		mGestureDetector = new GestureDetector(context, this);
+		mGestureDetector.setIsLongpressEnabled(false);
 		mScaleGestureDetector = new ScaleGestureDetector(context, this);
 		mScroller = new Scroller(context);
 		mStepper = new Stepper(this, this);
@@ -111,9 +131,10 @@ public class ReaderView
 		// less than 100 pixels (the smallest Android device screen
 		// dimension I've seen is 480 pixels or so). Then we check
 		// to ensure we are never more than 1/5 of the screen width.
-		DisplayMetrics dm = new DisplayMetrics();
-		WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
-		wm.getDefaultDisplay().getMetrics(dm);
+		DisplayMetrics dm = ((DocumentActivity)context).getResources().getDisplayMetrics();
+		// DisplayMetrics dm = new DisplayMetrics();
+		// WindowManager wm = (WindowManager) mContext.getSystemService(Context.WINDOW_SERVICE);
+		// wm.getDefaultDisplay().getMetrics(dm);
 		tapPageMargin = (int)dm.xdpi;
 		if (tapPageMargin < 100)
 			tapPageMargin = 100;
@@ -130,6 +151,10 @@ public class ReaderView
 
 	public void pushHistory() {
 		mHistory.push(mCurrent);
+	}
+
+	public void clearHistory() {
+		mHistory.clear();
 	}
 
 	public int getDisplayedViewIndex() {
@@ -360,11 +385,11 @@ public class ReaderView
 
 		mScale = 1.0f;
 		mXScroll = mYScroll = 0;
+		mSelecting = SELECT.NO_SELECT;
 
 		/* All page views need recreating since both page and screen has changed size,
 		 * invalidating both sizes and bitmaps. */
 		mAdapter.refresh();
-		int numChildren = mChildViews.size();
 		for (int i = 0; i < mChildViews.size(); i++) {
 			View v = mChildViews.valueAt(i);
 			onNotInUse(v);
@@ -413,15 +438,176 @@ public class ReaderView
 		}
 	}
 
-	public boolean onDown(MotionEvent arg0) {
+	public boolean onDown(MotionEvent e) {
+        if (mLongPressRunnable == null) {
+            mLongPressRunnable = new Runnable() {
+                public void run() {
+                    if (mLongPress) {
+                        mLongPress = false;
+                        beginSelect(mLongPressEvent.getX(), mLongPressEvent.getY());
+                    }
+                    mLongPressEvent = null;
+                }
+            };
+        }
+        if (mSelecting == SELECT.NO_SELECT) {
+            removeCallbacks(mLongPressRunnable);
+            mLongPress = true;
+            mLongPressEvent = e;
+            postDelayed(mLongPressRunnable, ViewConfiguration.getLongPressTimeout());
+        }
+        else if (mSelecting == SELECT.SELECTING) {
+            inSelect(e.getX(), e.getY());
+        }
+
 		mScroller.forceFinished(true);
 		return true;
 	}
+
+    private void beginSelect(float x, float y) {
+        for (int i = 0; i < mChildViews.size(); i++) {
+            PageView pv = (PageView) mChildViews.valueAt(i);
+            if (pointInView(x, y, pv)) {
+                if (pv.beginSelect(x, y)) {
+                    mSelecting = SELECT.SELECTING;
+                    mSelectLeftView = mSelectRightView = mChildViews.keyAt(i);
+                    ((DocumentActivity)mContext).showCopyButton(View.VISIBLE);
+                    return;
+                }
+            }
+        }
+        mBookmarked = true;
+        ((DocumentActivity)mContext).createBookmark();
+    }
+
+    private void inSelect(float x, float y) {
+        for (int i = 0; i < mChildViews.size(); i++) {
+            PageView pv = (PageView) mChildViews.valueAt(i);
+            if (pointInView(x, y, pv)) {
+                int key = mChildViews.keyAt(i);
+                if (key == mSelectLeftView && pv.isOnHandle(x, y, 0)) {
+                    mSelecting = SELECT.MOVE_LEFT;
+                }
+                else if (key == mSelectRightView && pv.isOnHandle(x, y, 1)) {
+                    mSelecting = SELECT.MOVE_RIGHT;
+                }
+                else if (key >= mSelectLeftView && key <= mSelectRightView && pv.isOnBox(x, y)) {
+                    mSelecting = SELECT.MOVE_IN;
+                }
+                else
+                    mSelecting = SELECT.MOVE_NONE;
+                break;
+            }
+        }
+    }
+
+    private void moveSelect(float x, float y) {
+        long mt = System.currentTimeMillis();
+        if (mt - mMoveTime < MOVE_DELAY) return;
+
+        int v1 = (mSelecting == SELECT.MOVE_LEFT) ? mSelectRightView : mSelectLeftView;
+        int v2 = -1;
+        for (int i = 0; i < mChildViews.size(); i++) {
+            PageView pv = (PageView) mChildViews.valueAt(i);
+            if (pointInView(x, y, pv)) {
+                v2 = mChildViews.keyAt(i);
+                break;
+            }
+        }
+        if (v2 == -1)
+            return;
+
+        mSelectLeftView = Math.min(v1, v2);
+        mSelectRightView = Math.max(v1, v2);
+        int ind = (v1 < v2) ? 1 : ((v1 > v2) ? -1 : 0);
+        for (int i = 0; i < mChildViews.size(); i++) {
+            PageView pv = (PageView) mChildViews.valueAt(i);
+            int key = mChildViews.keyAt(i);
+            if (ind == 1) {
+                if (key == v1) {
+                    pv.moveSelect(1, null, null);
+                }
+                else if (key == v2) {
+                    pv.moveSelect(2, x, y);
+                }
+                else if (key > v1 && key < v2) {
+                    pv.moveSelect(0, null, null);
+                }
+                else {
+                    pv.unSelect();
+                }
+            }
+            else if (ind == -1) {
+                if (key == v2) {
+                    pv.moveSelect(1, x, y);
+                }
+                else if (key == v1) {
+                    pv.moveSelect(2, null, null);
+                }
+                else if (key > v2 && key < v1) {
+                    pv.moveSelect(0, null, null);
+                }
+                else {
+                    pv.unSelect();
+                }
+            }
+            else {  // ind == 0
+                if (key == v1) {
+                    int m = (mSelecting == SELECT.MOVE_RIGHT) ? 0 : 1;
+                    pv.moveSelect(3 + m, x, y);
+                }
+                else {
+                    pv.unSelect();
+                }
+            }
+        }
+        mMoveTime = System.currentTimeMillis();
+    }
+
+    public void copy() {
+        if (mSelecting != SELECT.SELECTING) return;
+
+        StringBuffer buffer = new StringBuffer("");
+        for (int i = mSelectLeftView; i <= mSelectRightView; i++) {
+		    PageView pv = (PageView)getDisplayedView();
+            buffer.append(pv.copy(i)).append("\n");
+        }
+        ClipboardManager cm = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
+        cm.setPrimaryClip(ClipData.newPlainText(null, buffer.toString()));
+        endSelect();
+    }
+
+    private void endSelect() {
+        int minv = 1000, maxv = 0;
+        for (int i = 0; i < mChildViews.size(); i++) {
+            int key = mChildViews.keyAt(i);
+            if (key < minv) minv = key;
+            if (key > maxv) maxv = key;
+        }
+        for (int i = mSelectLeftView; i <= mSelectRightView; i++) {
+            PageView pv;
+            if (i >= minv && i <= maxv) {
+                pv = (PageView) mChildViews.get(i);
+                pv.unSelect();
+            }
+            else {
+		        pv = (PageView)getDisplayedView();
+                pv.unSelect(i);
+            }
+        }
+        ((DocumentActivity)mContext).showCopyButton(View.GONE);
+        mSelecting = SELECT.NO_SELECT;
+    }
 
 	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
 			float velocityY) {
 		if (mScaling)
 			return true;
+
+        if (mLongPress)
+            mLongPress = false;
+        if (mSelecting != SELECT.NO_SELECT)
+            mSelecting = SELECT.SELECTING;
 
 		View v = mChildViews.get(mCurrent);
 		if (v != null) {
@@ -464,7 +650,15 @@ public class ReaderView
 
 	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX,
 			float distanceY) {
-		PageView pageView = (PageView)getDisplayedView();
+        if (mLongPress)
+            mLongPress = false;
+        if (mSelecting == SELECT.MOVE_LEFT || mSelecting == SELECT.MOVE_RIGHT) {
+            moveSelect(e2.getX(), e2.getY());
+            return true;
+        }
+        if (mSelecting != SELECT.NO_SELECT)
+            mSelecting = SELECT.SELECTING;
+
 		if (!tapDisabled)
 			onDocMotion();
 		if (!mScaling) {
@@ -509,6 +703,11 @@ public class ReaderView
 	}
 
 	public boolean onScaleBegin(ScaleGestureDetector detector) {
+        if (mLongPress)
+            mLongPress = false;
+        if (mSelecting != SELECT.NO_SELECT)
+            mSelecting = SELECT.SELECTING;
+
 		tapDisabled = true;
 		mScaling = true;
 		// Ignore any scroll amounts yet to be accounted for: the
@@ -537,6 +736,10 @@ public class ReaderView
 			mUserInteracting = true;
 		}
 		if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
+            // move ended
+            if (mSelecting == SELECT.MOVE_LEFT || mSelecting == SELECT.MOVE_RIGHT)
+                mSelecting = SELECT.SELECTING;
+
 			mUserInteracting = false;
 
 			View v = mChildViews.get(mCurrent);
@@ -786,11 +989,10 @@ public class ReaderView
                 else
                     lrv2 = rightView(lrv, -2, true);
                 if (lrv2 != null && mCurrent > 2) {
-                    View lrv3 = null;
                     if (!mTextLeft)
-                        lrv3 = leftView(lrv2, -3, false);
+                        leftView(lrv2, -3, false);
                     else
-                        lrv3 = rightView(lrv2, -3, false);
+                        rightView(lrv2, -3, false);
                 }
             }
         }
@@ -808,11 +1010,10 @@ public class ReaderView
                 else
                     lrv2 = leftView(lrv, 2, true);
                 if (lrv != null && mCurrent + 3 < mAdapter.getCount()) {
-                    View lrv3 = null;
                     if (!mTextLeft)
-                        lrv3 = rightView(lrv2, 3, false);
+                        rightView(lrv2, 3, false);
                     else
-                        lrv3 = leftView(lrv2, 3, false);
+                        leftView(lrv2, 3, false);
                 }
             }
         }
@@ -843,6 +1044,9 @@ public class ReaderView
                     , v.getTop() - gap
                     );
         }
+        else {
+            rmExtraView(mChildViews.get(mCurrent + n), mCurrent + n);
+        }
         return v2;
     }
 
@@ -868,7 +1072,19 @@ public class ReaderView
                     , v.getBottom() + gap + v2.getMeasuredHeight()
                     );
         }
+        else {
+            rmExtraView(mChildViews.get(mCurrent + n), mCurrent + n);
+        }
         return v2;
+    }
+
+    private void rmExtraView(View v, int ai) {
+        if (v == null) return;
+        onNotInUse(v);
+        if (mAdapter.cacheable(ai))
+            mViewCache.add(v);
+        removeViewInLayout(v);
+        mChildViews.remove(ai);
     }
 
 	@Override
@@ -1037,7 +1253,21 @@ public class ReaderView
 	}
 
 	public boolean onSingleTapUp(MotionEvent e) {
-		Link link = null;
+        if (mLongPress)
+            mLongPress = false;
+        if (mSelecting == SELECT.SELECTING)
+            return true;
+        if (mBookmarked) {
+            mBookmarked = false;
+            return true;
+        }
+        if (mSelecting == SELECT.MOVE_NONE) {
+            endSelect();
+            return true;
+        }
+        if (mSelecting != SELECT.NO_SELECT)
+            mSelecting = SELECT.SELECTING;
+
 		if (!tapDisabled) {
 			PageView pageView = (PageView) getDisplayedView();
 			if (mLinksEnabled && pageView != null) {
@@ -1067,17 +1297,17 @@ public class ReaderView
 		return true;
 	}
 
-    public boolean isWide() {
-        View v = mChildViews.get(mCurrent);
-        return (v == null) ? false : v.getMeasuredWidth() > v.getMeasuredHeight();
-    }
-
     /*
      * both even or odd page
      */
     private boolean sameSide(int i, int j) {
         return (i + j) % 2 == 0;
     }
+
+    private boolean pointInView(float x, float y, View v) {
+        return (x > v.getLeft() && x < v.getRight() && y > v.getTop() && y < v.getBottom());
+    }
+
 
     /**
      * before go to absolute view, save current position
@@ -1227,29 +1457,37 @@ public class ReaderView
 
         int xOffset = 0, yOffset = 0, smart = 0;
 
-        if (mHorizontalScrolling) {
-            if ((mTextLeft && dir == 1) || (!mTextLeft && dir == -1)) {
-                // only when zoomed in
-                if (mSmartFocus && nv.getWidth() > getWidth()) {
-                    // account its width to left and right value
-                    smart = nv.getRight() - getWidth() + nv.getLeft() + 2 * nv.getWidth();
-                }
-                xOffset += nv.getWidth() - smart;
-            }
-            else {
-                if (mSmartFocus && v.getWidth() > getWidth()) {
-                    smart = v.getRight() - getWidth() + v.getLeft();
-                }
-                xOffset -= v.getWidth() + smart;
+        if ((mTextLeft && dir == 1) || (!mTextLeft && dir == -1)) {
+            if (mSmartFocus && nv.getWidth() > getWidth()) {
+                smart = nv.getRight() - getWidth() + nv.getLeft() + 2 * nv.getWidth();
             }
         }
         else {
-            if ((mTextLeft && dir == 1) || (!mTextLeft && dir == -1))
-                yOffset += nv.getHeight();
-            else
-                yOffset -= v.getHeight();
+            if (mSmartFocus && v.getWidth() > getWidth()) {
+                smart = v.getRight() - getWidth() + v.getLeft();
+            }
         }
 
+        if (mHorizontalScrolling) {
+            if ((mTextLeft && dir == 1) || (!mTextLeft && dir == -1)) {
+                xOffset += nv.getWidth();
+            }
+            else {
+                xOffset -= v.getWidth();
+            }
+        }
+        else {
+            if ((mTextLeft && dir == 1) || (!mTextLeft && dir == -1)) {
+                yOffset += nv.getHeight();
+                if (mSmartFocus && nv.getWidth() > getWidth())
+                    smart -= 2 * nv.getWidth();
+            }
+            else {
+                yOffset -= v.getHeight();
+            }
+        }
+
+		xOffset -= smart;
 		mScrollerLastX = mScrollerLastY = 0;
 		mScroller.startScroll(0, 0, xOffset, yOffset, 400);
 		mStepper.prod();
@@ -1282,8 +1520,9 @@ public class ReaderView
 		mStepper.prod();
     }
 
-    public void toggleSingleColumn(boolean sc) {
-        if (sc) {
+    public void toggleSingleColumn() {
+        mSingleColumn = !mSingleColumn ;
+        if (mSingleColumn) {
             mCurrent = (mCurrent * 2) - 1;
             if (mCurrent < 0) mCurrent = 0;
         }
@@ -1295,6 +1534,7 @@ public class ReaderView
 
     public void toggleTextLeft() {
         mTextLeft = !mTextLeft;
+        endSelect();
         postDelayed(new Runnable(){
             public void run() {
                 PageView pv = (PageView) getDisplayedView();
@@ -1423,6 +1663,11 @@ public class ReaderView
 		// in HQ
         // this will update from original data when zoomed to make text clear
 		((PageView) v).updateHq(false);
+        if (mCurrent == ((PageView) v).getPage() && !mAdapter.isReflowable()) {
+            boolean vis = mCurrent > 0
+                    && mCurrent < (mAdapter.getCount() - 1);
+            ((DocumentActivity)mContext).showSingleColumnButton(vis ? View.VISIBLE : View.GONE);
+        }
 	}
 
 	protected void onUnsettle(View v) {

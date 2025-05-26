@@ -1,0 +1,4 @@
+Add Lock Stray function
+Improve flowable documents display speed
+Formalize flowable document display style
+Make top toolbar buttons show up when available

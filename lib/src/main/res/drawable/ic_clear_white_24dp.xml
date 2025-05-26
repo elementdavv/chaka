@@ -5,8 +5,8 @@
     android:viewportHeight="960"
     android:tint="#FFFFFF"
     android:alpha="0.8">
-  <group android:scaleX="0.75"
-      android:scaleY="0.75"
+  <group android:scaleX="0.8"
+      android:scaleY="0.8"
       android:translateX="120"
       android:translateY="120">
     <path

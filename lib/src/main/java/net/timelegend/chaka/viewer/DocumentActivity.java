@@ -1,63 +1,59 @@
 package net.timelegend.chaka.viewer;
 
 import com.artifex.mupdf.fitz.SeekableInputStream;
-import com.artifex.mupdf.fitz.RectI;
 
-import android.Manifest;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Insets;
-import android.graphics.Rect;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RectShape;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.ResultReceiver;
 import android.provider.OpenableColumns;
 import android.text.Editable;
-import android.text.TextWatcher;
 import android.text.method.PasswordTransformationMethod;
+import android.text.TextWatcher;
 import android.util.DisplayMetrics;
-import android.util.Log;
-import android.view.KeyEvent;
-import android.view.Menu;
-import android.view.MenuItem.OnMenuItemClickListener;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowInsets;
-import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.TranslateAnimation;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
+import android.view.Window;
+import android.view.WindowInsets;
+import android.view.WindowManager;
+import android.view.WindowMetrics;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.ViewAnimator;
 
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultCallback;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.TooltipCompat;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -65,12 +61,9 @@ import java.util.Locale;
 
 public class DocumentActivity extends AppCompatActivity
 {
-	private final String APP = "Chaka";
-
 	/* The core rendering instance */
 	enum TopBarMode {Main, Search, More};
 
-	private final int    OUTLINE_REQUEST=0;
 	private MuPDFCore    core;
 	private String       mDocTitle;
 	private String       mDocKey;
@@ -82,13 +75,15 @@ public class DocumentActivity extends AppCompatActivity
 	private SeekBar      mPageSlider;
 	private int          mPageSliderRes;
 	private TextView     mPageNumberView;
-    private ImageButton  mSingleColumnButton;
+	private ImageButton  mCopyButton;
+	private ImageButton  mSingleColumnButton;
 	private ImageButton  mTextLeftButton;
 	private ImageButton  mFlipVerticalButton;
 	private ImageButton  mLockButton;
 	private ImageButton  mCropMarginButton;
 	private ImageButton  mFocusButton;
 	private ImageButton  mSmartFocusButton;
+	private ImageButton  mHelpButton;
 	private ImageButton  mSearchButton;
 	private ImageButton  mOutlineButton;
 	private ViewAnimator mTopBarSwitcher;
@@ -109,10 +104,8 @@ public class DocumentActivity extends AppCompatActivity
     private boolean    mFocusHighlight = false;
     private boolean    mSmartFocusHighlight = false;
 	private boolean    mLinkHighlight = false;
-	private final Handler mHandler = new Handler();
-	private boolean mAlertsActive= false;
-	private AlertDialog mAlertDialog;
-	private ArrayList<OutlineActivity.Item> mFlatOutline;
+	private final Handler mHandler = new Handler(Looper.getMainLooper());
+	private ArrayList<TocItem> mFlatOutline;
 	private boolean mReturnToLibraryActivity = false;
     private boolean mNavigationBar;
 
@@ -126,6 +119,10 @@ public class DocumentActivity extends AppCompatActivity
     private boolean mKeyboardChanged2 = false;
     // to notify onSizeChanged ime close by system button (this is a guess)
     private boolean mKeyboardChanged3 = false;
+    private boolean mOrientationChanged = false;
+    private int mOrientation;
+    private int lastPage = -1;
+    private long firstClickTime = 0;
 
     private int highlightColor = Color.argb(0xFF, 0x3C, 0xB3, 0x71);
     private int highunlightColor = Color.argb(0xFF, 255, 255, 255);
@@ -140,13 +137,6 @@ public class DocumentActivity extends AppCompatActivity
 	protected View mLayoutButton;
 	protected PopupMenu mLayoutPopupMenu;
 
-	private String toHex(byte[] digest) {
-		StringBuilder builder = new StringBuilder(2 * digest.length);
-		for (byte b : digest)
-			builder.append(String.format("%02x", b));
-		return builder.toString();
-	}
-
         private MuPDFCore openBuffer(byte buffer[], String magic)
         {
                 try
@@ -155,7 +145,7 @@ public class DocumentActivity extends AppCompatActivity
                 }
                 catch (Exception e)
                 {
-                        Log.e(APP, "Error opening document buffer: " + e);
+                        Tool.e("Error opening document buffer: " + e);
                         return null;
                 }
                 return core;
@@ -169,7 +159,7 @@ public class DocumentActivity extends AppCompatActivity
 		}
 		catch (Exception e)
 		{
-			Log.e(APP, "Error opening document stream: " + e);
+			Tool.e("Error opening document stream: " + e);
 			return null;
 		}
 		return core;
@@ -178,7 +168,7 @@ public class DocumentActivity extends AppCompatActivity
 	private MuPDFCore openCore(Uri uri, long size, String mimetype) throws IOException {
 		ContentResolver cr = getContentResolver();
 
-		Log.i(APP, "Opening document " + uri);
+		Tool.i("Opening document " + uri);
 
 		InputStream is = cr.openInputStream(uri);
 		byte[] buf = null;
@@ -209,18 +199,17 @@ public class DocumentActivity extends AppCompatActivity
 		}
 
 		if (buf != null) {
-			Log.i(APP, "  Opening document from memory buffer of size " + buf.length);
+			Tool.i("  Opening document from memory buffer of size " + buf.length);
 			return openBuffer(buf, mimetype);
 		} else {
-			Log.i(APP, "  Opening document from stream");
+			Tool.i("  Opening document from stream");
 			return openStream(new ContentInputStream(cr, uri, size), mimetype);
 		}
 	}
 
 	private void showCannotOpenDialog(String reason) {
-		Resources res = getResources();
 		AlertDialog alert = mAlertBuilder.create();
-		alert.setTitle(String.format(Locale.ROOT, res.getString(R.string.cannot_open_document_Reason), reason));
+		alert.setTitle(String.format(Locale.ROOT, getResources().getString(R.string.cannot_open_document_Reason), reason));
 		alert.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.dismiss),
 				new DialogInterface.OnClickListener() {
 					public void onClick(DialogInterface dialog, int which) {
@@ -235,12 +224,14 @@ public class DocumentActivity extends AppCompatActivity
 	public void onCreate(final Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		Tool.mContext = this;
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
-		getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 
-		DisplayMetrics metrics = new DisplayMetrics();
-		getWindowManager().getDefaultDisplay().getMetrics(metrics);
+		DisplayMetrics metrics = getResources().getDisplayMetrics();
+		// DisplayMetrics metrics = new DisplayMetrics();
+		// getWindowManager().getDefaultDisplay().getMetrics(metrics);
 		mDisplayDPI = (int)metrics.densityDpi;
 
 		mAlertBuilder = new AlertDialog.Builder(this, R.style.MyDialog);
@@ -252,7 +243,6 @@ public class DocumentActivity extends AppCompatActivity
 		}
 		if (core == null) {
 			Intent intent = getIntent();
-			SeekableInputStream file;
 
 			mReturnToLibraryActivity = intent.getIntExtra(getComponentName().getPackageName() + ".ReturnToLibraryActivity", 0) != 0;
 
@@ -267,8 +257,8 @@ public class DocumentActivity extends AppCompatActivity
 
 				mDocKey = uri.toString();
 
-				Log.i(APP, "OPEN URI " + uri.toString());
-				Log.i(APP, "  MAGIC (Intent) " + mimetype);
+				Tool.i("OPEN URI " + uri.toString());
+				Tool.i("  MAGIC (Intent) " + mimetype);
 
 				mDocTitle = null;
 				long size = -1;
@@ -298,16 +288,16 @@ public class DocumentActivity extends AppCompatActivity
 						cursor.close();
 				}
 
-				Log.i(APP, "  NAME " + mDocTitle);
-				Log.i(APP, "  SIZE " + size);
+				Tool.i("  NAME " + mDocTitle);
+				Tool.i("  SIZE " + size);
 
 				if (mimetype == null || mimetype.equals("application/octet-stream")) {
 					mimetype = getContentResolver().getType(uri);
-					Log.i(APP, "  MAGIC (Resolved) " + mimetype);
+					Tool.i("  MAGIC (Resolved) " + mimetype);
 				}
 				if (mimetype == null || mimetype.equals("application/octet-stream")) {
 					mimetype = mDocTitle;
-					Log.i(APP, "  MAGIC (Filename) " + mimetype);
+					Tool.i("  MAGIC (Filename) " + mimetype);
 				}
 
 				try {
@@ -316,6 +306,15 @@ public class DocumentActivity extends AppCompatActivity
 				} catch (Exception x) {
 					showCannotOpenDialog(x.toString());
 					return;
+				}
+
+				if (core != null) {
+					String docTitle = core.getTitle();
+					if (docTitle != null && !"".equals(docTitle)) {
+						mDocTitle = docTitle;
+					}
+					String fileDigest = Tool.getDigest(getContentResolver(), uri);
+					mDocKey = mDocTitle + "." + String.valueOf(size) + "." + fileDigest;
 				}
 			}
 			if (core != null && core.needsPassword()) {
@@ -348,6 +347,16 @@ public class DocumentActivity extends AppCompatActivity
 		}
 
 		createUI(savedInstanceState);
+		mOrientation = getResources().getConfiguration().orientation;
+		HelpActivity.delay = 600;
+		OutlineActivity.content = core.hasOutline() ? OutlineActivity.CONTENTS.TOC : OutlineActivity.CONTENTS.BOOKMARK;
+		BookmarkRepository.getInstance().setup(core, mDocKey);
+	}
+
+	@Override
+	public void onAttachedToWindow() {
+		super.onAttachedToWindow();
+		Tool.fullScreen(getWindow());
 	}
 
 	public void requestPassword(final Bundle savedInstanceState) {
@@ -383,6 +392,15 @@ public class DocumentActivity extends AppCompatActivity
 		mFlatOutline = null;
 		mDocView.mHistory.clear();
 		mDocView.refresh();
+
+        if (lastPage > -1 ) {
+            HelpActivity.updateReadme();
+            if (lastPage < core.countPages())
+                loc = lastPage;
+            lastPage = -1;
+        }
+
+		BookmarkRepository.getInstance().onSizeChange();
 		mDocView.setDisplayedViewIndex(loc);
 	}
 
@@ -423,29 +441,19 @@ public class DocumentActivity extends AppCompatActivity
                 // ime changed by user
                 if (mKeyboardChanged) {
                     mKeyboardChanged = false;
-                    return;
+                    if (!mOrientationChanged) return;
                 }
 
                 // ime closed by system button (a guess)
                 if (mKeyboardChanged3) {
                     mKeyboardChanged3 = false;
-                    return;
+                    if (!mOrientationChanged) return;
                 }
 
                 // ajust doc name width
-                new Handler().postDelayed(new Runnable(){
+                mHandler.postDelayed(new Runnable(){
                     public void run() {
-                        int BUTTON_WIDTH = 160;
-                        // toolbar buttons count
-                        int cbut = 9;
-                        if (mLayoutButton.getVisibility() == View.VISIBLE) cbut++;
-                        if (mOutlineButton.getVisibility() == View.VISIBLE) cbut++;
-                        int tw = w - BUTTON_WIDTH * cbut;
-                        int titlebytelen = mDocNameView.getText().toString().getBytes().length;
-                        int titlewidth = titlebytelen * 32;
-                        int minwidth = Math.min(titlewidth, 360);
-                        tw = Math.max(tw, minwidth);
-                        mDocNameView.setWidth(tw);
+                        updateTopBar(w);
                     }}, 200);
 
 				if (core.isReflowable()) {
@@ -477,6 +485,7 @@ public class DocumentActivity extends AppCompatActivity
 
         // below android 8 (api26)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            TooltipCompat.setTooltipText(mCopyButton, getString(R.string.copy));
             TooltipCompat.setTooltipText(mSingleColumnButton, getString(R.string.single_column));
             TooltipCompat.setTooltipText(mTextLeftButton, getString(R.string.text_left));
             TooltipCompat.setTooltipText(mFlipVerticalButton, getString(R.string.flip_vertical));
@@ -486,7 +495,8 @@ public class DocumentActivity extends AppCompatActivity
             TooltipCompat.setTooltipText(mLinkButton, getString(R.string.link));
             TooltipCompat.setTooltipText(mSearchButton, getString(R.string.text_search));
             TooltipCompat.setTooltipText(mLayoutButton, getString(R.string.format_size));
-            TooltipCompat.setTooltipText(mOutlineButton, getString(R.string.toc));
+            TooltipCompat.setTooltipText(mOutlineButton, getString(R.string.contents));
+            TooltipCompat.setTooltipText(mHelpButton, getString(R.string.help));
         }
 
 		// Set up the page slider
@@ -494,12 +504,8 @@ public class DocumentActivity extends AppCompatActivity
 		mPageSliderRes = ((10 + smax - 1)/smax) * 2;
 
 		// Set the file-name text
-		String docTitle = core.getTitle();
-		if (docTitle != null && !"".equals(docTitle))
-			mDocNameView.setText(docTitle);
-		else
-			mDocNameView.setText(mDocTitle);
-        TooltipCompat.setTooltipText(mDocNameView, mDocNameView.getText());
+		mDocNameView.setText(mDocTitle);
+		TooltipCompat.setTooltipText(mDocNameView, mDocNameView.getText());
 
 		// Activate the seekbar
 		mPageSlider.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
@@ -522,17 +528,44 @@ public class DocumentActivity extends AppCompatActivity
 			}
 		});
 
-        mSingleColumnButton.setOnClickListener(new View.OnClickListener() {
+        mDocNameView.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                toggleSingleColumnHighlight();
+                long secondClickTime = System.currentTimeMillis();;
+
+                if (secondClickTime - firstClickTime < ViewConfiguration.getDoubleTapTimeout()) {
+                    exit();
+                }
+                firstClickTime = secondClickTime;
             }
         });
 
-        mTextLeftButton.setOnClickListener(new View.OnClickListener() {
+        mCopyButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                toggleTextLeftHighlight();
+                copy();
             }
         });
+
+        if (core.isReflowable()) {
+            mSingleColumnButton.setVisibility(View.GONE);
+        }
+        else {
+            mSingleColumnButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    toggleSingleColumnHighlight();
+                }
+            });
+        }
+
+        if (core.isReflowable()) {
+            mTextLeftButton.setVisibility(View.GONE);
+        }
+        else {
+            mTextLeftButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    toggleTextLeftHighlight();
+                }
+            });
+        }
 
         mFlipVerticalButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -564,6 +597,13 @@ public class DocumentActivity extends AppCompatActivity
             }
         });
 
+        mHelpButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(DocumentActivity.this, HelpActivity.class);
+                startActivity(intent);
+            }
+        });
+
 		// Activate the search-preparing button
 		mSearchButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -578,18 +618,17 @@ public class DocumentActivity extends AppCompatActivity
 		});
 
 		// Search invoking buttons are disabled while there is no text specified
-		mSearchBack.setEnabled(false);
-		mSearchFwd.setEnabled(false);
-		mSearchBack.setColorFilter(disabledColor);
-		mSearchFwd.setColorFilter(disabledColor);
+		setButtonEnabled(mSearchBack, false);
+		setButtonEnabled(mSearchFwd, false);
+		setButtonEnabled(mSearchClear, false);
 
 		// React to interaction with the text widget
 		mSearchText.addTextChangedListener(new TextWatcher() {
-
 			public void afterTextChanged(Editable s) {
 				boolean haveText = s.toString().trim().length() > 0;
 				setButtonEnabled(mSearchBack, haveText);
 				setButtonEnabled(mSearchFwd, haveText);
+				setButtonEnabled(mSearchClear, haveText);
 
                 if (!haveText) {
                     mSearchText.requestFocus();
@@ -709,29 +748,37 @@ public class DocumentActivity extends AppCompatActivity
 			});
 		}
 
-		if (core.hasOutline()) {
-			mOutlineButton.setOnClickListener(new View.OnClickListener() {
-				public void onClick(View v) {
-					if (mFlatOutline == null)
-						mFlatOutline = core.getOutline();
-					if (mFlatOutline != null) {
-						Intent intent = new Intent(DocumentActivity.this, OutlineActivity.class);
-						Bundle bundle = new Bundle();
-						bundle.putInt("POSITION", mDocView.getDisplayedViewIndex());
-						bundle.putSerializable("OUTLINE", mFlatOutline);
-						intent.putExtra("PALLETBUNDLE", Pallet.sendBundle(bundle));
-						startActivityForResult(intent, OUTLINE_REQUEST);
-					}
-				}
-			});
-		} else {
-			mOutlineButton.setVisibility(View.GONE);
-		}
+        mOutlineButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent intent = new Intent(DocumentActivity.this, OutlineActivity.class);
+
+                if (mFlatOutline == null)
+                    if (core.hasOutline())
+                        mFlatOutline = core.getOutline();
+
+                if (mFlatOutline != null) {
+                    Bundle bundle = new Bundle();
+                    bundle.putInt("POSITION", mDocView.getDisplayedViewIndex());
+                    bundle.putSerializable("OUTLINE", mFlatOutline);
+                    intent.putExtra("PALLETBUNDLE", Pallet.sendBundle(bundle));
+                }
+                activityLauncher.launch(intent);
+            }
+        });
 
 		// Reenstate last state if it was recorded
 		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-		mDocView.setDisplayedViewIndex(core.correctPage(prefs.getInt("page"+mDocKey, 0)));
-        mLayoutEM = prefs.getInt("layoutem"+mDocKey, 6);
+		mLayoutEM = prefs.getInt("layoutem"+mDocKey, 7);
+		lastPage = core.correctPage(prefs.getInt("page"+mDocKey, 0));
+
+        if (!core.isReflowable()) {
+            HelpActivity.updateReadme();
+
+            if (lastPage < core.countPages())
+                mDocView.setDisplayedViewIndex(lastPage);
+
+            lastPage = -1;
+        }
 
 		if (savedInstanceState == null || !savedInstanceState.getBoolean("ButtonsHidden", false))
 			showButtons();
@@ -749,11 +796,31 @@ public class DocumentActivity extends AppCompatActivity
         watchNavigationBar();
 	}
 
+    private ActivityResultLauncher<Intent> activityLauncher = registerForActivityResult(
+        new ActivityResultContracts.StartActivityForResult(),
+        new ActivityResultCallback<ActivityResult>() {
+            @Override
+            public void onActivityResult(ActivityResult result) {
+                if (result.getResultCode() == RESULT_OK) {
+                    // There are no request codes
+                    Intent data = result.getData();
+                    int pagetogo  = data.getExtras().getInt("pagetogo");
+
+                    if (mDocView != null) {
+                        mDocView.pushHistory();
+                        mDocView.setDisplayedViewIndex(pagetogo - RESULT_FIRST_USER);
+                    }
+                }
+            }
+        });
+
+
 	private void setButtonEnabled(ImageButton button, boolean enabled) {
 		button.setEnabled(enabled);
 		button.setColorFilter(enabled ? enabledColor : disabledColor);
 	}
 
+    @SuppressWarnings("deprecation")
     private void watchNavigationBar() {
         View decorView = getWindow().getDecorView();
         // below android 11 (api30)
@@ -778,17 +845,17 @@ public class DocumentActivity extends AppCompatActivity
                 /**
                  * insetTop: 96: statusBar, insetBottom: 0/168: navigationBar
                  */
-                // Lug.i("stable");
+                // Tool.i("stable");
                 // RectI rs = new RectI(insets.getStableInsetLeft(),insets.getStableInsetTop()
                 //         ,insets.getStableInsetRight(),insets.getStableInsetBottom());
-                // Lug.i(rs);
+                // Tool.i(rs);
             }
             else {
-                // Lug.i("ime:" + insets.isVisible(WindowInsets.Type.ime()));
+                // Tool.i("ime:" + insets.isVisible(WindowInsets.Type.ime()));
                 // Insets bar = insets.getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
-                // Lug.i("inset");
+                // Tool.i("inset");
                 // RectI rb = new RectI(bar.left, bar.top, bar.right, bar.bottom);
-                // Lug.i(rb);
+                // Tool.i(rb);
 
                 // if changed by keyboard, do not report
                 if (mKeyboardChanged2) {
@@ -805,19 +872,6 @@ public class DocumentActivity extends AppCompatActivity
             return v.onApplyWindowInsets(insets);
         });
     }
-
-	@Override
-	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch (requestCode) {
-		case OUTLINE_REQUEST:
-			if (resultCode >= RESULT_FIRST_USER && mDocView != null) {
-				mDocView.pushHistory();
-				mDocView.setDisplayedViewIndex(resultCode-RESULT_FIRST_USER);
-			}
-			break;
-		}
-		super.onActivityResult(requestCode, resultCode, data);
-	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
@@ -842,6 +896,8 @@ public class DocumentActivity extends AppCompatActivity
 
 		if (mTopBarMode == TopBarMode.Search)
 			outState.putBoolean("SearchMode", true);
+
+		BookmarkRepository.getInstance().save();
 	}
 
 	@Override
@@ -857,13 +913,15 @@ public class DocumentActivity extends AppCompatActivity
 			edit.putInt("page"+mDocKey, core.realPage(mDocView.getDisplayedViewIndex()));
 			edit.apply();
 		}
+		BookmarkRepository.getInstance().save();
 	}
 
 	@Override
 	protected void onDestroy() {
 		if (mDocView != null) {
 			mDocView.applyToChildren(new ReaderView.ViewMapper() {
-				void applyToView(View view) {
+				@Override
+				public void applyToView(View view) {
 					((PageView)view).releaseBitmaps();
 				}
 			});
@@ -874,38 +932,29 @@ public class DocumentActivity extends AppCompatActivity
 		super.onDestroy();
 	}
 
+    private void exit() {
+        finish();
+    }
+
+    private void copy() {
+        mDocView.copy();
+    }
+
     private void toggleSingleColumnHighlight() {
         int index;
-        if (!mSingleColumnHighlight) {
-            if (!mDocView.isWide()) {
-                callAlert(R.string.is_not_wide);
-                return;
-            }
-		    index = mDocView.getDisplayedViewIndex();
-            if (index == 0 || index == (core.countPages() - 1)) {
-                callAlert(R.string.first_last_page);
-                return;
-            }
-        }
         mSingleColumnHighlight = !mSingleColumnHighlight;
 		// COLOR tint
 		mSingleColumnButton.setColorFilter(mSingleColumnHighlight ? highlightColor : highunlightColor);
 		// Inform pages of the change.
         core.toggleSingleColumn();
-		mDocView.toggleSingleColumn(mSingleColumnHighlight);
+		mDocView.toggleSingleColumn();
 		int smax = Math.max(core.countPages()-1,1);
 		mPageSliderRes = ((10 + smax - 1)/smax) * 2;
 		index = mDocView.getDisplayedViewIndex();
 		updatePageNumView(index);
-        updatePageSlider(index);
+		updatePageSlider(index);
 		mFlatOutline = null;
-    }
-
-    private void callAlert(int msg) {
-        new AlertDialog.Builder(this, R.style.MyDialog)
-                .setTitle(msg)
-                .setPositiveButton(R.string.dismiss, null)
-                .show();
+		BookmarkRepository.getInstance().toggleSingleColumn();
     }
 
     private void toggleTextLeftHighlight() {
@@ -1089,6 +1138,7 @@ public class DocumentActivity extends AppCompatActivity
 		mPageSlider = (SeekBar)mButtonsView.findViewById(R.id.pageSlider);
 		mPageNumberView = (TextView)mButtonsView.findViewById(R.id.pageNumber);
 		mSearchButton = (ImageButton)mButtonsView.findViewById(R.id.searchButton);
+        mCopyButton = (ImageButton)mButtonsView.findViewById(R.id.copyButton);
         mSingleColumnButton = (ImageButton)mButtonsView.findViewById(R.id.singleColumnButton);
         mTextLeftButton = (ImageButton)mButtonsView.findViewById(R.id.textLeftButton);
         mFlipVerticalButton = (ImageButton)mButtonsView.findViewById(R.id.flipVerticalButton);
@@ -1096,6 +1146,7 @@ public class DocumentActivity extends AppCompatActivity
         mLockButton = (ImageButton)mButtonsView.findViewById(R.id.lockButton);
         mCropMarginButton = (ImageButton)mButtonsView.findViewById(R.id.cropMarginButton);
         mSmartFocusButton = (ImageButton)mButtonsView.findViewById(R.id.smartFocusButton);
+        mHelpButton = (ImageButton)mButtonsView.findViewById(R.id.helpButton);
 		mOutlineButton = (ImageButton)mButtonsView.findViewById(R.id.outlineButton);
 		mTopBarSwitcher = (ViewAnimator)mButtonsView.findViewById(R.id.switcher);
 		mSearchClear = (ImageButton)mButtonsView.findViewById(R.id.searchClear);
@@ -1107,7 +1158,6 @@ public class DocumentActivity extends AppCompatActivity
 		mLayoutButton = mButtonsView.findViewById(R.id.layoutButton);
 		mTopBarSwitcher.setVisibility(View.INVISIBLE);
 		mPageNumberView.setVisibility(View.INVISIBLE);
-
 		mPageSlider.setVisibility(View.INVISIBLE);
 	}
 
@@ -1138,6 +1188,90 @@ public class DocumentActivity extends AppCompatActivity
             }
         }
     };
+
+    @SuppressWarnings("deprecation")
+    public void updateTopBar(Integer w) {
+        if (w == null) {
+
+            // below android 11 (api30)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowMetrics windowMetrics = getWindowManager().getCurrentWindowMetrics();
+                Insets insets = windowMetrics.getWindowInsets()
+                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
+                w = windowMetrics.getBounds().width() - insets.left - insets.right;
+            } else {
+                DisplayMetrics displayMetrics = new DisplayMetrics();
+                getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+		        w = (int)displayMetrics.widthPixels;
+            }
+        }
+        int BUTTON_WIDTH = 160;
+        // topbar button count
+        int cbut = 8;
+        if (mCopyButton.getVisibility() == View.VISIBLE) cbut++;
+        if (mSingleColumnButton.getVisibility() == View.VISIBLE) cbut++;
+        if (mTextLeftButton.getVisibility() == View.VISIBLE) cbut++;
+        if (mLayoutButton.getVisibility() == View.VISIBLE) cbut++;
+        if (mOutlineButton.getVisibility() == View.VISIBLE) cbut++;
+        int tw = w - BUTTON_WIDTH * cbut;
+        int titlebytelen = mDocNameView.getText().toString().getBytes().length;
+        int titlewidth = titlebytelen * 32;
+        int minwidth = Math.min(titlewidth, 360);
+        tw = Math.max(tw, minwidth);
+        mDocNameView.setWidth(tw);
+    }
+
+    public void showCopyButton(int vis) {
+        if (mCopyButton.getVisibility() != vis) {
+            mCopyButton.setVisibility(vis);
+            updateTopBar(null);
+        }
+    }
+
+    public void showSingleColumnButton(int vis) {
+        if (mOrientationChanged) {
+            mOrientationChanged = false;
+        }
+        else if (core.isReflowable()) {
+            return;
+        }
+        else if (mSingleColumnButton.getVisibility() != vis) {
+            mSingleColumnButton.setVisibility(vis);
+            updateTopBar(null);
+        }
+    }
+
+	public void createBookmark() {
+		AlertDialog alert = mAlertBuilder.create();
+		alert.setTitle(R.string.create_bookmark);
+		alert.setMessage(getString(R.string.create_bookmark_message));
+		alert.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.yes),
+			new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					BookmarkRepository.getInstance().create(mDocView.getDisplayedViewIndex());
+				}
+			}
+		);
+		alert.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.no),
+			new DialogInterface.OnClickListener() {
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.cancel();
+				}
+			}
+		);
+		alert.show();
+	}
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        if (newConfig.orientation != mOrientation) {
+            mOrientation = newConfig.orientation;
+            mOrientationChanged = true;
+            searchModeOff();
+        }
+    }
 
 	private void search(int direction) {
 		hideKeyboard();

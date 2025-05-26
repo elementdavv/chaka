@@ -3,6 +3,7 @@
         <!-- for App Title -->
         <item name="colorPrimary">@color/toolbar</item>
         <item name="colorPrimaryDark">@color/toolbar</item>
+        <item name="colorAccent">@color/mediumseagreen</item>
         <!-- for menu checkbox -->
         <item name="colorSecondary">@android:color/white</item>
         <!-- <item name="colorPrimaryVariant">@color/purple_700</item> -->
@@ -20,7 +21,7 @@
         <!-- <item name="colorOnError">@color/black</item> -->
 
         <!-- for overscroll-->
-        <item name="android:colorEdgeEffect">@color/edge</item>
+        <item name="android:colorEdgeEffect">@color/mediumseagreen</item>
 
         <!-- for menu text -->
         <item name="android:textColor">@android:color/white</item>
@@ -30,5 +31,9 @@
 
     <style name="MyDialog" parent="android:Theme.Material.Dialog.Alert">
         <item name="android:windowNoTitle">false</item>
+    </style>
+
+    <style name="MyDialog2" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorSurface">@android:color/white</item>
     </style>
 </resources>

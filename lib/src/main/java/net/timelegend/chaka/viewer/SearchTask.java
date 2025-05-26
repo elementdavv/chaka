@@ -6,12 +6,17 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.os.Handler;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 
 class ProgressDialogX extends ProgressDialog {
 	public ProgressDialogX(Context context) {
 		super(context);
+	}
+
+	public ProgressDialogX(Context context, int theme) {
+		super(context, theme);
 	}
 
 	private boolean mCancelled = false;
@@ -38,7 +43,7 @@ public abstract class SearchTask {
 	public SearchTask(Context context, MuPDFCore core) {
 		mContext = context;
 		mCore = core;
-		mHandler = new Handler();
+		mHandler = new Handler(Looper.getMainLooper());
 		mAlertBuilder = new AlertDialog.Builder(context, R.style.MyDialog);
 	}
 
@@ -59,7 +64,7 @@ public abstract class SearchTask {
 		final int increment = direction;
 		final int startIndex = searchPage == -1 ? displayPage : searchPage + increment;
 
-		final ProgressDialogX progressDialog = new ProgressDialogX(mContext);
+		final ProgressDialogX progressDialog = new ProgressDialogX(mContext, R.style.MyDialog);
 		progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
 		progressDialog.setTitle(mContext.getString(R.string.searching_));
 		progressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {

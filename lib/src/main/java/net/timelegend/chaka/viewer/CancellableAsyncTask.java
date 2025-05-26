@@ -31,7 +31,8 @@ public class CancellableAsyncTask<Params, Result>
 		asyncTask = new AsyncTask<Params, Void, Result>()
 				{
 					@Override
-					protected Result doInBackground(Params... params)
+					@SafeVarargs
+					protected final Result doInBackground(Params... params)
 					{
 						return task.doInBackground(params);
 					}
@@ -77,7 +78,8 @@ public class CancellableAsyncTask<Params, Result>
 		}
 	}
 
-	public void execute(Params ... params)
+	@SafeVarargs
+	public final void execute(Params ... params)
 	{
 		asyncTask.execute(params);
 	}
