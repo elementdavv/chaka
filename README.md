@@ -9,6 +9,13 @@ PDF, EPUB, MOBI, CBZ, FB2 and XPS documents are supported.
 
 Or download the latest APK from the [Releases Section](https://github.com/elementdavv/chaka/releases/latest).
 
+## Beta Version
+The beta version v1.24.9a.16beta had been released for test. Changes in the version are:
+- support txt/html/office(docx/xlsx/pptx) documents format
+- support zip/gzip compressed packages
+- For office documents, only texts, images and tables are displayed. And image rotation, table cell span, table border-collapse and nested tables are supported
+- All feedbacks are appreciated.
+
 ### Features
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/flip_vertical.png"> Flip Vertical
 
@@ -85,8 +92,8 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
 ### Usage
 - Long press on Top Toolbar buttons, to show button tooltip.
-- Tap in left/top side, to move a page backward
-- Tap in right/bottom side, to move a page forward
+- Tap in left/top side, to move a page backward (when in **not RtL Text** mode)
+- Tap in right/bottom side, to move a page forward (when in **not RtL Text** mode)
 - Tap in middle, to show/hide Top Toolbar and Page Indicator
 - Press down and move in any direction, to move page position
 - Fling horizontally/vertically, to scroll continuously

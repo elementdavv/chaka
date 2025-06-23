@@ -62,9 +62,10 @@ public class MuPDFCore
 		// apply consistent css to all flowable docs
 		else {
 			StringBuilder sb = new StringBuilder();
-			sb.append("@page{margin:2em !important;}");
-			sb.append("body{display:block;margin:0 !important;padding:0 !important;}");
-			sb.append("p{display:block;margin:0.6em 0 !important;}");
+			sb.append("@page{margin:2em}");
+			sb.append("body{margin:0;padding:0;overflow-wrap:break-word;}");
+			sb.append("p{margin:0.6em 0;}");
+			sb.append("table{border-collapse:collapse;}");
 			com.artifex.mupdf.fitz.Context.setUserCSS(sb.toString());
 		}
 		resolution = 160;
@@ -195,7 +196,7 @@ public class MuPDFCore
             pageW *= 2;
         }
 
-		float zoom = resolution / 72;
+		float zoom = resolution / 72 / 2;
 		Matrix ctm = new Matrix(zoom, zoom);
         Rect b = page.getBounds();
 

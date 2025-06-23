@@ -457,8 +457,8 @@ public class DocumentActivity extends AppCompatActivity
                     }}, 200);
 
 				if (core.isReflowable()) {
-					mLayoutW = w * 72 / mDisplayDPI;
-					mLayoutH = h * 72 / mDisplayDPI;
+					mLayoutW = w * 72 * 2 / mDisplayDPI;
+					mLayoutH = h * 72 * 2 / mDisplayDPI;
 					relayoutDocument();
 				} else {
 					refresh();
@@ -768,7 +768,7 @@ public class DocumentActivity extends AppCompatActivity
 
 		// Reenstate last state if it was recorded
 		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-		mLayoutEM = prefs.getInt("layoutem"+mDocKey, 7);
+		mLayoutEM = prefs.getInt("layoutem"+mDocKey, 12);
 		lastPage = core.correctPage(prefs.getInt("page"+mDocKey, 0));
 
         if (!core.isReflowable()) {

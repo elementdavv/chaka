@@ -37,6 +37,13 @@ public class LibraryActivity extends Activity
 				"application/epub+zip",
 				"application/x-fictionbook",
 				"application/x-mobipocket-ebook",
+				"application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+				"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+				"application/vnd.openxmlformats-officedocument.presentationml.presentation",
+				"text/html",
+				"text/plain",
+				"application/x-gzip-compressed",
+				"application/zip",
 				// ... and the ones android doesn't know about
 				"application/octet-stream"
 			});
