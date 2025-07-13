@@ -1,7 +1,7 @@
 Read fluently and comfortably, with simple and clear interface.
 
 Supported Document Types:
-PDF, EPUB, MOBI, CBZ, FB2 and XPS
+PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX) and ZIP/GZIP
 
 Features:
 Horizontal / Vertical Flip
@@ -12,11 +12,11 @@ Focus Mode: Retent page position on flipping zoomed pages
 Smarty Focus: Recognize border bias in Focus Mode
 RtL Text: Support Top-to-Bottom, Right-to-Left(TB-RL) text
 Single Column: Support scanned dual-spread PDF page
-Links navigation
-Text Search
-Font Size Selection
+Selectable Font Size
+Text Copy
 Table of Contents
 Bookmarks
-Text Copy
+Links
+Search
 
 The project is under active development.

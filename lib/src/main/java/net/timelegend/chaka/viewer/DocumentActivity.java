@@ -137,18 +137,18 @@ public class DocumentActivity extends AppCompatActivity
 	protected View mLayoutButton;
 	protected PopupMenu mLayoutPopupMenu;
 
-        private MuPDFCore openBuffer(byte buffer[], String magic)
-        {
-                try
-                {
-                        core = new MuPDFCore(buffer, magic);
-                }
-                catch (Exception e)
-                {
-                        Tool.e("Error opening document buffer: " + e);
-                        return null;
-                }
-                return core;
+	private MuPDFCore openBuffer(byte buffer[], String magic)
+	{
+		try
+		{
+			core = new MuPDFCore(buffer, magic);
+		}
+		catch (Exception e)
+		{
+			Tool.e("Error opening document buffer: " + e);
+			return null;
+		}
+		return core;
 	}
 
 	private MuPDFCore openStream(SeekableInputStream stm, String magic)
@@ -235,6 +235,8 @@ public class DocumentActivity extends AppCompatActivity
 		mDisplayDPI = (int)metrics.densityDpi;
 
 		mAlertBuilder = new AlertDialog.Builder(this, R.style.MyDialog);
+
+		setUserCss();
 
 		if (core == null) {
 			if (savedInstanceState != null && savedInstanceState.containsKey("DocTitle")) {
@@ -351,6 +353,16 @@ public class DocumentActivity extends AppCompatActivity
 		HelpActivity.delay = 600;
 		OutlineActivity.content = core.hasOutline() ? OutlineActivity.CONTENTS.TOC : OutlineActivity.CONTENTS.BOOKMARK;
 		BookmarkRepository.getInstance().setup(core, mDocKey);
+	}
+
+
+	private void setUserCss() {
+		StringBuilder sb = new StringBuilder();
+		sb.append("@page{margin:2em}");
+		sb.append("body{margin:0;padding:0;overflow-wrap:break-word;}");
+		sb.append("p{margin:0.6em 0;}");
+		sb.append("table{border-collapse:collapse;}");
+		com.artifex.mupdf.fitz.Context.setUserCSS(sb.toString());
 	}
 
 	@Override

@@ -1,20 +1,13 @@
 ## Chaka Book Reader
 An Android reader app committed to improving reading experience.
 
-PDF, EPUB, MOBI, CBZ, FB2 and XPS documents are supported.
+PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX,XLSX,PPTX) and ZIP/GZIP are supported.
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
      height="80">](https://f-droid.org/packages/net.timelegend.chaka.viewer.app/)
 
 Or download the latest APK from the [Releases Section](https://github.com/elementdavv/chaka/releases/latest).
-
-## Beta Version
-The beta version v1.24.9a.16beta had been released for test. Changes in the version are:
-- support txt/html/office(docx/xlsx/pptx) documents format
-- support zip/gzip compressed packages
-- For office documents, only texts, images and tables are displayed. And image rotation, table cell span, table border-collapse and nested tables are supported
-- All feedbacks are appreciated.
 
 ### Features
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/flip_vertical.png"> Flip Vertical
