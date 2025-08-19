@@ -132,8 +132,8 @@ public class HelpActivity extends ComponentActivity
         if (f.exists() && f.length() != 0L) {
             long mod = f.lastModified();
             long curr = System.currentTimeMillis();
-            long aweek = 7 * 24 * 60 * 60 * 1000;
-            if (curr - mod < aweek)
+            long leng = 24 * 60 * 60 * 1000;        // test everyday
+            if (curr - mod < leng)
                 return true;
         }
 

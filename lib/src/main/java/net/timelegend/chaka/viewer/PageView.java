@@ -87,15 +87,15 @@ public class PageView extends ViewGroup {
 	private       ProgressBar mBusyIndicator;
 	private final Handler   mHandler = new Handler(Looper.getMainLooper());
 
-	public PageView(Context c, MuPDFCore core, Point parentSize, Bitmap sharedHqBm) {
+	public PageView(Context c, MuPDFCore core, Point parentSize) {
 		super(c);
 		mContext = c;
 		mCore = core;
 		mParentSize = parentSize;
 		setBackgroundColor(BACKGROUND_COLOR);
-        // the parent is correct screen
+		// the parent is correct screen
 		mEntireBm = Bitmap.createBitmap(parentSize.x, parentSize.y, Config.ARGB_8888);
-		mPatchBm = sharedHqBm;
+		mPatchBm = Bitmap.createBitmap(parentSize.x, parentSize.y, Config.ARGB_8888);
 		mEntireMat = new Matrix();
 	}
 

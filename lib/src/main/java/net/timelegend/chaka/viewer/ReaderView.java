@@ -1668,12 +1668,34 @@ public class ReaderView
                     && mCurrent < (mAdapter.getCount() - 1);
             ((DocumentActivity)mContext).showSingleColumnButton(vis ? View.VISIBLE : View.GONE);
         }
+        if (mCurrent > 0) {
+            View v1 = mChildViews.get(mCurrent - 1);
+            if ((mHorizontalScrolling && (v1.getLeft() + v1.getMeasuredWidth()) > 0)
+                    || (!mHorizontalScrolling && (v1.getTop() + v1.getMeasuredHeight()) > 0)) {
+                ((PageView) v1).updateHq(false);
+            }
+        }
+        if (mCurrent < mAdapter.getCount() - 1) {
+            View v2 = mChildViews.get(mCurrent + 1);
+            if ((mHorizontalScrolling && v2.getLeft() < getWidth())
+                    || (!mHorizontalScrolling && v2.getTop() < getHeight())) {
+                ((PageView) v2).updateHq(false);
+            }
+        }
 	}
 
 	protected void onUnsettle(View v) {
 		// When something changes making the previous settled view
 		// no longer appropriate, tell the page to remove HQ
 		((PageView) v).removeHq();
+        if (mCurrent > 0) {
+            View v1 = mChildViews.get(mCurrent - 1);
+            ((PageView) v1).removeHq();
+        }
+        if (mCurrent < mAdapter.getCount() - 1) {
+            View v2 = mChildViews.get(mCurrent + 1);
+            ((PageView) v2).removeHq();
+        }
 	}
 
 	protected void onNotInUse(View v) {

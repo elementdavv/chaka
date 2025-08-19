@@ -262,6 +262,11 @@ public class DocumentActivity extends AppCompatActivity
 				Tool.i("OPEN URI " + uri.toString());
 				Tool.i("  MAGIC (Intent) " + mimetype);
 
+				// in case of cbz recognized as zip
+				if ("application/zip".equals(mimetype)) {
+					mimetype = null;
+				}
+
 				mDocTitle = null;
 				long size = -1;
 				Cursor cursor = null;

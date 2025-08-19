@@ -14,7 +14,6 @@ public class PageAdapter extends BaseAdapter {
 	private final Context mContext;
 	private final MuPDFCore mCore;
 	private final SparseArray<RectF> mPageSizes = new SparseArray<RectF>();
-	private       Bitmap mSharedHqBm;
 
 	public PageAdapter(Context c, MuPDFCore core) {
 		mContext = c;
@@ -39,10 +38,6 @@ public class PageAdapter extends BaseAdapter {
 
 	public synchronized void releaseBitmaps()
 	{
-		//  recycle and release the shared bitmap.
-		if (mSharedHqBm!=null)
-			mSharedHqBm.recycle();
-		mSharedHqBm = null;
 	}
 
 	public void refresh() {
@@ -68,15 +63,7 @@ public class PageAdapter extends BaseAdapter {
             if (mCore.isSplitPage(position)) {
                 pw *= 2;
             }
-			if (mSharedHqBm == null || mSharedHqBm.getWidth() != pw || mSharedHqBm.getHeight() != ph)
-			{
-				if (pw > 0 && ph > 0)
-					mSharedHqBm = Bitmap.createBitmap(pw, ph, Bitmap.Config.ARGB_8888);
-				else
-					mSharedHqBm = null;
-			}
-
-			pageView = new PageView(mContext, mCore, new Point(pw, ph), mSharedHqBm);
+			pageView = new PageView(mContext, mCore, new Point(pw, ph));
 		} else {
 			pageView = (PageView) convertView;
 		}
