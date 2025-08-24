@@ -1,16 +1,13 @@
 package net.timelegend.chaka.viewer;
 
 import android.app.ActionBar;
-import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.view.MenuItem;
 import android.view.View;
 
 import androidx.activity.ComponentActivity;
-import androidx.core.content.ContextCompat;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -24,7 +21,6 @@ import java.io.OutputStreamWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 

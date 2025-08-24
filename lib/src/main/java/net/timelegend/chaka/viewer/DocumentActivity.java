@@ -9,7 +9,6 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.content.res.Resources;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
