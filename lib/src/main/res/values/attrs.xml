@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="Theme">
+        <attr name="highlight" format="reference" />
+        <attr name="link" format="reference" />
+        <attr name="selection" format="reference" />
+    </declare-styleable>
+</resources>

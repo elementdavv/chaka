@@ -40,6 +40,7 @@ import android.view.WindowManager;
 import android.view.WindowMetrics;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ListPopupWindow;
 import android.widget.PopupMenu;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
@@ -52,10 +53,12 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.TooltipCompat;
+import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 public class DocumentActivity extends AppCompatActivity
@@ -82,6 +85,8 @@ public class DocumentActivity extends AppCompatActivity
 	private ImageButton  mCropMarginButton;
 	private ImageButton  mFocusButton;
 	private ImageButton  mSmartFocusButton;
+	private ImageButton  mColorButton;
+	private ImageButton  mShareButton;
 	private ImageButton  mHelpButton;
 	private ImageButton  mSearchButton;
 	private ImageButton  mOutlineButton;
@@ -122,6 +127,11 @@ public class DocumentActivity extends AppCompatActivity
     private int mOrientation;
     private int lastPage = -1;
     private long firstClickTime = 0;
+    private boolean single = false;
+    private boolean leftText = false;
+    private boolean vertical = false;
+    private Uri uri;
+    private String mMimeType;
 
     private int highlightColor = Color.argb(0xFF, 0x3C, 0xB3, 0x71);
     private int highunlightColor = Color.argb(0xFF, 255, 255, 255);
@@ -135,6 +145,7 @@ public class DocumentActivity extends AppCompatActivity
 
 	protected View mLayoutButton;
 	protected PopupMenu mLayoutPopupMenu;
+	protected ListPopupWindow mColorPopupWindow;
 
 	private MuPDFCore openBuffer(byte buffer[], String magic)
 	{
@@ -223,7 +234,7 @@ public class DocumentActivity extends AppCompatActivity
 	public void onCreate(final Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-		Tool.mContext = this;
+		Tool.create(this);
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
@@ -248,7 +259,7 @@ public class DocumentActivity extends AppCompatActivity
 			mReturnToLibraryActivity = intent.getIntExtra(getComponentName().getPackageName() + ".ReturnToLibraryActivity", 0) != 0;
 
 			if (Intent.ACTION_VIEW.equals(intent.getAction())) {
-				Uri uri = intent.getData();
+				uri = intent.getData();
 				String mimetype = getIntent().getType();
 
 				if (uri == null)  {
@@ -262,7 +273,8 @@ public class DocumentActivity extends AppCompatActivity
 				Tool.i("  MAGIC (Intent) " + mimetype);
 
 				// in case of cbz recognized as zip
-				if ("application/zip".equals(mimetype)) {
+				// .gz recognized as */*
+				if ("application/zip".equals(mimetype) || "*/*".equals(mimetype)) {
 					mimetype = null;
 				}
 
@@ -301,6 +313,9 @@ public class DocumentActivity extends AppCompatActivity
 					mimetype = getContentResolver().getType(uri);
 					Tool.i("  MAGIC (Resolved) " + mimetype);
 				}
+
+				mMimeType = mimetype;
+
 				if (mimetype == null || mimetype.equals("application/octet-stream")) {
 					mimetype = mDocTitle;
 					Tool.i("  MAGIC (Filename) " + mimetype);
@@ -418,6 +433,11 @@ public class DocumentActivity extends AppCompatActivity
 
 		BookmarkRepository.getInstance().onSizeChange();
 		mDocView.setDisplayedViewIndex(loc);
+
+		if (vertical) {
+			vertical = false;
+			toggleFlipVerticalHighlight();
+		}
 	}
 
 	public void createUI(Bundle savedInstanceState) {
@@ -508,9 +528,12 @@ public class DocumentActivity extends AppCompatActivity
             TooltipCompat.setTooltipText(mLockButton, getString(R.string.lock));
             TooltipCompat.setTooltipText(mCropMarginButton, getString(R.string.crop_margin));
             TooltipCompat.setTooltipText(mFocusButton, getString(R.string.focus));
+            TooltipCompat.setTooltipText(mSmartFocusButton, getString(R.string.smart_focus));
             TooltipCompat.setTooltipText(mLinkButton, getString(R.string.link));
             TooltipCompat.setTooltipText(mSearchButton, getString(R.string.text_search));
             TooltipCompat.setTooltipText(mLayoutButton, getString(R.string.format_size));
+            TooltipCompat.setTooltipText(mColorButton, getString(R.string.color));
+            TooltipCompat.setTooltipText(mShareButton, getString(R.string.share));
             TooltipCompat.setTooltipText(mOutlineButton, getString(R.string.contents));
             TooltipCompat.setTooltipText(mHelpButton, getString(R.string.help));
         }
@@ -607,9 +630,34 @@ public class DocumentActivity extends AppCompatActivity
             }
         });
 
-        mSmartFocusButton.setOnClickListener(new View.OnClickListener() {
+        if (core.isReflowable()) {
+            mSmartFocusButton.setVisibility(View.GONE);
+        }
+        else {
+            mSmartFocusButton.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    toggleSmartFocus();
+                }
+            });
+        }
+
+        makeColorPopupWindow();
+
+        mColorButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                toggleSmartFocus();
+                mColorPopupWindow.setAnchorView(v);
+                mColorPopupWindow.show();
+            }
+        });
+
+        mShareButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent shareIntent = new Intent();
+                shareIntent.setAction(Intent.ACTION_SEND);
+                shareIntent.setType(mMimeType);
+                shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
+                shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_to)));
             }
         });
 
@@ -728,16 +776,12 @@ public class DocumentActivity extends AppCompatActivity
 					float oldLayoutEM = mLayoutEM;
 					int id = item.getItemId();
 					if (id == R.id.action_layout_6pt) mLayoutEM = 6;
-					else if (id == R.id.action_layout_7pt) mLayoutEM = 7;
 					else if (id == R.id.action_layout_8pt) mLayoutEM = 8;
-					else if (id == R.id.action_layout_9pt) mLayoutEM = 9;
 					else if (id == R.id.action_layout_10pt) mLayoutEM = 10;
-					else if (id == R.id.action_layout_11pt) mLayoutEM = 11;
 					else if (id == R.id.action_layout_12pt) mLayoutEM = 12;
-					else if (id == R.id.action_layout_13pt) mLayoutEM = 13;
 					else if (id == R.id.action_layout_14pt) mLayoutEM = 14;
-					else if (id == R.id.action_layout_15pt) mLayoutEM = 15;
 					else if (id == R.id.action_layout_16pt) mLayoutEM = 16;
+					else if (id == R.id.action_layout_16pt) mLayoutEM = 18;
 					if (oldLayoutEM != mLayoutEM) {
 						relayoutDocument();
 			            SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
@@ -782,18 +826,41 @@ public class DocumentActivity extends AppCompatActivity
             }
         });
 
+        int black = ContextCompat.getColor(this, R.color.black1);
+        int white = ContextCompat.getColor(this, R.color.white1);
+
 		// Reenstate last state if it was recorded
 		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
 		mLayoutEM = prefs.getInt("layoutem"+mDocKey, 12);
-		lastPage = core.correctPage(prefs.getInt("page"+mDocKey, 0));
+		lastPage = prefs.getInt("page" + mDocKey, 0);
+		single = prefs.getBoolean("single" + mDocKey, false);
+		leftText = prefs.getBoolean("lefttext" + mDocKey, false);
+		vertical = prefs.getBoolean("vertical" + mDocKey, false);
+
+		core.setTintColor(black, white);
 
         if (!core.isReflowable()) {
             HelpActivity.updateReadme();
+
+            if (leftText) {
+                leftText = false;
+                toggleTextLeftHighlight();
+            }
+
+            if (single) {
+                single = false;
+                toggleSingleColumnHighlight();
+            }
 
             if (lastPage < core.countPages())
                 mDocView.setDisplayedViewIndex(lastPage);
 
             lastPage = -1;
+
+            if (vertical) {
+                vertical = false;
+                toggleFlipVerticalHighlight();
+            }
         }
 
 		if (savedInstanceState == null || !savedInstanceState.getBoolean("ButtonsHidden", false))
@@ -811,6 +878,33 @@ public class DocumentActivity extends AppCompatActivity
 
         watchNavigationBar();
 	}
+
+    private void makeColorPopupWindow() {
+        List<ColorItem> itemList = new ArrayList<>();
+
+        itemList.add(new ColorItem("Day", ContextCompat.getColor(this, R.color.black1), ContextCompat.getColor(this, R.color.white1)));
+        itemList.add(new ColorItem("Night", ContextCompat.getColor(this, R.color.black2), ContextCompat.getColor(this, R.color.white2)));
+        itemList.add(new ColorItem("Paper", ContextCompat.getColor(this, R.color.black3), ContextCompat.getColor(this, R.color.white3)));
+        itemList.add(new ColorItem("Sepia", ContextCompat.getColor(this, R.color.black4), ContextCompat.getColor(this, R.color.white4)));
+        itemList.add(new ColorItem("Twilight", ContextCompat.getColor(this, R.color.black5), ContextCompat.getColor(this, R.color.white5)));
+        itemList.add(new ColorItem("Console", ContextCompat.getColor(this, R.color.black6), ContextCompat.getColor(this, R.color.white6)));
+
+        ColorAdapter adapter = new ColorAdapter(this, itemList, new ColorAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClick(int position) {
+                ColorItem item =  itemList.get(position);
+                if (core.setTintColor(item.black, item.white))
+                    mDocView.refresh();
+                mColorPopupWindow.dismiss();
+            }
+        });
+
+        mColorPopupWindow = new ListPopupWindow(this);
+        mColorPopupWindow.setAdapter(adapter);
+        mColorPopupWindow.setWidth(adapter.getWidth() + 100);
+        mColorPopupWindow.setHeight(ListPopupWindow.WRAP_CONTENT);
+        mColorPopupWindow.setModal(true);
+    }
 
     private ActivityResultLauncher<Intent> activityLauncher = registerForActivityResult(
         new ActivityResultContracts.StartActivityForResult(),
@@ -897,14 +991,7 @@ public class DocumentActivity extends AppCompatActivity
 			if (mDocTitle != null)
 				outState.putString("DocTitle", mDocTitle);
 
-			// Store current page in the prefs against the file name,
-			// so that we can pick it up each time the file is loaded
-			// Other info is needed only for screen-orientation change,
-			// so it can go in the bundle
-			SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-			SharedPreferences.Editor edit = prefs.edit();
-			edit.putInt("page"+mDocKey, core.realPage(mDocView.getDisplayedViewIndex()));
-			edit.apply();
+			savePrefs();
 		}
 
 		if (!mButtonsVisible)
@@ -924,12 +1011,23 @@ public class DocumentActivity extends AppCompatActivity
 			mSearchTask.stop();
 
 		if (mDocKey != null && mDocView != null) {
-			SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-			SharedPreferences.Editor edit = prefs.edit();
-			edit.putInt("page"+mDocKey, core.realPage(mDocView.getDisplayedViewIndex()));
-			edit.apply();
+			savePrefs();
 		}
 		BookmarkRepository.getInstance().save();
+	}
+
+	private void savePrefs() {
+		// Store current page in the prefs against the file name,
+		// so that we can pick it up each time the file is loaded
+		// Other info is needed only for screen-orientation change,
+		// so it can go in the bundle
+		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
+		SharedPreferences.Editor edit = prefs.edit();
+		edit.putInt("page" + mDocKey, mDocView.getDisplayedViewIndex());
+		edit.putBoolean("single" + mDocKey, mSingleColumnHighlight);
+		edit.putBoolean("lefttext" + mDocKey, mTextLeftHighlight);
+		edit.putBoolean("vertical" + mDocKey, mFlipVerticalHighlight);
+		edit.apply();
 	}
 
 	@Override
@@ -1015,7 +1113,7 @@ public class DocumentActivity extends AppCompatActivity
 		// COLOR tint
 		mFocusButton.setColorFilter(mFocusHighlight ? highlightColor : highunlightColor);
 		// Inform pages of the change.
-		mDocView.toggleFocus();
+		mDocView.toggleFocus(core.isReflowable());
     }
 
     private void toggleSmartFocus() {
@@ -1162,6 +1260,8 @@ public class DocumentActivity extends AppCompatActivity
         mLockButton = (ImageButton)mButtonsView.findViewById(R.id.lockButton);
         mCropMarginButton = (ImageButton)mButtonsView.findViewById(R.id.cropMarginButton);
         mSmartFocusButton = (ImageButton)mButtonsView.findViewById(R.id.smartFocusButton);
+        mColorButton = (ImageButton)mButtonsView.findViewById(R.id.colorButton);
+        mShareButton = (ImageButton)mButtonsView.findViewById(R.id.shareButton);
         mHelpButton = (ImageButton)mButtonsView.findViewById(R.id.helpButton);
 		mOutlineButton = (ImageButton)mButtonsView.findViewById(R.id.outlineButton);
 		mTopBarSwitcher = (ViewAnimator)mButtonsView.findViewById(R.id.switcher);
@@ -1223,10 +1323,11 @@ public class DocumentActivity extends AppCompatActivity
         }
         int BUTTON_WIDTH = 160;
         // topbar button count
-        int cbut = 8;
+        int cbut = 9;
         if (mCopyButton.getVisibility() == View.VISIBLE) cbut++;
         if (mSingleColumnButton.getVisibility() == View.VISIBLE) cbut++;
         if (mTextLeftButton.getVisibility() == View.VISIBLE) cbut++;
+        if (mSmartFocusButton.getVisibility() == View.VISIBLE) cbut++;
         if (mLayoutButton.getVisibility() == View.VISIBLE) cbut++;
         if (mOutlineButton.getVisibility() == View.VISIBLE) cbut++;
         int tw = w - BUTTON_WIDTH * cbut;

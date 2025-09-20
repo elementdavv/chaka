@@ -21,10 +21,22 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
+import com.google.android.material.color.MaterialColors;
+
 public class Tool
 {
     public final static String TAG = "Chaka";
     public static Context mContext;
+    public static int HIGHLIGHT_COLOR;
+    public static int LINK_COLOR;
+    public static int SELECTION_COLOR;
+
+    public static void create(Context context) {
+        mContext = context;
+        HIGHLIGHT_COLOR = getThemeColor(R.attr.highlight);
+        LINK_COLOR = getThemeColor(R.attr.link);
+        SELECTION_COLOR = getThemeColor(R.attr.selection);
+    }
 
     public final static <T> void i(T v) {
         Log.i(TAG, v.toString());
@@ -136,4 +148,7 @@ public class Tool
         return hex;
     }
 
+    public static int getThemeColor(int resId) {
+        return MaterialColors.getColor(mContext, resId, 0);
+    }
 }

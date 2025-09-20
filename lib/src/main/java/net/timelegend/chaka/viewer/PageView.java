@@ -45,15 +45,9 @@ class OpaqueImageView extends ImageView {
 }
 
 public class PageView extends ViewGroup {
-	private final MuPDFCore mCore;
-
-	private static final int HIGHLIGHT_COLOR = 0x80cc6600;
-	private static final int LINK_COLOR = 0x800066cc;
-	private static final int SELECTION_COLOR = 0x8090EE90;            // lightgreen
-	private static final int BACKGROUND_COLOR = 0xFFFFFFFF;
-	private static final int PROGRESS_DIALOG_DELAY = 200;
-
 	protected final Context mContext;
+	private final MuPDFCore mCore;
+	private static final int PROGRESS_DIALOG_DELAY = 200;
 
 	protected     int       mPageNumber;
 	private       Point     mParentSize;
@@ -92,7 +86,7 @@ public class PageView extends ViewGroup {
 		mContext = c;
 		mCore = core;
 		mParentSize = parentSize;
-		setBackgroundColor(BACKGROUND_COLOR);
+		setBackgroundColor(mCore.getBackgroundColor());
 		// the parent is correct screen
 		mEntireBm = Bitmap.createBitmap(parentSize.x, parentSize.y, Config.ARGB_8888);
 		mPatchBm = Bitmap.createBitmap(parentSize.x, parentSize.y, Config.ARGB_8888);
@@ -179,7 +173,7 @@ public class PageView extends ViewGroup {
 			addView(mBusyIndicator);
 		}
 
-		setBackgroundColor(BACKGROUND_COLOR);
+		setBackgroundColor(mCore.getBackgroundColor());
 	}
 
 	protected void clearRenderError() {
@@ -212,7 +206,7 @@ public class PageView extends ViewGroup {
 			addView(mErrorIndicator);
 			Drawable mErrorIcon = ResourcesCompat.getDrawable(getResources(), R.drawable.ic_error_red_24dp, null);
 			mErrorIndicator.setImageDrawable(mErrorIcon);
-			mErrorIndicator.setBackgroundColor(BACKGROUND_COLOR);
+			mErrorIndicator.setBackgroundColor(mCore.getBackgroundColor());
 		}
 
 		setBackgroundColor(Color.TRANSPARENT);
@@ -288,7 +282,7 @@ public class PageView extends ViewGroup {
 
 			@Override
 			public void onPreExecute() {
-				setBackgroundColor(BACKGROUND_COLOR);
+				setBackgroundColor(mCore.getBackgroundColor());
 				mEntire.setImageBitmap(null);
 				mEntire.invalidate();
 
@@ -343,7 +337,7 @@ public class PageView extends ViewGroup {
 					final Paint paint = new Paint();
 
 					if (!mIsBlank && mSearchBoxes != null) {
-						paint.setColor(HIGHLIGHT_COLOR);
+						paint.setColor(Tool.HIGHLIGHT_COLOR);
 						for (Quad[] searchBox : mSearchBoxes) {
 							for (Quad q : searchBox) {
 								drawRect(q.toRect(), canvas, paint);
@@ -352,7 +346,7 @@ public class PageView extends ViewGroup {
 					}
 
 					if (!mIsBlank && mLinks != null && mHighlightLinks) {
-						paint.setColor(LINK_COLOR);
+						paint.setColor(Tool.LINK_COLOR);
 						for (Link link : mLinks) {
 							drawRect(link.getBounds(), canvas, paint);
 						}
@@ -360,7 +354,7 @@ public class PageView extends ViewGroup {
 
 					MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(mPageNumber);
 					if (tsmodel != null && tsmodel.selectionBoxes != null && tsmodel.selectionBoxes.length > 0) {
-						paint.setColor(SELECTION_COLOR);
+						paint.setColor(Tool.SELECTION_COLOR);
 						for (Quad q : tsmodel.selectionBoxes) {
 							drawRect(q.toRect(), canvas, paint);
 						}
@@ -616,6 +610,12 @@ public class PageView extends ViewGroup {
 						patchArea.width(), patchArea.height());
 
 			mDrawPatch = new CancellableAsyncTask<Void, Boolean>(task) {
+
+				public void onPreExecute() {
+					// prevent patch view splash
+					mPatch.setImageBitmap(null);
+					mPatch.invalidate();
+				}
 
 				public void onPostExecute(Boolean result) {
 					if (result.booleanValue()) {

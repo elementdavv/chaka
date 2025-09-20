@@ -1,2 +1,2 @@
-bug fixes
-appearance improvement
+Bug fixes
+Appearance improvement

@@ -4,13 +4,10 @@
         <item name="colorPrimary">@color/toolbar</item>
         <item name="colorPrimaryDark">@color/toolbar</item>
         <item name="colorAccent">@color/mediumseagreen</item>
-        <!-- for menu checkbox -->
-        <item name="colorSecondary">@android:color/white</item>
         <!-- <item name="colorPrimaryVariant">@color/purple_700</item> -->
         <!-- <item name="colorOnPrimary">@color/black</item> -->
-        <!-- <item name="colorSecondary">@color/teal_200</item> -->
-        <!-- <item name="colorSecondaryVariant">@color/teal_200</item> -->
-        <!-- <item name="colorOnSecondary">@color/black</item> -->
+        <!-- for menu checkbox -->
+        <item name="colorSecondary">@android:color/white</item>
 
         <!-- for menu background-->
         <item name="android:colorBackground">@color/toolbar</item>
@@ -27,6 +24,11 @@
         <item name="android:textColor">@android:color/white</item>
         <!-- for status bar -->
         <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <!-- for pageview -->
+        <item name="highlight">@color/highlight</item>
+        <item name="link">@color/link</item>
+        <item name="selection">@color/selection</item>
     </style>
 
     <style name="MyDialog" parent="android:Theme.Material.Dialog.Alert">

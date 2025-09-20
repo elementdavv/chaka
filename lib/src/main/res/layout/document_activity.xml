@@ -59,6 +59,15 @@
 				/>
 
 			<ImageButton
+				android:id="@+id/outlineButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="@drawable/button"
+				android:src="@drawable/ic_outlined_white_24dp"
+				android:tooltipText="@string/contents"
+				/>
+
+			<ImageButton
 				android:id="@+id/singleColumnButton"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
@@ -122,6 +131,25 @@
 				/>
 
 			<ImageButton
+				android:id="@+id/colorButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="@drawable/button"
+				android:src="@drawable/ic_color_white_24dp"
+				android:tooltipText="@string/color"
+				/>
+
+			<ImageButton
+				android:id="@+id/layoutButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="@drawable/button"
+				android:src="@drawable/ic_format_size_white_24dp"
+				android:visibility="gone"
+                android:tooltipText="@string/format_size"
+				/>
+
+			<ImageButton
 				android:id="@+id/linkButton"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
@@ -140,22 +168,12 @@
 				/>
 
 			<ImageButton
-				android:id="@+id/layoutButton"
+				android:id="@+id/shareButton"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
 				android:background="@drawable/button"
-				android:src="@drawable/ic_format_size_white_24dp"
-				android:visibility="gone"
-                android:tooltipText="@string/format_size"
-				/>
-
-			<ImageButton
-				android:id="@+id/outlineButton"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:background="@drawable/button"
-				android:src="@drawable/ic_outlined_white_24dp"
-				android:tooltipText="@string/contents"
+				android:src="@drawable/ic_share_white_24dp"
+				android:tooltipText="@string/share"
 				/>
 
 			<ImageButton

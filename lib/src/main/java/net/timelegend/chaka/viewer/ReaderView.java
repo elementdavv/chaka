@@ -1522,6 +1522,7 @@ public class ReaderView
 
     public void toggleSingleColumn() {
         mSingleColumn = !mSingleColumn ;
+        if (mChildViews.size() == 0) return;
         if (mSingleColumn) {
             mCurrent = (mCurrent * 2) - 1;
             if (mCurrent < 0) mCurrent = 0;
@@ -1534,6 +1535,7 @@ public class ReaderView
 
     public void toggleTextLeft() {
         mTextLeft = !mTextLeft;
+        if (mChildViews.size() == 0) return;
         endSelect();
         postDelayed(new Runnable(){
             public void run() {
@@ -1557,6 +1559,7 @@ public class ReaderView
 
     public void toggleFlipVertical() {
         mHorizontalScrolling = !mHorizontalScrolling;
+        if (mChildViews.size() == 0) return;
 		requestLayout();
     }
 
@@ -1572,8 +1575,10 @@ public class ReaderView
     int xScrollStep, yScrollStep, step;
     Stepper focusStepper;
 
-    public void toggleFocus() {
+    public void toggleFocus(boolean isReflowable) {
         mFocus = !mFocus;
+        if (isReflowable) return;
+
         mPrevLeft = mPrevTop = 0;
         PageView pv = (PageView) getDisplayedView();
         float pvwidth = (float)pv.getWidth();

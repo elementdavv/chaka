@@ -37,6 +37,8 @@ public class MuPDFCore
     private float pageLeft;         // crop margin render offset left
     private float pageTop;          // crop margin render offset top
     private final SparseArray<TextSelectionModel> tsModel = new SparseArray<>();
+    private int tint_black = -1;
+    private int tint_white;
 	private DisplayList displayList;
     private boolean singleColumnMode = false;
     private boolean textLeftMode = false;
@@ -73,6 +75,10 @@ public class MuPDFCore
 
 	public String getTitle() {
 		return doc.getMetaData(Document.META_INFO_TITLE);
+	}
+
+	public int getBackgroundColor() {
+		return tint_white;
 	}
 
 	public int countPages() {
@@ -208,6 +214,7 @@ public class MuPDFCore
 		AndroidDrawDevice dev = new AndroidDrawDevice(bm, patchX, patchY);
 		try {
 			displayList.run(dev, ctm, cookie);
+			dev.tint(tint_black, tint_white);
 			dev.close();
 		} finally {
 			dev.destroy();
@@ -221,6 +228,20 @@ public class MuPDFCore
 			Cookie cookie) {
 		drawPage(bm, pageNum, pageW, pageH, patchX, patchY, patchW, patchH, cookie);
 	}
+
+    public boolean setTintColor(int black, int white) {
+        boolean ret = true;
+
+        if (tint_black == -1) ret = false;
+        if (tint_black == black && tint_white == white)
+            ret = false;
+        else {
+            tint_black = black;
+            tint_white = white;
+        }
+
+        return ret;
+    }
 
     public void toggleSingleColumn() {
         singleColumnMode = !singleColumnMode;
