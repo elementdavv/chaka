@@ -10,28 +10,6 @@ import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.Looper;
 
-class ProgressDialogX extends ProgressDialog {
-	public ProgressDialogX(Context context) {
-		super(context);
-	}
-
-	public ProgressDialogX(Context context, int theme) {
-		super(context, theme);
-	}
-
-	private boolean mCancelled = false;
-
-	public boolean isCancelled() {
-		return mCancelled;
-	}
-
-	@Override
-	public void cancel() {
-		mCancelled = true;
-		super.cancel();
-	}
-}
-
 public abstract class SearchTask {
 	private static final int SEARCH_PROGRESS_DELAY = 200;
 	private final Context mContext;

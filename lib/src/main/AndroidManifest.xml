@@ -32,7 +32,7 @@
 				<data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation" />
 				<data android:mimeType="text/html" />
 				<data android:mimeType="text/plain" />
-				<data android:mimeType="application/x-gzip-compressed" />
+				<data android:mimeType="application/x-gzip" />
 				<data android:mimeType="application/zip" />
 				<!-- list application/octet-stream to catch the ones android doesn't recognize -->
 				<data android:mimeType="application/octet-stream" />

@@ -43,14 +43,16 @@ public class BookmarkRepository {
 
         String title = BASE_BOOKMARK_NAME + String.valueOf(++maxnum);
         int realPage = core.realPage(page);
+        long bookmark = 0L;
         BookmarkItem bi;
 
         if (!core.isReflowable()) {
             int right = (core.isSplitPage(page) && core.isRightPage(page)) ? 1 : 0;
-            bi = new BookmarkItemPdf(title, page, realPage, 0L, right);
+            bi = new BookmarkItemPdf(title, page, realPage, bookmark, right);
         }
         else {
-            long bookmark = core.makeBookmark(realPage);
+            // disable use of findBookmark
+            // bookmark = core.makeBookmark(realPage);
             int pageCount = core.countPages();
             bi = new BookmarkItemFlowable(title, page, realPage, bookmark, pageCount);
             ((BookmarkItemFlowable) bi).chapterPage = core.locatePage(realPage);
@@ -100,27 +102,33 @@ public class BookmarkRepository {
             for (Integer key : bookmarks.keySet()) {
                 BookmarkItemFlowable bi = (BookmarkItemFlowable) bookmarks.get(key);
 
+                /*
+                 * for some epubs, findBookmark may take much time
+                 * so disable it's use
+                 */
                 if (bi.pageCount == pageCount) {
                     bi.page = bi.realPage;
 
-                    if (bi.bookmark == 0L) {
-                        bi.bookmark = core.makeBookmark(bi.realPage);
-                    }
+                    // if (bi.bookmark == 0L) {
+                    //     bi.bookmark = core.makeBookmark(bi.realPage);
+                    // }
                 }
                 else if (bi.pageCount2 == pageCount) {
                     bi.page = bi.realPage2;
 
-                    if (bi.bookmark == 0L) {
-                        bi.bookmark = core.makeBookmark(bi.realPage2);
-                    }
+                    // if (bi.bookmark == 0L) {
+                    //     bi.bookmark = core.makeBookmark(bi.realPage2);
+                    // }
                 }
-                else if (bi.bookmark != 0L) {
-                    bi.realPage2 = core.findBookmark(bi.bookmark);
+                // else if (bi.bookmark != 0L) {
+                //     bi.realPage2 = core.findBookmark(bi.bookmark);
+                //     bi.pageCount2 = pageCount;
+                //     bi.page = bi.realPage2;
+                // }
+                else {
+                    bi.realPage2 = core.estimatePage(bi.chapterPage);
                     bi.pageCount2 = pageCount;
                     bi.page = bi.realPage2;
-                }
-                else {
-                    bi.page = core.estimatePage(bi.chapterPage);
                 }
                 marks.put(bi.page, bi);
             }

@@ -15,15 +15,24 @@ import com.artifex.mupdf.fitz.SeekableInputStream;
 import com.artifex.mupdf.fitz.StructuredText;
 import com.artifex.mupdf.fitz.android.AndroidDrawDevice;
 
+import android.app.ProgressDialog;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.PointF;
 import android.graphics.RectF;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.SparseArray;
 
 import java.util.ArrayList;
 
 public class MuPDFCore
 {
+	private static final int LAYOUT_PROGRESS_DELAY = 200;
+	private Context mContext;
+	private final Handler mHandler = new Handler(Looper.getMainLooper());
+	private AsyncTask<Void, Integer, Integer> mLayoutTask;
 	private int resolution;
 	private Document doc;
 	private Outline[] outline;
@@ -49,7 +58,8 @@ public class MuPDFCore
 	private int layoutH = 504;
 	private int layoutEM = 10;
 
-	private MuPDFCore(Document doc) {
+	private MuPDFCore(Context context, Document doc) {
+		this.mContext = context;
 		this.doc = doc;
 		if (!doc.needsPassword()) setup();
 	}
@@ -59,18 +69,19 @@ public class MuPDFCore
 		// PDFs use default pocket book size
 		if (!reflowable) {
 			doc.layout(layoutW, layoutH, layoutEM);
-			correctPageCount(true);
+			basePageCount = doc.countPages();
+			correctPageCount();
 		}
 		resolution = 160;
 		currentPage = -1;
 	}
 
-	public MuPDFCore(byte buffer[], String magic) {
-		this(Document.openDocument(buffer, magic));
+	public MuPDFCore(Context context, byte buffer[], String magic) {
+		this(context, Document.openDocument(buffer, magic));
 	}
 
-	public MuPDFCore(SeekableInputStream stm, String magic) {
-		this(Document.openDocument(stm, magic));
+	public MuPDFCore(Context context, SeekableInputStream stm, String magic) {
+		this(context, Document.openDocument(stm, magic));
 	}
 
 	public String getTitle() {
@@ -90,25 +101,78 @@ public class MuPDFCore
 	}
 
 	// flowable documents use custom book size
-	public synchronized int layout(int oldPage, int w, int h, int em) {
+	public synchronized void layout(int oldPage, int w, int h, int em) {
 		if (w != layoutW || h != layoutH || em != layoutEM) {
 			System.out.println("LAYOUT: " + w + "," + h);
 			layoutW = w;
 			layoutH = h;
 			layoutEM = em;
-			long mark = doc.makeBookmark(doc.locationFromPageNumber(realPage(oldPage)));
+			ChapterPage mark = locatePage(realPage(oldPage));
 			doc.layout(layoutW, layoutH, layoutEM);
-			correctPageCount(true);
-			currentPage = -1;
-			outline = null;
-			try {
-				outline = doc.loadOutline();
-			} catch (Exception ex) {
-				/* ignore error */
-			}
-			return correctPage(doc.pageNumberFromLocation(doc.findBookmark(mark)));
+
+			final ProgressDialogX progressDialog = new ProgressDialogX(mContext, R.style.MyDialog);
+			progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+			progressDialog.setTitle(mContext.getString(R.string.relayout_));
+			int nc = doc.countChapters();
+			progressDialog.setMax(nc);
+			mLayoutTask = new AsyncTask<Void,Integer,Integer>() {
+				@Override
+				protected Integer doInBackground(Void... params) {
+					int np = 0;
+					for (int i = 0; i < nc; i++) {
+						if (!progressDialog.isCancelled()) {
+							publishProgress(i);
+							np += doc.countPages(i);
+						}
+					}
+					return np;
+				}
+
+				@Override
+				protected void onPostExecute(Integer result) {
+					progressDialog.cancel();
+					basePageCount = result;
+					correctPageCount();
+					currentPage = -1;
+					outline = null;
+					try {
+						outline = doc.loadOutline();
+					} catch (Exception ex) {
+						/* ignore error */
+					}
+					int newPage = estimatePage(mark);
+					((DocumentActivity)mContext).afterRelayout(correctPage(newPage));
+				}
+
+				@Override
+				protected void onCancelled() {
+					progressDialog.cancel();
+				}
+
+				@Override
+				protected void onProgressUpdate(Integer... values) {
+					progressDialog.setProgress(values[0].intValue());
+				}
+
+				@Override
+				protected void onPreExecute() {
+					super.onPreExecute();
+					mHandler.postDelayed(new Runnable() {
+						public void run() {
+							if (!progressDialog.isCancelled()) {
+								progressDialog.show();
+								progressDialog.setProgress(0);
+							}
+						}
+					}, LAYOUT_PROGRESS_DELAY);
+				}
+			};
+
+			mLayoutTask.execute();
 		}
-		return oldPage;
+		else {
+			((DocumentActivity)mContext).afterRelayout(oldPage);
+		}
 	}
 
     // the pageNum is correctPage
@@ -245,7 +309,7 @@ public class MuPDFCore
 
     public void toggleSingleColumn() {
         singleColumnMode = !singleColumnMode;
-        correctPageCount(false);
+        correctPageCount();
     }
 
     public void toggleTextLeft() {
@@ -324,13 +388,17 @@ public class MuPDFCore
 		return result;
 	}
 
-    public long makeBookmark(int page) {
-        return doc.makeBookmark(doc.locationFromPageNumber(page));
-    }
+    /*
+    * for some epubs, findBookmark may take much time
+    * so disable it's use
+    */
+    // public long makeBookmark(int page) {
+    //     return doc.makeBookmark(doc.locationFromPageNumber(page));
+    // }
 
-    public int findBookmark(long mark) {
-        return doc.pageNumberFromLocation(doc.findBookmark(mark));
-    }
+    // public int findBookmark(long mark) {
+    //     return doc.pageNumberFromLocation(doc.findBookmark(mark));
+    // }
 
     public ChapterPage locatePage(int page) {
         Location loc = doc.locationFromPageNumber(page);
@@ -338,12 +406,10 @@ public class MuPDFCore
     }
 
     public int estimatePage(ChapterPage cp) {
-        int pageCount = doc.countPages(cp.chapter);
-        int page = Math.round(pageCount * (cp.page + 1) / cp.pageCount) - 1;
-
-        if (page < 0 || page >= pageCount) {
-            page = (page < 0) ? 0 : pageCount - 1;
-        }
+        int chPageCount = doc.countPages(cp.chapter);
+        int page = Math.round(chPageCount * (cp.page + 1) / cp.pageCount) - 1;
+        if (page < 0) page = 0;
+        if (page >= chPageCount) page = chPageCount - 1;
         return doc.pageNumberFromLocation(new Location(cp.chapter, page));
     }
 
@@ -406,11 +472,7 @@ public class MuPDFCore
         return textLeftMode;
     }
 
-    private void correctPageCount(boolean refresh) {
-        if (refresh || basePageCount == -1) {
-            basePageCount = doc.countPages();
-            // until now, layout complete and UI reaady
-        }
+    private void correctPageCount() {
         if (singleColumnMode)
             // divide every page into 2 pages, except first and last page
             pageCount = basePageCount * 2 - 2;

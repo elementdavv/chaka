@@ -12,6 +12,7 @@
 	<string name="searching_">Searching&#x2026;</string>
 	<string name="text_not_found">Text not found</string>
 	<string name="share_to">Share book...</string>
+	<string name="relayout_">Relayout&#x2026;</string>
 
     <string name="copy">Copy Selection</string>
     <string name="single_column">Single Column</string>

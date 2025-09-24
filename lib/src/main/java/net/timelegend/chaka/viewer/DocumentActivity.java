@@ -151,7 +151,7 @@ public class DocumentActivity extends AppCompatActivity
 	{
 		try
 		{
-			core = new MuPDFCore(buffer, magic);
+			core = new MuPDFCore(this, buffer, magic);
 		}
 		catch (Exception e)
 		{
@@ -165,7 +165,7 @@ public class DocumentActivity extends AppCompatActivity
 	{
 		try
 		{
-			core = new MuPDFCore(stm, magic);
+			core = new MuPDFCore(this, stm, magic);
 		}
 		catch (Exception e)
 		{
@@ -419,7 +419,10 @@ public class DocumentActivity extends AppCompatActivity
 	}
 
 	public void relayoutDocument() {
-		int loc = core.layout(mDocView.mCurrent, mLayoutW, mLayoutH, mLayoutEM);
+		core.layout(mDocView.mCurrent, mLayoutW, mLayoutH, mLayoutEM);
+	}
+
+	public void afterRelayout(int loc) {
 		mFlatOutline = null;
 		mDocView.mHistory.clear();
 		mDocView.refresh();
@@ -836,6 +839,8 @@ public class DocumentActivity extends AppCompatActivity
 		single = prefs.getBoolean("single" + mDocKey, false);
 		leftText = prefs.getBoolean("lefttext" + mDocKey, false);
 		vertical = prefs.getBoolean("vertical" + mDocKey, false);
+		black = prefs.getInt("black" + mDocKey, black);
+		white = prefs.getInt("white" + mDocKey, white);
 
 		core.setTintColor(black, white);
 
@@ -893,8 +898,14 @@ public class DocumentActivity extends AppCompatActivity
             @Override
             public void onItemClick(int position) {
                 ColorItem item =  itemList.get(position);
-                if (core.setTintColor(item.black, item.white))
+                if (core.setTintColor(item.black, item.white)) {
                     mDocView.refresh();
+                    SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
+                    SharedPreferences.Editor edit = prefs.edit();
+                    edit.putInt("black"+mDocKey, item.black);
+                    edit.putInt("white"+mDocKey, item.white);
+                    edit.apply();
+                }
                 mColorPopupWindow.dismiss();
             }
         });

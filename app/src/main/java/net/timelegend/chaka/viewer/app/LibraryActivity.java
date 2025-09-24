@@ -42,7 +42,7 @@ public class LibraryActivity extends Activity
 				"application/vnd.openxmlformats-officedocument.presentationml.presentation",
 				"text/html",
 				"text/plain",
-				"application/x-gzip-compressed",
+				"application/x-gzip",
 				"application/zip",
 				// ... and the ones android doesn't know about
 				"application/octet-stream"
