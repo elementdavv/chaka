@@ -1,0 +1,4 @@
+Add color palette
+Add book sharing
+Remember reading status
+Compact fontsize options

@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 group = 'net.timelegend.chaka'
-version = '1.24.9a.17'
+version = '1.24.9a.18'
 
 dependencies {
 	if (file('../lib/build.gradle').isFile())
 		api project(':lib')
 	else
-		api 'net.timelegend.chaka:viewer:1.24.9a.17'
+		api 'net.timelegend.chaka:viewer:1.24.9a.18'
 }
 
 android {
@@ -18,8 +18,8 @@ android {
         namespace 'net.timelegend.chaka.viewer.app'
 		minSdkVersion 21
 		targetSdkVersion 34
-		versionName '1.24.9a.17'
-		versionCode 163
+		versionName '1.24.9a.18'
+		versionCode 164
 
         if (!project.hasProperty('noSplits')) {
 	        splits {
@@ -59,6 +59,9 @@ android {
 		buildTypes {
 			release {
 				signingConfig signingConfigs.release
+				minifyEnabled true
+				shrinkResources true
+				proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
 				ndk {
 					debugSymbolLevel 'FULL'
 				}
