@@ -778,13 +778,13 @@ public class DocumentActivity extends AppCompatActivity
 				public boolean onMenuItemClick(MenuItem item) {
 					float oldLayoutEM = mLayoutEM;
 					int id = item.getItemId();
-					if (id == R.id.action_layout_6pt) mLayoutEM = 6;
-					else if (id == R.id.action_layout_8pt) mLayoutEM = 8;
+					if (id == R.id.action_layout_8pt) mLayoutEM = 8;
 					else if (id == R.id.action_layout_10pt) mLayoutEM = 10;
 					else if (id == R.id.action_layout_12pt) mLayoutEM = 12;
 					else if (id == R.id.action_layout_14pt) mLayoutEM = 14;
 					else if (id == R.id.action_layout_16pt) mLayoutEM = 16;
-					else if (id == R.id.action_layout_16pt) mLayoutEM = 18;
+					else if (id == R.id.action_layout_18pt) mLayoutEM = 18;
+					else if (id == R.id.action_layout_20pt) mLayoutEM = 20;
 					if (oldLayoutEM != mLayoutEM) {
 						relayoutDocument();
 			            SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
@@ -834,7 +834,7 @@ public class DocumentActivity extends AppCompatActivity
 
 		// Reenstate last state if it was recorded
 		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-		mLayoutEM = prefs.getInt("layoutem"+mDocKey, 12);
+		mLayoutEM = prefs.getInt("layoutem"+mDocKey, 14);
 		lastPage = prefs.getInt("page" + mDocKey, 0);
 		single = prefs.getBoolean("single" + mDocKey, false);
 		leftText = prefs.getBoolean("lefttext" + mDocKey, false);
@@ -876,7 +876,8 @@ public class DocumentActivity extends AppCompatActivity
 
 		// Stick the document view and the buttons overlay into a parent view
 		RelativeLayout layout = new RelativeLayout(this);
-		layout.setBackgroundColor(Color.DKGRAY);
+		// layout.setBackgroundColor(Color.DKGRAY);
+		layout.setBackgroundColor(ContextCompat.getColor(this, R.color.toolbar));
 		layout.addView(mDocView);
 		layout.addView(mButtonsView);
 		setContentView(layout);
@@ -889,6 +890,7 @@ public class DocumentActivity extends AppCompatActivity
 
         itemList.add(new ColorItem("Day", ContextCompat.getColor(this, R.color.black1), ContextCompat.getColor(this, R.color.white1)));
         itemList.add(new ColorItem("Night", ContextCompat.getColor(this, R.color.black2), ContextCompat.getColor(this, R.color.white2)));
+        itemList.add(new ColorItem("Moon", ContextCompat.getColor(this, R.color.black21), ContextCompat.getColor(this, R.color.white21)));
         itemList.add(new ColorItem("Paper", ContextCompat.getColor(this, R.color.black3), ContextCompat.getColor(this, R.color.white3)));
         itemList.add(new ColorItem("Sepia", ContextCompat.getColor(this, R.color.black4), ContextCompat.getColor(this, R.color.white4)));
         itemList.add(new ColorItem("Twilight", ContextCompat.getColor(this, R.color.black5), ContextCompat.getColor(this, R.color.white5)));
@@ -906,7 +908,7 @@ public class DocumentActivity extends AppCompatActivity
                     edit.putInt("white"+mDocKey, item.white);
                     edit.apply();
                 }
-                mColorPopupWindow.dismiss();
+                // mColorPopupWindow.dismiss();
             }
         });
 

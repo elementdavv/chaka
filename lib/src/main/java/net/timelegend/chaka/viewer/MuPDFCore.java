@@ -115,6 +115,7 @@ public class MuPDFCore
 			progressDialog.setTitle(mContext.getString(R.string.relayout_));
 			int nc = doc.countChapters();
 			progressDialog.setMax(nc);
+			progressDialog.setCanceledOnTouchOutside(false);
 			mLayoutTask = new AsyncTask<Void,Integer,Integer>() {
 				@Override
 				protected Integer doInBackground(Void... params) {
@@ -278,7 +279,9 @@ public class MuPDFCore
 		AndroidDrawDevice dev = new AndroidDrawDevice(bm, patchX, patchY);
 		try {
 			displayList.run(dev, ctm, cookie);
-			dev.tint(tint_black, tint_white);
+			if (tint_black != 0xff000000 || tint_white != 0xffffffff) {
+				dev.tint(tint_black, tint_white);
+            }
 			dev.close();
 		} finally {
 			dev.destroy();

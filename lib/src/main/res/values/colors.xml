@@ -11,21 +11,24 @@
 	<color name="selection">#8090EE90</color>
 
 	<!-- day -->
-	<color name="black1">#303030</color>
-	<color name="white1">#FFFFF0</color>
+	<color name="black1">#000000</color>
+	<color name="white1">#ffffff</color>
 	<!-- night -->
-	<color name="black2">#FFFFF0</color>
-	<color name="white2">#303030</color>
+	<color name="black2">#fffffe</color>
+	<color name="white2">#000000</color>
+	<!-- moon -->
+	<color name="black21">#fffffe</color>
+	<color name="white21">#303030</color>
 	<!-- paper -->
 	<color name="black3">#000000</color>
 	<color name="white3">#ffe6b5</color>
 	<!-- sepia -->
-	<color name="black4">#303030</color>
+	<color name="black4">#000000</color>
 	<color name="white4">#ffffe0</color>
 	<!-- twilight -->
-	<color name="black5">#303030</color>
+	<color name="black5">#000000</color>
 	<color name="white5">#f0ffff</color>
-	<!-- console:P1 phosphors -->
-	<color name="black6">#33ff33</color>
+	<!-- console -->
+	<color name="black6">#18e699</color>
 	<color name="white6">#000000</color>
 </resources>

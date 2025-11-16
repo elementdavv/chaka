@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-	<item android:id="@+id/action_layout_6pt" android:title="6pt" />
 	<item android:id="@+id/action_layout_8pt" android:title="8pt" />
 	<item android:id="@+id/action_layout_10pt" android:title="10pt" />
 	<item android:id="@+id/action_layout_12pt" android:title="12pt" />
 	<item android:id="@+id/action_layout_14pt" android:title="14pt" />
 	<item android:id="@+id/action_layout_16pt" android:title="16pt" />
-	<item android:id="@+id/action_layout_16pt" android:title="18pt" />
+	<item android:id="@+id/action_layout_18pt" android:title="18pt" />
+	<item android:id="@+id/action_layout_20pt" android:title="20pt" />
 </menu>

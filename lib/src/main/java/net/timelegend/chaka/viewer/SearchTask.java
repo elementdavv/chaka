@@ -51,6 +51,7 @@ public abstract class SearchTask {
 			}
 		});
 		progressDialog.setMax(mCore.countPages());
+		progressDialog.setCanceledOnTouchOutside(false);
 
 		mSearchTask = new AsyncTask<Void,Integer,SearchTaskResult>() {
 			@Override

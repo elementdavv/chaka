@@ -63,12 +63,14 @@ public class HelpActivity extends ComponentActivity
         return super.onOptionsItemSelected(item);
     }
 
+    private static String README = "README.md";
+
     private void showReadme() {
         MarkedView mvHelp = (MarkedView)findViewById(R.id.mvHelp);
         mvHelp.chColor("#" + Tool.colorHex(android.R.color.white));
         mvHelp.chBackgroundColor("#" + Tool.colorHex(R.color.toolbar));
         mvHelp.init();
-        File dir = getExternalFilesDir(null);
+        File dir = Tool.getDataDir(null);
         File f = new File(dir, README);
         mvHelp.loadMDFile(f);
 
@@ -90,9 +92,6 @@ public class HelpActivity extends ComponentActivity
             }
         }, 200);
     }
-
-    private static String README = "README.md";
-    private static String tag, published;
 
     // called when book layout completed
     public static void updateReadme() {
@@ -135,6 +134,8 @@ public class HelpActivity extends ComponentActivity
 
         return false;
     }
+
+    private static String tag, published;
 
     private static void getApi()
             throws MalformedURLException, IOException {
