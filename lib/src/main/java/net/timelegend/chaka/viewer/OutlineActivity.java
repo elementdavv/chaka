@@ -25,6 +25,7 @@ public class OutlineActivity extends ComponentActivity
     @Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+        Tool.fullScreen(getWindow());
         setContentView(R.layout.outline_activity);
 
         ActionBar ab = getActionBar();
@@ -38,12 +39,6 @@ public class OutlineActivity extends ComponentActivity
         }
         initBookmarks();
         refresh(ab);
-    }
-
-    @Override
-    public void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        Tool.fullScreen(getWindow());
     }
 
     private void initToc() {

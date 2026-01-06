@@ -7,4 +7,6 @@
 	<item android:id="@+id/action_layout_16pt" android:title="16pt" />
 	<item android:id="@+id/action_layout_18pt" android:title="18pt" />
 	<item android:id="@+id/action_layout_20pt" android:title="20pt" />
+	<item android:id="@+id/action_layout_22pt" android:title="22pt" />
+	<item android:id="@+id/action_layout_24pt" android:title="24pt" />
 </menu>

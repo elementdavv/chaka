@@ -56,7 +56,7 @@ public class ReaderView
 
 	private PageAdapter           mAdapter;
 	protected int               mCurrent;    // Adapter's index for the current view
-	private boolean           mResetLayout;
+	protected boolean           mResetLayout;
 	private final SparseArray<View>
 				  mChildViews = new SparseArray<View>(7);
 					       // Shadows the children of the adapter view
@@ -65,7 +65,7 @@ public class ReaderView
 				  mViewCache = new LinkedList<View>();
 	private boolean           mUserInteracting;  // Whether the user is interacting
 	private boolean           mScaling;    // Whether the user is currently pinch zooming
-	private float             mScale     = 1.0f;
+	protected float             mScale     = 1.0f;
 	private int               mXScroll;    // Scroll amounts recorded from events.
 	private int               mYScroll;    // and then accounted for in onLayout
 	private GestureDetector mGestureDetector;
@@ -82,8 +82,8 @@ public class ReaderView
     private boolean       mFocus = false;
     private boolean       mSmartFocus = false;
     private boolean       mLock = false;
-    private int           mPrevLeft;
-    private int           mPrevTop;
+    protected int           mPrevLeft;
+    protected int           mPrevTop;
     private SELECT        mSelecting = SELECT.NO_SELECT;    // text select state
     private int           mSelectLeftView;                  // view pageNumber with text select left handle
     private int           mSelectRightView;                 // view pageNumber with text select right handle
@@ -163,7 +163,7 @@ public class ReaderView
 
 	public void setDisplayedViewIndex(int i) {
 		if (0 <= i && i < mAdapter.getCount()) {
-            if (mFocus) {
+            if (mFocus || i == mCurrent) {
                 savePosition(i);
             }
 			onMoveOffChild(mCurrent);
@@ -380,10 +380,17 @@ public class ReaderView
 			mapper.applyToView(mChildViews.valueAt(i));
 	}
 
-	public void refresh() {
+	public void refresh(boolean full) {
 		mResetLayout = true;
 
-		mScale = 1.0f;
+		if (full) {
+			mScale = 1.0f;
+			mPrevLeft = 0;
+			mPrevLeft = 0;
+		}
+		else {
+			savePosition(mCurrent);
+		}
 		mXScroll = mYScroll = 0;
 		mSelecting = SELECT.NO_SELECT;
 
@@ -882,7 +889,6 @@ public class ReaderView
 				}
 			}
 		} else {
-			mResetLayout = false;
 			mXScroll = mYScroll = 0;
 
 			// Remove all children and hold them for reuse
@@ -910,7 +916,7 @@ public class ReaderView
 		// the views spaced out
 		cvOffset = subScreenSizeOffset(cv);
 		if (notPresent) {
-            if (mFocus ) {
+            if (mFocus || mResetLayout) {
                 cvLeft = mPrevLeft;
                 cvTop = mPrevTop;
             }
@@ -975,6 +981,7 @@ public class ReaderView
 		}
 
 		cv.layout(cvLeft, cvTop, cvRight, cvBottom);
+		mResetLayout = false;
 
         if (mCurrent > 0) {
             View lrv = null;
@@ -1246,8 +1253,9 @@ public class ReaderView
 	protected void onTapMainDocArea() {}
 	protected void onDocMotion() {}
 
-	public void setLinksEnabled(boolean b) {
+	public void setLinksEnabled(boolean b, boolean init) {
 		mLinksEnabled = b;
+		if (init) return;
 		resetupChildren();
 		invalidate();
 	}
@@ -1315,6 +1323,7 @@ public class ReaderView
      */
     private void savePosition(int i) {
         View cv = getDisplayedView();
+        if (cv == null) return;
         mPrevLeft = cv.getLeft();
         if (mSmartFocus && !sameSide(mCurrent, i)) {
             mPrevLeft = -(cv.getRight() - getWidth());
@@ -1520,9 +1529,9 @@ public class ReaderView
 		mStepper.prod();
     }
 
-    public void toggleSingleColumn() {
+    public void toggleSingleColumn(boolean init) {
         mSingleColumn = !mSingleColumn ;
-        if (mChildViews.size() == 0) return;
+        if (mChildViews.size() == 0 || init) return;
         if (mSingleColumn) {
             mCurrent = (mCurrent * 2) - 1;
             if (mCurrent < 0) mCurrent = 0;
@@ -1530,12 +1539,12 @@ public class ReaderView
         else {
             mCurrent = (mCurrent + 1) / 2;
         }
-        refresh();
+        refresh(true);
     }
 
-    public void toggleTextLeft() {
+    public void toggleTextLeft(boolean init) {
         mTextLeft = !mTextLeft;
-        if (mChildViews.size() == 0) return;
+        if (mChildViews.size() == 0 || init) return;
         endSelect();
         postDelayed(new Runnable(){
             public void run() {
@@ -1557,9 +1566,9 @@ public class ReaderView
         }, 200);
     }
 
-    public void toggleFlipVertical() {
+    public void toggleFlipVertical(boolean init) {
         mHorizontalScrolling = !mHorizontalScrolling;
-        if (mChildViews.size() == 0) return;
+        if (mChildViews.size() == 0 || init) return;
 		requestLayout();
     }
 
@@ -1567,17 +1576,18 @@ public class ReaderView
         mLock = !mLock;
     }
 
-    public void toggleCropMargin() {
-        refresh();
+    public void toggleCropMargin(boolean init) {
+        if (init) return;
+        refresh(true);
     }
 
     float scaleTo, scaleStep;
     int xScrollStep, yScrollStep, step;
     Stepper focusStepper;
 
-    public void toggleFocus(boolean isReflowable) {
+    public void toggleFocus(boolean isReflowable, boolean init) {
         mFocus = !mFocus;
-        if (isReflowable) return;
+        if (isReflowable || init) return;
 
         mPrevLeft = mPrevTop = 0;
         PageView pv = (PageView) getDisplayedView();

@@ -88,6 +88,8 @@ public class DocumentActivity extends AppCompatActivity
 	private ImageButton  mColorButton;
 	private ImageButton  mShareButton;
 	private ImageButton  mHelpButton;
+	private View         scrollView;
+	private View         iconView;
 	private ImageButton  mSearchButton;
 	private ImageButton  mOutlineButton;
 	private ViewAnimator mTopBarSwitcher;
@@ -127,9 +129,6 @@ public class DocumentActivity extends AppCompatActivity
     private int mOrientation;
     private int lastPage = -1;
     private long firstClickTime = 0;
-    private boolean single = false;
-    private boolean leftText = false;
-    private boolean vertical = false;
     private Uri uri;
     private String mMimeType;
 
@@ -142,6 +141,8 @@ public class DocumentActivity extends AppCompatActivity
 	private int mLayoutEM;      // read from prefs
 	private int mLayoutW = 312;
 	private int mLayoutH = 504;
+	private int mTitleWidth = 0;
+	private int mButtonWidth = 0;
 
 	protected View mLayoutButton;
 	protected PopupMenu mLayoutPopupMenu;
@@ -238,6 +239,7 @@ public class DocumentActivity extends AppCompatActivity
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
+		Tool.fullScreen(getWindow());
 
 		DisplayMetrics metrics = getResources().getDisplayMetrics();
 		// DisplayMetrics metrics = new DisplayMetrics();
@@ -384,12 +386,6 @@ public class DocumentActivity extends AppCompatActivity
 		com.artifex.mupdf.fitz.Context.setUserCSS(sb.toString());
 	}
 
-	@Override
-	public void onAttachedToWindow() {
-		super.onAttachedToWindow();
-		Tool.fullScreen(getWindow());
-	}
-
 	public void requestPassword(final Bundle savedInstanceState) {
 		mPasswordView = new EditText(this);
 		mPasswordView.setInputType(EditorInfo.TYPE_TEXT_VARIATION_PASSWORD);
@@ -425,22 +421,16 @@ public class DocumentActivity extends AppCompatActivity
 	public void afterRelayout(int loc) {
 		mFlatOutline = null;
 		mDocView.mHistory.clear();
-		mDocView.refresh();
 
-        if (lastPage > -1 ) {
+        if (lastPage > -1) {
             HelpActivity.updateReadme();
-            if (lastPage < core.countPages())
+            if (lastPage >= 0 && lastPage < core.countPages())
                 loc = lastPage;
             lastPage = -1;
         }
 
 		BookmarkRepository.getInstance().onSizeChange();
 		mDocView.setDisplayedViewIndex(loc);
-
-		if (vertical) {
-			vertical = false;
-			toggleFlipVerticalHighlight();
-		}
 	}
 
 	public void createUI(Bundle savedInstanceState) {
@@ -492,7 +482,7 @@ public class DocumentActivity extends AppCompatActivity
                 // ajust doc name width
                 mHandler.postDelayed(new Runnable(){
                     public void run() {
-                        updateTopBar(w);
+                        updateTopBar();
                     }}, 200);
 
 				if (core.isReflowable()) {
@@ -500,7 +490,7 @@ public class DocumentActivity extends AppCompatActivity
 					mLayoutH = h * 72 * 2 / mDisplayDPI;
 					relayoutDocument();
 				} else {
-					refresh();
+					refresh(false);
 				}
 			}
 		};
@@ -593,7 +583,7 @@ public class DocumentActivity extends AppCompatActivity
         else {
             mSingleColumnButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    toggleSingleColumnHighlight();
+                    toggleSingleColumnHighlight(false);
                 }
             });
         }
@@ -604,14 +594,14 @@ public class DocumentActivity extends AppCompatActivity
         else {
             mTextLeftButton.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
-                    toggleTextLeftHighlight();
+                    toggleTextLeftHighlight(false);
                 }
             });
         }
 
         mFlipVerticalButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                toggleFlipVerticalHighlight();
+                toggleFlipVerticalHighlight(false);
             }
         });
 
@@ -623,13 +613,13 @@ public class DocumentActivity extends AppCompatActivity
 
         mCropMarginButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                toggleCropMargin();
+                toggleCropMargin(false);
             }
         });
 
         mFocusButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                toggleFocus();
+                toggleFocus(false);
             }
         });
 
@@ -766,7 +756,7 @@ public class DocumentActivity extends AppCompatActivity
 
 		mLinkButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				setLinkHighlight(!mLinkHighlight);
+				setLinkHighlight(!mLinkHighlight, false);
 			}
 		});
 
@@ -785,6 +775,8 @@ public class DocumentActivity extends AppCompatActivity
 					else if (id == R.id.action_layout_16pt) mLayoutEM = 16;
 					else if (id == R.id.action_layout_18pt) mLayoutEM = 18;
 					else if (id == R.id.action_layout_20pt) mLayoutEM = 20;
+					else if (id == R.id.action_layout_22pt) mLayoutEM = 22;
+					else if (id == R.id.action_layout_24pt) mLayoutEM = 24;
 					if (oldLayoutEM != mLayoutEM) {
 						relayoutDocument();
 			            SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
@@ -829,43 +821,77 @@ public class DocumentActivity extends AppCompatActivity
             }
         });
 
-        int black = ContextCompat.getColor(this, R.color.black1);
-        int white = ContextCompat.getColor(this, R.color.white1);
-
 		// Reenstate last state if it was recorded
 		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
 		mLayoutEM = prefs.getInt("layoutem"+mDocKey, 14);
-		lastPage = prefs.getInt("page" + mDocKey, 0);
-		single = prefs.getBoolean("single" + mDocKey, false);
-		leftText = prefs.getBoolean("lefttext" + mDocKey, false);
-		vertical = prefs.getBoolean("vertical" + mDocKey, false);
-		black = prefs.getInt("black" + mDocKey, black);
-		white = prefs.getInt("white" + mDocKey, white);
+		lastPage = prefs.getInt("page" + mDocKey, -1);
+		boolean single = prefs.getBoolean("single" + mDocKey, false);
+		boolean leftText = prefs.getBoolean("lefttext" + mDocKey, false);
+		boolean vertical = prefs.getBoolean("vertical" + mDocKey, false);
+		boolean lock = prefs.getBoolean("lock" + mDocKey, false);
+		boolean crop = prefs.getBoolean("crop" + mDocKey, false);
+		boolean focus = prefs.getBoolean("focus" + mDocKey, false);
+		boolean smart = prefs.getBoolean("smart" + mDocKey, false);
+		boolean link = prefs.getBoolean("link" + mDocKey, false);
+		int left = prefs.getInt("left" + mDocKey, 0);
+		int top = prefs.getInt("top" + mDocKey, 0);
+		float scale = prefs.getFloat("scale" + mDocKey, 1.0f);
+		int black = prefs.getInt("black" + mDocKey, ContextCompat.getColor(this, R.color.black1));
+		int white = prefs.getInt("white" + mDocKey, ContextCompat.getColor(this, R.color.white1));
 
+        mDocView.mPrevLeft = left;
+        mDocView.mPrevTop = top;
+        mDocView.mScale = scale;
+        mDocView.mResetLayout = true;
 		core.setTintColor(black, white);
+
+        if (vertical) {
+            vertical = false;
+            toggleFlipVerticalHighlight(true);
+        }
+
+        if (lock) {
+            lock = false;
+            toggleLock();
+        }
+
+        if (crop) {
+            crop = false;
+            toggleCropMargin(true);
+        }
+
+        if (focus) {
+            focus = false;
+            toggleFocus(true);
+        }
+
+        if (smart) {
+            smart = false;
+            toggleSmartFocus();
+        }
+
+        if (link) {
+            link = false;
+            setLinkHighlight(!mLinkHighlight, true);
+        }
 
         if (!core.isReflowable()) {
             HelpActivity.updateReadme();
 
             if (leftText) {
                 leftText = false;
-                toggleTextLeftHighlight();
+                toggleTextLeftHighlight(true);
             }
 
             if (single) {
                 single = false;
-                toggleSingleColumnHighlight();
+                toggleSingleColumnHighlight(true);
             }
 
-            if (lastPage < core.countPages())
+            if (lastPage >= 0 && lastPage < core.countPages())
                 mDocView.setDisplayedViewIndex(lastPage);
 
             lastPage = -1;
-
-            if (vertical) {
-                vertical = false;
-                toggleFlipVerticalHighlight();
-            }
         }
 
 		if (savedInstanceState == null || !savedInstanceState.getBoolean("ButtonsHidden", false))
@@ -901,7 +927,11 @@ public class DocumentActivity extends AppCompatActivity
             public void onItemClick(int position) {
                 ColorItem item =  itemList.get(position);
                 if (core.setTintColor(item.black, item.white)) {
-                    mDocView.refresh();
+                    if (core.isReflowable()) {
+                        relayoutDocument();
+                    } else {
+                        mDocView.refresh(false);
+                    }
                     SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
                     SharedPreferences.Editor edit = prefs.edit();
                     edit.putInt("black"+mDocKey, item.black);
@@ -1040,6 +1070,15 @@ public class DocumentActivity extends AppCompatActivity
 		edit.putBoolean("single" + mDocKey, mSingleColumnHighlight);
 		edit.putBoolean("lefttext" + mDocKey, mTextLeftHighlight);
 		edit.putBoolean("vertical" + mDocKey, mFlipVerticalHighlight);
+		edit.putBoolean("lock" + mDocKey, mLockHighlight);
+		edit.putBoolean("crop" + mDocKey, mCropMarginHighlight);
+		edit.putBoolean("focus" + mDocKey, mFocusHighlight);
+		edit.putBoolean("smart" + mDocKey, mSmartFocusHighlight);
+		edit.putBoolean("link" + mDocKey, mLinkHighlight);
+		View v = mDocView.getDisplayedView();
+		edit.putInt("left" + mDocKey, v.getLeft());
+		edit.putInt("top" + mDocKey, v.getTop());
+		edit.putFloat("scale" + mDocKey, mDocView.mScale);
 		edit.apply();
 	}
 
@@ -1067,14 +1106,14 @@ public class DocumentActivity extends AppCompatActivity
         mDocView.copy();
     }
 
-    private void toggleSingleColumnHighlight() {
-        int index;
-        mSingleColumnHighlight = !mSingleColumnHighlight;
+    private void toggleSingleColumnHighlight(boolean init) {
+		int index;
+		mSingleColumnHighlight = !mSingleColumnHighlight;
 		// COLOR tint
 		mSingleColumnButton.setColorFilter(mSingleColumnHighlight ? highlightColor : highunlightColor);
 		// Inform pages of the change.
-        core.toggleSingleColumn();
-		mDocView.toggleSingleColumn();
+		core.toggleSingleColumn();
+		mDocView.toggleSingleColumn(init);
 		int smax = Math.max(core.countPages()-1,1);
 		mPageSliderRes = ((10 + smax - 1)/smax) * 2;
 		index = mDocView.getDisplayedViewIndex();
@@ -1084,24 +1123,24 @@ public class DocumentActivity extends AppCompatActivity
 		BookmarkRepository.getInstance().toggleSingleColumn();
     }
 
-    private void toggleTextLeftHighlight() {
+    private void toggleTextLeftHighlight(boolean init) {
 		mTextLeftHighlight = !mTextLeftHighlight;
 		// COLOR tint
 		mTextLeftButton.setColorFilter(mTextLeftHighlight ? highlightColor : highunlightColor);
 		// Inform pages of the change.
 		core.toggleTextLeft();
-		mDocView.toggleTextLeft();
+		mDocView.toggleTextLeft(init);
 		int index = mDocView.getDisplayedViewIndex();
 		updatePageNumView(index);
-        updatePageSlider(index);
+		updatePageSlider(index);
 	}
 
-    private void toggleFlipVerticalHighlight() {
+    private void toggleFlipVerticalHighlight(boolean init) {
 		mFlipVerticalHighlight = !mFlipVerticalHighlight;
 		// COLOR tint
 		mFlipVerticalButton.setColorFilter(mFlipVerticalHighlight ? highlightColor : highunlightColor);
 		// Inform pages of the change.
-		mDocView.toggleFlipVertical();
+		mDocView.toggleFlipVertical(init);
 	}
 
     private void toggleLock() {
@@ -1112,21 +1151,21 @@ public class DocumentActivity extends AppCompatActivity
 		mDocView.toggleLock();
     }
 
-    private void toggleCropMargin() {
+    private void toggleCropMargin(boolean init) {
 		mCropMarginHighlight = !mCropMarginHighlight;
 		// COLOR tint
 		mCropMarginButton.setColorFilter(mCropMarginHighlight ? highlightColor : highunlightColor);
 		// Inform pages of the change.
 		core.toggleCropMargin();
-		mDocView.toggleCropMargin();
+		mDocView.toggleCropMargin(init);
     }
 
-    private void toggleFocus() {
+    private void toggleFocus(boolean init) {
 		mFocusHighlight = !mFocusHighlight;
 		// COLOR tint
 		mFocusButton.setColorFilter(mFocusHighlight ? highlightColor : highunlightColor);
 		// Inform pages of the change.
-		mDocView.toggleFocus(core.isReflowable());
+		mDocView.toggleFocus(core.isReflowable(), init);
     }
 
     private void toggleSmartFocus() {
@@ -1137,12 +1176,12 @@ public class DocumentActivity extends AppCompatActivity
 		mDocView.toggleSmartFocus();
     }
 
-	private void setLinkHighlight(boolean highlight) {
+	private void setLinkHighlight(boolean highlight, boolean init) {
 		mLinkHighlight = highlight;
 		// LINK_COLOR tint
 		mLinkButton.setColorFilter(highlight ? highlightColor : highunlightColor);
 		// Inform pages of the change.
-		mDocView.setLinksEnabled(highlight);
+		mDocView.setLinksEnabled(highlight, init);
 	}
 
 	private void showButtons() {
@@ -1276,6 +1315,8 @@ public class DocumentActivity extends AppCompatActivity
         mColorButton = (ImageButton)mButtonsView.findViewById(R.id.colorButton);
         mShareButton = (ImageButton)mButtonsView.findViewById(R.id.shareButton);
         mHelpButton = (ImageButton)mButtonsView.findViewById(R.id.helpButton);
+        scrollView = mButtonsView.findViewById(R.id.scrollView);
+        iconView = mButtonsView.findViewById(R.id.iconView);
 		mOutlineButton = (ImageButton)mButtonsView.findViewById(R.id.outlineButton);
 		mTopBarSwitcher = (ViewAnimator)mButtonsView.findViewById(R.id.switcher);
 		mSearchClear = (ImageButton)mButtonsView.findViewById(R.id.searchClear);
@@ -1318,43 +1359,32 @@ public class DocumentActivity extends AppCompatActivity
         }
     };
 
-    @SuppressWarnings("deprecation")
-    public void updateTopBar(Integer w) {
-        if (w == null) {
+    public void updateTopBar() {
+        mButtonWidth = iconView.getWidth() - mDocNameView.getWidth();
 
-            // below android 11 (api30)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                WindowMetrics windowMetrics = getWindowManager().getCurrentWindowMetrics();
-                Insets insets = windowMetrics.getWindowInsets()
-                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemBars());
-                w = windowMetrics.getBounds().width() - insets.left - insets.right;
-            } else {
-                DisplayMetrics displayMetrics = new DisplayMetrics();
-                getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-		        w = (int)displayMetrics.widthPixels;
+        if (mTitleWidth == 0) {
+            mTitleWidth = mDocNameView.getWidth();
+        }
+        int scrw = scrollView.getWidth();
+        int tw = scrw - mButtonWidth;
+
+        if (tw > 0) {
+            if (tw < 360) tw = 360;
+        }
+        else {
+            tw = mTitleWidth;
+
+            if (tw > scrw / 3) {
+                tw = scrw / 3;
             }
         }
-        int BUTTON_WIDTH = 160;
-        // topbar button count
-        int cbut = 9;
-        if (mCopyButton.getVisibility() == View.VISIBLE) cbut++;
-        if (mSingleColumnButton.getVisibility() == View.VISIBLE) cbut++;
-        if (mTextLeftButton.getVisibility() == View.VISIBLE) cbut++;
-        if (mSmartFocusButton.getVisibility() == View.VISIBLE) cbut++;
-        if (mLayoutButton.getVisibility() == View.VISIBLE) cbut++;
-        if (mOutlineButton.getVisibility() == View.VISIBLE) cbut++;
-        int tw = w - BUTTON_WIDTH * cbut;
-        int titlebytelen = mDocNameView.getText().toString().getBytes().length;
-        int titlewidth = titlebytelen * 32;
-        int minwidth = Math.min(titlewidth, 360);
-        tw = Math.max(tw, minwidth);
         mDocNameView.setWidth(tw);
     }
 
     public void showCopyButton(int vis) {
         if (mCopyButton.getVisibility() != vis) {
             mCopyButton.setVisibility(vis);
-            updateTopBar(null);
+            updateTopBar();
         }
     }
 
@@ -1367,7 +1397,7 @@ public class DocumentActivity extends AppCompatActivity
         }
         else if (mSingleColumnButton.getVisibility() != vis) {
             mSingleColumnButton.setVisibility(vis);
-            updateTopBar(null);
+            updateTopBar();
         }
     }
 

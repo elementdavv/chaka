@@ -38,18 +38,13 @@ public class HelpActivity extends ComponentActivity
     @Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+        Tool.fullScreen(getWindow());
         ActionBar ab = getActionBar();
         ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP,
                 ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_USE_LOGO);
         ab.setTitle(R.string.help);
         setContentView(R.layout.help_activity);
         showReadme();
-    }
-
-    @Override
-    public void onAttachedToWindow() {
-        super.onAttachedToWindow();
-        Tool.fullScreen(getWindow());
     }
 
     @Override
