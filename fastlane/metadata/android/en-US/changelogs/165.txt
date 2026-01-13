@@ -1,0 +1,7 @@
+· support full screen with notch
+· remember all reading status, including page scale, position and all enable button state
+· improve and fix font size settings
+· improve color palette settings
+· improve toolbar alignment on switching screen orientation
+· loading progress does not interrupted by random touch
+· search progress does not interrupted by random touch
