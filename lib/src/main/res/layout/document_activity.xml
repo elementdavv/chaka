@@ -151,6 +151,15 @@
 				/>
 
 			<ImageButton
+				android:id="@+id/optionsButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="@drawable/button"
+				android:src="@drawable/ic_options_white_24dp"
+				android:tooltipText="@string/options"
+				/>
+
+			<ImageButton
 				android:id="@+id/linkButton"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
@@ -271,7 +280,7 @@
 			android:paddingLeft="16dp"
 			android:paddingRight="16dp"
 			android:paddingTop="12dp"
-			android:paddingBottom="8dp"
+			android:paddingBottom="16dp"
 			android:background="@color/toolbar"
 			android:thumb="@drawable/seek_thumb"
 			android:progressDrawable="@drawable/seek_line"

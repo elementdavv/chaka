@@ -66,7 +66,7 @@ public class BookmarkAdapter extends RecyclerView.Adapter<BookmarkAdapter.ViewHo
             if (position != RecyclerView.NO_POSITION) {
                 BookmarkItem item = bookmarks.get(position);
                 Intent data = new Intent();
-                data.putExtra("pagetogo", Activity.RESULT_FIRST_USER + item.page);
+                data.putExtra(Tool.PAGETOGO, Activity.RESULT_FIRST_USER + item.page);
                 getActivity().setResult(Activity.RESULT_OK, data);
 		        getActivity().finish();
             }

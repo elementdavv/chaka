@@ -38,7 +38,7 @@ public class TocAdapter extends RecyclerView.Adapter<TocAdapter.ViewHolder> {
                         }
                         else {
                             Intent data = new Intent();
-                            data.putExtra("pagetogo", Activity.RESULT_FIRST_USER + item.page);
+                            data.putExtra(Tool.PAGETOGO, Activity.RESULT_FIRST_USER + item.page);
                             getActivity().setResult(Activity.RESULT_OK, data);
 		                    getActivity().finish();
                         }
@@ -56,7 +56,7 @@ public class TocAdapter extends RecyclerView.Adapter<TocAdapter.ViewHolder> {
             if (position != RecyclerView.NO_POSITION) {
                 TocItem item = outline2.get(position);
                 Intent data = new Intent();
-                data.putExtra("pagetogo", Activity.RESULT_FIRST_USER + item.page);
+                data.putExtra(Tool.PAGETOGO, Activity.RESULT_FIRST_USER + item.page);
                 getActivity().setResult(Activity.RESULT_OK, data);
 		        getActivity().finish();
             }

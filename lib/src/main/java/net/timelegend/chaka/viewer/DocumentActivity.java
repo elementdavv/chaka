@@ -12,7 +12,6 @@ import android.content.res.Configuration;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
-import android.graphics.Insets;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -34,10 +33,10 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowManager;
-import android.view.WindowMetrics;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ListPopupWindow;
@@ -87,6 +86,7 @@ public class DocumentActivity extends AppCompatActivity
 	private ImageButton  mSmartFocusButton;
 	private ImageButton  mColorButton;
 	private ImageButton  mShareButton;
+	private ImageButton  mOptionsButton;
 	private ImageButton  mHelpButton;
 	private View         scrollView;
 	private View         iconView;
@@ -143,9 +143,13 @@ public class DocumentActivity extends AppCompatActivity
 	private int mLayoutH = 504;
 	private int mTitleWidth = 0;
 	private int mButtonWidth = 0;
+	private int mPlacement = -1; // -1: toolbar top, 1: toolbar bottom
+	private int mPageSliderHeight;
+	private int mTopBarSwitcherHeight;
 
 	protected View mLayoutButton;
 	protected PopupMenu mLayoutPopupMenu;
+	protected PopupMenu mOptionsPopupMenu;
 	protected ListPopupWindow mColorPopupWindow;
 
 	private MuPDFCore openBuffer(byte buffer[], String magic)
@@ -239,7 +243,7 @@ public class DocumentActivity extends AppCompatActivity
 
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-		Tool.fullScreen(getWindow());
+		Tool.cutout(getWindow(), false);
 
 		DisplayMetrics metrics = getResources().getDisplayMetrics();
 		// DisplayMetrics metrics = new DisplayMetrics();
@@ -376,7 +380,6 @@ public class DocumentActivity extends AppCompatActivity
 		BookmarkRepository.getInstance().setup(core, mDocKey);
 	}
 
-
 	private void setUserCss() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("@page{margin:2em}");
@@ -384,6 +387,12 @@ public class DocumentActivity extends AppCompatActivity
 		sb.append("p{margin:0.6em 0;}");
 		sb.append("table{border-collapse:collapse;}");
 		com.artifex.mupdf.fitz.Context.setUserCSS(sb.toString());
+	}
+
+	@Override
+	public void onAttachedToWindow() {
+		super.onAttachedToWindow();
+		Tool.fullScreen(getWindow());
 	}
 
 	public void requestPassword(final Bundle savedInstanceState) {
@@ -421,6 +430,7 @@ public class DocumentActivity extends AppCompatActivity
 	public void afterRelayout(int loc) {
 		mFlatOutline = null;
 		mDocView.mHistory.clear();
+		mDocView.refresh(false);
 
         if (lastPage > -1) {
             HelpActivity.updateReadme();
@@ -527,6 +537,7 @@ public class DocumentActivity extends AppCompatActivity
             TooltipCompat.setTooltipText(mLayoutButton, getString(R.string.format_size));
             TooltipCompat.setTooltipText(mColorButton, getString(R.string.color));
             TooltipCompat.setTooltipText(mShareButton, getString(R.string.share));
+            TooltipCompat.setTooltipText(mOptionsButton, getString(R.string.options));
             TooltipCompat.setTooltipText(mOutlineButton, getString(R.string.contents));
             TooltipCompat.setTooltipText(mHelpButton, getString(R.string.help));
         }
@@ -651,6 +662,25 @@ public class DocumentActivity extends AppCompatActivity
                 shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
                 shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
                 startActivity(Intent.createChooser(shareIntent, getString(R.string.share_to)));
+            }
+        });
+
+        makeOptionsPopupWindow();
+
+        mOptionsButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Menu menu = mOptionsPopupMenu.getMenu();
+                for (int mi = 0; mi < menu.size(); mi++) {
+                    MenuItem item = menu.getItem(mi);
+                    int id = item.getItemId();
+                    if (id == R.id.action_fullscreen) {
+                        item.setChecked(Tool.mFullscreen);
+                    }
+                    else if (id == R.id.action_toolbar_bottom) {
+                        item.setChecked(mPlacement == 1);
+                    }
+                }
+                mOptionsPopupMenu.show();
             }
         });
 
@@ -815,7 +845,7 @@ public class DocumentActivity extends AppCompatActivity
                     Bundle bundle = new Bundle();
                     bundle.putInt("POSITION", mDocView.getDisplayedViewIndex());
                     bundle.putSerializable("OUTLINE", mFlatOutline);
-                    intent.putExtra("PALLETBUNDLE", Pallet.sendBundle(bundle));
+                    intent.putExtra(Tool.PALLETBUNDLE, Pallet.sendBundle(bundle));
                 }
                 activityLauncher.launch(intent);
             }
@@ -823,6 +853,8 @@ public class DocumentActivity extends AppCompatActivity
 
 		// Reenstate last state if it was recorded
 		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
+		Tool.mFullscreen = prefs.getBoolean("fullscreen" + mDocKey, true);
+		mPlacement = prefs.getInt("placement"+mDocKey, -1);
 		mLayoutEM = prefs.getInt("layoutem"+mDocKey, 14);
 		lastPage = prefs.getInt("page" + mDocKey, -1);
 		boolean single = prefs.getBoolean("single" + mDocKey, false);
@@ -914,7 +946,7 @@ public class DocumentActivity extends AppCompatActivity
     private void makeColorPopupWindow() {
         List<ColorItem> itemList = new ArrayList<>();
 
-        itemList.add(new ColorItem("Day", ContextCompat.getColor(this, R.color.black1), ContextCompat.getColor(this, R.color.white1)));
+        itemList.add(new ColorItem("Default", ContextCompat.getColor(this, R.color.black1), ContextCompat.getColor(this, R.color.white1)));
         itemList.add(new ColorItem("Night", ContextCompat.getColor(this, R.color.black2), ContextCompat.getColor(this, R.color.white2)));
         itemList.add(new ColorItem("Moon", ContextCompat.getColor(this, R.color.black21), ContextCompat.getColor(this, R.color.white21)));
         itemList.add(new ColorItem("Paper", ContextCompat.getColor(this, R.color.black3), ContextCompat.getColor(this, R.color.white3)));
@@ -927,11 +959,7 @@ public class DocumentActivity extends AppCompatActivity
             public void onItemClick(int position) {
                 ColorItem item =  itemList.get(position);
                 if (core.setTintColor(item.black, item.white)) {
-                    if (core.isReflowable()) {
-                        relayoutDocument();
-                    } else {
-                        mDocView.refresh(false);
-                    }
+                    mDocView.refresh(false);
                     SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
                     SharedPreferences.Editor edit = prefs.edit();
                     edit.putInt("black"+mDocKey, item.black);
@@ -949,6 +977,31 @@ public class DocumentActivity extends AppCompatActivity
         mColorPopupWindow.setModal(true);
     }
 
+    private void makeOptionsPopupWindow() {
+        mOptionsPopupMenu = new PopupMenu(this, mOptionsButton);
+        mOptionsPopupMenu.getMenuInflater().inflate(R.menu.options_menu, mOptionsPopupMenu .getMenu());
+        Menu menu = mOptionsPopupMenu.getMenu();
+
+        for (int mi = 0; mi < menu.size(); mi++) {
+            MenuItem item = menu.getItem(mi);
+            item.setCheckable(true);
+        }
+        mOptionsPopupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+            public boolean onMenuItemClick(MenuItem item) {
+                int id = item.getItemId();
+                if (id == R.id.action_fullscreen) {
+                    item.setChecked(!Tool.mFullscreen);
+                    toggleFullscreen();
+                }
+                else if (id == R.id.action_toolbar_bottom) {
+                    item.setChecked(mPlacement == -1);
+                    togglePlacement();
+                }
+                return true;
+            }
+        });
+    }
+
     private ActivityResultLauncher<Intent> activityLauncher = registerForActivityResult(
         new ActivityResultContracts.StartActivityForResult(),
         new ActivityResultCallback<ActivityResult>() {
@@ -957,7 +1010,7 @@ public class DocumentActivity extends AppCompatActivity
                 if (result.getResultCode() == RESULT_OK) {
                     // There are no request codes
                     Intent data = result.getData();
-                    int pagetogo  = data.getExtras().getInt("pagetogo");
+                    int pagetogo  = data.getExtras().getInt(Tool.PAGETOGO);
 
                     if (mDocView != null) {
                         mDocView.pushHistory();
@@ -1176,6 +1229,14 @@ public class DocumentActivity extends AppCompatActivity
 		mDocView.toggleSmartFocus();
     }
 
+	private void search(int direction) {
+		hideKeyboard();
+		int displayPage = mDocView.getDisplayedViewIndex();
+		SearchTaskResult r = SearchTaskResult.get();
+		int searchPage = r != null ? r.pageNumber : -1;
+		mSearchTask.go(mSearchText.getText().toString().trim(), direction, displayPage, searchPage);
+	}
+
 	private void setLinkHighlight(boolean highlight, boolean init) {
 		mLinkHighlight = highlight;
 		// LINK_COLOR tint
@@ -1183,6 +1244,82 @@ public class DocumentActivity extends AppCompatActivity
 		// Inform pages of the change.
 		mDocView.setLinksEnabled(highlight, init);
 	}
+
+    private void togglePlacement() {
+        mPlacement = -mPlacement;
+        updateBars(true);
+        SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putInt("placement"+mDocKey, mPlacement);
+        edit.apply();
+	}
+
+    private void toggleFullscreen() {
+        Tool.mFullscreen = !Tool.mFullscreen;
+        Tool.fullScreen(getWindow());
+        updateBars(false);
+        SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit = prefs.edit();
+        edit.putBoolean("fullscreen"+mDocKey, Tool.mFullscreen);
+        edit.apply();
+    }
+
+    private void updateBars(boolean placeChange) {
+        int htop = 0, hdown = 0;
+
+        // android 9 (api28)
+        if (!Tool.mFullscreen && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            hdown = Tool.getNavigationBarHeight(mOrientation);
+            if (mPlacement == -1) {
+                htop = Tool.getStatusBarHeight();
+            }
+            else {
+                htop = hdown;
+            }
+        }
+        int dp16px = Tool.dp2px(16);
+        RelativeLayout.LayoutParams param0, param1, param2;
+        param0 = (RelativeLayout.LayoutParams)mPageSlider.getLayoutParams();
+
+        if (Tool.mFullscreen) {
+            param0.height = mPageSliderHeight;
+            mPageSlider.setPadding(mPageSlider.getPaddingLeft(), mPageSlider.getPaddingTop(), mPageSlider.getPaddingRight(), dp16px);
+        }
+        else {
+            // keep mPageSlider from overlap
+            param0.height = mPageSliderHeight + hdown;
+            // offset seek line
+            mPageSlider.setPadding(mPageSlider.getPaddingLeft(), mPageSlider.getPaddingTop(), mPageSlider.getPaddingRight(), dp16px + hdown);
+        }
+        mPageSlider.setLayoutParams(param0);
+
+        if (mPlacement == -1) {
+            if (placeChange) {
+                param1 = (RelativeLayout.LayoutParams)mTopBarSwitcher.getLayoutParams();
+                param1.removeRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+                param1.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+                mTopBarSwitcher.setLayoutParams(param1);
+            }
+            mTopBarSwitcher.setPadding(0, htop, 0, 0);
+            param2 = (RelativeLayout.LayoutParams)mPageNumberView.getLayoutParams();
+            param2.bottomMargin = dp16px;
+            mPageNumberView.setLayoutParams(param2);
+        }
+        else {
+            if (placeChange) {
+                param1 = (RelativeLayout.LayoutParams)mTopBarSwitcher.getLayoutParams();
+                param1.removeRule(RelativeLayout.ALIGN_PARENT_TOP);
+                param1.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
+                mTopBarSwitcher.setLayoutParams(param1);
+            }
+            mTopBarSwitcher.setPadding(0, 0, 0, mPageSliderHeight + htop);
+            param2 = (RelativeLayout.LayoutParams)mPageNumberView.getLayoutParams();
+            param2.bottomMargin = mTopBarSwitcherHeight + dp16px;
+            mPageNumberView.setLayoutParams(param2);
+        }
+        hideButtons();
+        showButtons();
+    }
 
 	private void showButtons() {
 		if (core == null)
@@ -1200,7 +1337,7 @@ public class DocumentActivity extends AppCompatActivity
                 }
 			}
 
-			Animation anim = new TranslateAnimation(0, 0, -mTopBarSwitcher.getHeight(), 0);
+			Animation anim = new TranslateAnimation(0, 0, mTopBarSwitcher.getHeight() * mPlacement, 0);
 			anim.setDuration(200);
 			anim.setAnimationListener(new Animation.AnimationListener() {
 				public void onAnimationStart(Animation animation) {
@@ -1231,7 +1368,7 @@ public class DocumentActivity extends AppCompatActivity
 			mButtonsVisible = false;
 			hideKeyboard();
 
-			Animation anim = new TranslateAnimation(0, 0, 0, -mTopBarSwitcher.getHeight());
+			Animation anim = new TranslateAnimation(0, 0, 0, mTopBarSwitcher.getHeight() * mPlacement);
 			anim.setDuration(200);
 			anim.setAnimationListener(new Animation.AnimationListener() {
 				public void onAnimationStart(Animation animation) {}
@@ -1314,6 +1451,7 @@ public class DocumentActivity extends AppCompatActivity
         mSmartFocusButton = (ImageButton)mButtonsView.findViewById(R.id.smartFocusButton);
         mColorButton = (ImageButton)mButtonsView.findViewById(R.id.colorButton);
         mShareButton = (ImageButton)mButtonsView.findViewById(R.id.shareButton);
+        mOptionsButton = (ImageButton)mButtonsView.findViewById(R.id.optionsButton);
         mHelpButton = (ImageButton)mButtonsView.findViewById(R.id.helpButton);
         scrollView = mButtonsView.findViewById(R.id.scrollView);
         iconView = mButtonsView.findViewById(R.id.iconView);
@@ -1329,6 +1467,24 @@ public class DocumentActivity extends AppCompatActivity
 		mTopBarSwitcher.setVisibility(View.INVISIBLE);
 		mPageNumberView.setVisibility(View.INVISIBLE);
 		mPageSlider.setVisibility(View.INVISIBLE);
+
+		mTopBarSwitcher.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+			@Override
+			public void onGlobalLayout() {
+				mTopBarSwitcher.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+				// original height
+				mPageSliderHeight = mPageSlider.getHeight();
+				mTopBarSwitcherHeight = mTopBarSwitcher.getHeight();
+
+				if (mPlacement == 1) {
+					mPlacement = -1;
+					togglePlacement();
+				}
+				else {
+					updateBars(false);
+				}
+			}
+		});
 	}
 
 	private void showKeyboard() {
@@ -1401,27 +1557,6 @@ public class DocumentActivity extends AppCompatActivity
         }
     }
 
-	public void createBookmark() {
-		AlertDialog alert = mAlertBuilder.create();
-		alert.setTitle(R.string.create_bookmark);
-		alert.setMessage(getString(R.string.create_bookmark_message));
-		alert.setButton(AlertDialog.BUTTON_POSITIVE, getString(R.string.yes),
-			new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					BookmarkRepository.getInstance().create(mDocView.getDisplayedViewIndex());
-				}
-			}
-		);
-		alert.setButton(AlertDialog.BUTTON_NEGATIVE, getString(R.string.no),
-			new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.cancel();
-				}
-			}
-		);
-		alert.show();
-	}
-
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
@@ -1432,14 +1567,6 @@ public class DocumentActivity extends AppCompatActivity
             searchModeOff();
         }
     }
-
-	private void search(int direction) {
-		hideKeyboard();
-		int displayPage = mDocView.getDisplayedViewIndex();
-		SearchTaskResult r = SearchTaskResult.get();
-		int searchPage = r != null ? r.pageNumber : -1;
-		mSearchTask.go(mSearchText.getText().toString().trim(), direction, displayPage, searchPage);
-	}
 
 	@Override
 	public boolean onSearchRequested() {

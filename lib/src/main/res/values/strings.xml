@@ -28,6 +28,9 @@
     <string name="toc">Table of Contents</string>
     <string name="color">Color Palette</string>
     <string name="share">Share Book</string>
+    <string name="options">Options</string>
+    <string name="fullscreen">Full Screen</string>
+    <string name="toolbar_bottom">Toolbar on Bottom</string>
 
     <string name="contents">Contents</string>
     <string name="bookmarks">Bookmarks</string>

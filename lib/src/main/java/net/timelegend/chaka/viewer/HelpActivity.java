@@ -4,7 +4,9 @@ import android.app.ActionBar;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.GestureDetector;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 
 import androidx.activity.ComponentActivity;
@@ -38,13 +40,21 @@ public class HelpActivity extends ComponentActivity
     @Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-        Tool.fullScreen(getWindow());
+        if (Tool.mFullscreen) {
+            Tool.cutout(getWindow(), true);
+        }
         ActionBar ab = getActionBar();
         ab.setDisplayOptions(ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP,
                 ActionBar.DISPLAY_SHOW_TITLE | ActionBar.DISPLAY_HOME_AS_UP | ActionBar.DISPLAY_USE_LOGO);
         ab.setTitle(R.string.help);
         setContentView(R.layout.help_activity);
         showReadme();
+    }
+
+    @Override
+    public void onAttachedToWindow() {
+        super.onAttachedToWindow();
+        Tool.fullScreen(getWindow());
     }
 
     @Override
@@ -62,6 +72,18 @@ public class HelpActivity extends ComponentActivity
 
     private void showReadme() {
         MarkedView mvHelp = (MarkedView)findViewById(R.id.mvHelp);
+        GestureDetector gestureDetector = new GestureDetector(this, new MyGestureListener());
+
+        mvHelp.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                // Pass the touch event to the gesture detector
+                gestureDetector.onTouchEvent(event);
+                // Return false to allow the WebView to also handle the touch (e.g., vertical scrolling)
+                return false;
+            }
+        });
+
         mvHelp.chColor("#" + Tool.colorHex(android.R.color.white));
         mvHelp.chBackgroundColor("#" + Tool.colorHex(R.color.toolbar));
         mvHelp.init();
@@ -212,5 +234,26 @@ public class HelpActivity extends ComponentActivity
         }
 
         return res;
+    }
+
+    class MyGestureListener extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+        if (Math.abs(e1.getY() - e2.getY()) > Tool.SWIPE_MAX_OFF_PATH)
+            return false;
+        if (e1.getX() - e2.getX() > Tool.SWIPE_MIN_DISTANCE && Math.abs(velocityX) > Tool.SWIPE_THRESHOLD_VELOCITY) {
+            // Handle left swipe (e.g., navigate to next page)
+            return true;
+        } else if (e2.getX() - e1.getX() > Tool.SWIPE_MIN_DISTANCE && Math.abs(velocityX) > Tool.SWIPE_THRESHOLD_VELOCITY) {
+            // Handle right swipe (e.g., navigate to previous page)
+            close();
+            return true;
+        }
+        return false;
+        }
+    }
+
+    public void close() {
+        super.onBackPressed();
     }
 }

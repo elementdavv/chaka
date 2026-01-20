@@ -92,6 +92,7 @@ public class ReaderView
     private Runnable      mLongPressRunnable;;
     private long          mMoveTime = 0L;
     private boolean       mBookmarked = false;
+    private long          mBookmarkTime = 0L;
 
 	protected Stack<Integer> mHistory;
 
@@ -483,8 +484,6 @@ public class ReaderView
                 }
             }
         }
-        mBookmarked = true;
-        ((DocumentActivity)mContext).createBookmark();
     }
 
     private void inSelect(float x, float y) {
@@ -1265,10 +1264,6 @@ public class ReaderView
             mLongPress = false;
         if (mSelecting == SELECT.SELECTING)
             return true;
-        if (mBookmarked) {
-            mBookmarked = false;
-            return true;
-        }
         if (mSelecting == SELECT.MOVE_NONE) {
             endSelect();
             return true;
@@ -1283,14 +1278,16 @@ public class ReaderView
 				if (page > -1) {
 					pushHistory();
 					setDisplayedViewIndex(page);
-                    return true;
-                // external link, handled
+					if (mBookmarked) mBookmarked = false;
+					return true;
+				// external link, handled
 				} else if (page == -1){
-                    return true;
+					if (mBookmarked) mBookmarked = false;
+					return true;
 				}
 			}
-            // page < -1, hit nothing, proceed
-            if (e.getX() < tapPageMargin) {
+			// page < -1, hit nothing, proceed
+			if (e.getX() < tapPageMargin) {
 				if (mTextLeft) smartMoveForwards(); else smartMoveBackwards();
 			} else if (e.getX() > super.getWidth() - tapPageMargin) {
 				if (mTextLeft) smartMoveBackwards(); else smartMoveForwards();
@@ -1300,8 +1297,24 @@ public class ReaderView
 				if (mTextLeft) smartMoveBackwards(); else smartMoveForwards();
 			} else {
 				onTapMainDocArea();
+				if (mBookmarked) {
+					long mt = System.currentTimeMillis();
+					if (mt - mBookmarkTime < ViewConfiguration.getDoubleTapTimeout()) {
+						mBookmarked = false;
+						BookmarkRepository.getInstance().create(mCurrent);
+					}
+					else {
+						mBookmarkTime = mt;
+					}
+				}
+				else {
+					mBookmarkTime = System.currentTimeMillis();
+					mBookmarked = true;
+				}
+				return true;
 			}
 		}
+		if (mBookmarked) mBookmarked = false;
 		return true;
 	}
 

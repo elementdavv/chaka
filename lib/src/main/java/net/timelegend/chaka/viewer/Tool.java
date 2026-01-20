@@ -2,10 +2,12 @@ package net.timelegend.chaka.viewer;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
@@ -13,6 +15,7 @@ import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -26,10 +29,16 @@ import com.google.android.material.color.MaterialColors;
 public class Tool
 {
     public final static String TAG = "Chaka";
+    public final static String PALLETBUNDLE = "PalleteBundle";
+    public final static String PAGETOGO = "pagetogo";
     public static Context mContext;
+    public static boolean mFullscreen = true;
     public static int HIGHLIGHT_COLOR;
     public static int LINK_COLOR;
     public static int SELECTION_COLOR;
+    public static int SWIPE_MIN_DISTANCE = 240;
+    public static int SWIPE_MAX_OFF_PATH = 240;
+    public static int SWIPE_THRESHOLD_VELOCITY = 200;
 
     public static void create(Context context) {
         mContext = context;
@@ -92,11 +101,66 @@ public class Tool
 
     @SuppressWarnings("deprecation")
     public static void fullScreen(Window window) {
-        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        // android 11 (api30)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            final WindowInsetsController controller = window.getInsetsController();
 
+            if(controller != null) {
+                if (mFullscreen) {
+                    controller.hide(WindowInsets.Type.statusBars());
+                    controller.hide(WindowInsets.Type.navigationBars());
+                    controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                }
+                else {
+                    controller.show(WindowInsets.Type.statusBars());
+                    controller.show(WindowInsets.Type.navigationBars());
+                    controller.setSystemBarsBehavior(WindowInsetsController.BEHAVIOR_DEFAULT);
+                }
+            }
+        }
+        else {
+            if (mFullscreen) {
+                window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            }
+            else {
+                window.setFlags(0, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+            }
+        }
+    }
+
+    public static void cutout(Window window, boolean hasActionBar) {
+        // android 9 (api28)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+            if (hasActionBar) {
+                // FLAG_LAYOUT_NO_LIMITS makes popupmenu and listpopupwindow not adaptive
+                window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+            }
+            else {
+                // setDecorFitsSystemWindows conflict with actionbar
+                WindowCompat.setDecorFitsSystemWindows(window, false);
+            }
             window.getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+    }
+
+    public static int getStatusBarHeight() {
+        int resId = mContext.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resId > 0) {
+            return mContext.getResources().getDimensionPixelSize(resId);
+        }
+        else {
+            return 128;
+        }
+    }
+
+    public static int getNavigationBarHeight(int orientation) {
+        String resName = (orientation == Configuration.ORIENTATION_PORTRAIT) ? "navigation_bar_height" : "navigation_bar_height_landscape";
+        int resId = mContext.getResources().getIdentifier(resName, "dimen", "android");
+        if (resId > 0) {
+            return mContext.getResources().getDimensionPixelSize(resId);
+        }
+        else {
+            return 128;
         }
     }
 
@@ -145,5 +209,9 @@ public class Tool
 
     public static int getThemeColor(int resId) {
         return MaterialColors.getColor(mContext, resId, 0);
+    }
+
+    public static int dp2px(int dp) {
+        return (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, mContext.getResources().getDisplayMetrics());
     }
 }

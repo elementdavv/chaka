@@ -279,6 +279,7 @@ public class MuPDFCore
 		AndroidDrawDevice dev = new AndroidDrawDevice(bm, patchX, patchY);
 		try {
 			displayList.run(dev, ctm, cookie);
+			// correspond to default mode
 			if (tint_black != 0xff000000 || tint_white != 0xffffffff) {
 				dev.tint(tint_black, tint_white);
             }

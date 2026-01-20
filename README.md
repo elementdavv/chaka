@@ -88,9 +88,9 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
   Call Android **Share** menu.
 
-- Scrollable Top Toobar
+- Scrollable Toobar
 
-  Scrollable **Top Toolbar** can accommodate more buttons for extended funtions.
+  Scrollable **Toolbar** can accommodate more buttons for extended funtions.
 
 - Pros and Cons
 
@@ -100,19 +100,19 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 [![Chaka Book Reader](https://img.youtube.com/vi/KkB2vlDj_6g/0.jpg)](https://www.youtube.com/watch?v=KkB2vlDj_6g)
 
 ### Usage
-- A function button will show up in **Top Toolbar** when the corresponding function is applicable, otherwise it will be hidden.
-- Long press a **Top Toolbar** button, to show it's tooltip.
+- A function button will show up in **Toolbar** when the corresponding function is applicable, otherwise it will be hidden.
+- Long press a **Toolbar** button, to show it's tooltip.
 - Tap in left/top side, to move a page backward (when in **not RtL Text** mode)
 - Tap in right/bottom side, to move a page forward (when in **not RtL Text** mode)
-- Tap in middle, to show/hide **Top Toolbar** and **Page Indicator**
+- Tap in middle, to show/hide **Toolbar** and **Page Indicator**
 - Press down one finger and move in any direction, to scrol a page
 - Press down two fingers and move one, to zoom in/out pages
 - Fling horizontally/vertically, to **Scroll Continuously**
 - Under the combination of **Flip Horizontal and not Rtl Text** mode, or of **Flip Vertical and Rtl Text** mode, when pages are leaved between two pages, it will slide slowly into the near page that guarantees any page contents will not be cut off.
 - Under the combination of **Flip Horizontal and Rtl Text** mode, or of **Flip Vertical and not Rtl Text** mode, pages can stay at any position which will never cut off page contents that makes reading across two pages comfortably.
-- Long press one finger on text, to trigger a text selection session. Then press on left/right handles and move, to change selection area. Tap in selection area, to show/hide **Top Toolbar**. Then tap **Copy Selection** button, to copy the selected text to system clipboard and end the selection session. Tap out of selection area, to cancel the selection session.
-- Long press one finger on blank area(not on text), to **Bookmark** current page.
-- Reading status of **Flip Vertical**, **RtL Text** and **Single Column**, **Color Palette**, as well as **Font Size** and last read page number, will be remembered across reading sessions for per book.
+- Long press one finger on text, to trigger a text selection session. Then press on left/right handles and move, to change selection area. Tap in selection area, to show/hide **Toolbar**. Then tap **Copy Selection** button, to copy the selected text to system clipboard and end the selection session. Tap out of selection area, to cancel the selection session.
+- Double tap in middle to **Bookmark** current page.
+- All reading status as of page scale, position, last read page number, as well as all enable button states will be remembered across reading sessions for per book.
 - In general, to get the best reading experience mutiple function modes can be employed, adding appropriate screen orientation if needed.
 
 ### Credits
