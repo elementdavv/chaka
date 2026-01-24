@@ -10,6 +10,12 @@
 	<color name="link">#800066cc</color>
 	<color name="selection">#8090EE90</color>
 
+	<!-- document activity -->
+	<color name="highlight_button">#ff3cbc71</color>
+	<color name="highunlight_button">#ffffffff</color>
+	<color name="enabled_button">#ffffffff</color>
+	<color name="disabled_button">#ff808080</color>
+
 	<!-- day -->
 	<color name="black1">#000000</color>
 	<color name="white1">#ffffff</color>

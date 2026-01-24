@@ -3,6 +3,7 @@ package net.timelegend.chaka.viewer;
 import java.util.List;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,6 +58,12 @@ public class ColorAdapter extends BaseAdapter {
             holder.tvTitle.setTextColor(item.black);
             holder.tvTitle.setBackgroundColor(item.white);
 
+            if (item.selected) {
+                holder.tvTitle.setTypeface(null, Typeface.BOLD);
+            }
+            else {
+                holder.tvTitle.setTypeface(null, Typeface.NORMAL);
+            }
             holder.tvTitle.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

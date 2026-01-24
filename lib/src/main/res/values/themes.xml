@@ -29,6 +29,12 @@
         <item name="highlight">@color/highlight</item>
         <item name="link">@color/link</item>
         <item name="selection">@color/selection</item>
+
+        <!-- for document activity -->
+        <item name="highlight_button">@color/highlight_button</item>
+        <item name="highunlight_button">@color/highunlight_button</item>
+        <item name="enabled_button">@color/enabled_button</item>
+        <item name="disabled_button">@color/disabled_button</item>
     </style>
 
     <style name="MyDialog" parent="android:Theme.Material.Dialog.Alert">

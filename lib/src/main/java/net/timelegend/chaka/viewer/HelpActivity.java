@@ -14,13 +14,11 @@ import androidx.activity.ComponentActivity;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -83,13 +81,18 @@ public class HelpActivity extends ComponentActivity
                 return false;
             }
         });
+        File dir = Tool.getDataDir(null);
+        File f = new File(dir, README);
 
+        try {
+            mvHelp.loadMDFile(f);
+        }
+        catch (IOException e) {
+            mvHelp.setMDText(e.getMessage());
+        }
         mvHelp.chColor("#" + Tool.colorHex(android.R.color.white));
         mvHelp.chBackgroundColor("#" + Tool.colorHex(R.color.toolbar));
         mvHelp.init();
-        File dir = Tool.getDataDir(null);
-        File f = new File(dir, README);
-        mvHelp.loadMDFile(f);
 
         Handler handler = new Handler(Looper.getMainLooper());
         handler.postDelayed(new Runnable() {
@@ -125,13 +128,7 @@ public class HelpActivity extends ComponentActivity
                     getApi();
                     getReadme(f);
                 }
-                catch (MalformedURLException e) {
-                    e.printStackTrace();
-                }
-                catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-                catch (IOException e) {
+                catch (IOException | JSONException e) {
                     e.printStackTrace();
                 }
             }
@@ -148,14 +145,12 @@ public class HelpActivity extends ComponentActivity
             if (curr - mod < leng)
                 return true;
         }
-
         return false;
     }
 
-    private static String tag, published;
+    private static String tag = "", published = "";
 
-    private static void getApi()
-            throws MalformedURLException, IOException {
+    private static void getApi() throws IOException, JSONException {
         URL url = new URL(Tool.getResourceString(R.string.api));
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
         conn.setDoInput(true);
@@ -163,24 +158,15 @@ public class HelpActivity extends ComponentActivity
         InputStream is = conn.getInputStream();
         BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(is));
         String line = "";
-
-        try {
-            line = bufferedReader.readLine();
-            JSONObject jo = new JSONObject(line);
-            tag = jo.getString("tag_name").substring(1);
-            published = jo.getString("published_at").substring(0, 10);
-        }
-        catch (JSONException e) {
-            e.printStackTrace();
-            tag = "";
-            published = "";
-        }
+        line = bufferedReader.readLine();
+        JSONObject jo = new JSONObject(line);
+        tag = jo.getString("tag_name").substring(1);
+        published = jo.getString("published_at").substring(0, 10);
         is.close();
         conn.disconnect();
     }
 
-    private static void getReadme(File f)
-            throws MalformedURLException, FileNotFoundException, IOException {
+    private static void getReadme(File f) throws IOException {
         f.delete();
         URL url = new URL(Tool.getResourceString(R.string.readme));
         HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
@@ -205,7 +191,6 @@ public class HelpActivity extends ComponentActivity
                 bw.newLine();
             }
         }
-
         bw.flush();
         bw.close();
         fos.close();
@@ -232,7 +217,6 @@ public class HelpActivity extends ComponentActivity
         else if (cp > 0) {
             res = "```unknown release```";
         }
-
         return res;
     }
 

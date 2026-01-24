@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:id="@+id/action_layout_default" android:title="default" />
 	<item android:id="@+id/action_layout_8pt" android:title="8pt" />
 	<item android:id="@+id/action_layout_10pt" android:title="10pt" />
 	<item android:id="@+id/action_layout_12pt" android:title="12pt" />

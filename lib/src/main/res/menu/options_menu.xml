@@ -1,5 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:id="@+id/action_fullscreen" android:title="@string/fullscreen" />
-    <item android:id="@+id/action_toolbar_bottom" android:title="@string/toolbar_bottom" />
+    <group
+        android:id="@+id/group_document"
+        android:checkableBehavior="all">
+        <item
+            android:id="@+id/group_document_title"
+            android:title="@string/group_document"
+            android:enabled="false"
+            android:checkable="false" />
+        <item
+            android:id="@+id/action_fullscreen"
+            android:tooltipText="a tooltip"
+            android:title="@string/fullscreen" />
+        <item
+            android:id="@+id/action_toolbar_bottom"
+            android:title="@string/toolbar_bottom" />
+    </group>
+    <group
+        android:id="@+id/group_global"
+        android:checkableBehavior="all">
+        <item
+            android:id="@+id/group_global_title"
+            android:title="@string/group_global"
+            android:enabled="false"
+            android:checkable="false" />
+        <item
+            android:id="@+id/action_fullscreen_g"
+            android:title="@string/fullscreen" />
+        <item
+            android:id="@+id/action_toolbar_bottom_g"
+            android:title="@string/toolbar_bottom" />
+        <item
+            android:id="@+id/action_flip_vertical_g"
+            android:title="@string/flip_vertical" />
+        <item
+            android:id="@+id/action_color_palette_g"
+            android:title="@string/color" />
+        <item
+            android:id="@+id/action_font_size_g"
+            android:title="@string/format_size" />
+    </group>
 </menu>

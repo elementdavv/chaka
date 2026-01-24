@@ -1698,16 +1698,20 @@ public class ReaderView
         }
         if (mCurrent > 0) {
             View v1 = mChildViews.get(mCurrent - 1);
-            if ((mHorizontalScrolling && (v1.getLeft() + v1.getMeasuredWidth()) > 0)
-                    || (!mHorizontalScrolling && (v1.getTop() + v1.getMeasuredHeight()) > 0)) {
-                ((PageView) v1).updateHq(false);
+            if (v1 != null) {
+                if ((mHorizontalScrolling && (v1.getLeft() + v1.getMeasuredWidth()) > 0)
+                        || (!mHorizontalScrolling && (v1.getTop() + v1.getMeasuredHeight()) > 0)) {
+                    ((PageView) v1).updateHq(false);
+                }
             }
         }
         if (mCurrent < mAdapter.getCount() - 1) {
             View v2 = mChildViews.get(mCurrent + 1);
-            if ((mHorizontalScrolling && v2.getLeft() < getWidth())
-                    || (!mHorizontalScrolling && v2.getTop() < getHeight())) {
-                ((PageView) v2).updateHq(false);
+            if (v2 != null) {
+                if ((mHorizontalScrolling && v2.getLeft() < getWidth())
+                        || (!mHorizontalScrolling && v2.getTop() < getHeight())) {
+                    ((PageView) v2).updateHq(false);
+                }
             }
         }
 	}

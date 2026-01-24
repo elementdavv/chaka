@@ -11,7 +11,7 @@ import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,7 +20,11 @@ import android.os.Looper;
 import android.os.ResultReceiver;
 import android.provider.OpenableColumns;
 import android.text.Editable;
+import android.text.SpannableString;
+import android.text.Spanned;
 import android.text.method.PasswordTransformationMethod;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.text.TextWatcher;
 import android.util.DisplayMetrics;
 import android.view.animation.Animation;
@@ -132,20 +136,27 @@ public class DocumentActivity extends AppCompatActivity
     private Uri uri;
     private String mMimeType;
 
-    private int highlightColor = Color.argb(0xFF, 0x3C, 0xB3, 0x71);
-    private int highunlightColor = Color.argb(0xFF, 255, 255, 255);
-    private int enabledColor = Color.argb(255, 255, 255, 255);
-    private int disabledColor = Color.argb(255, 128, 128, 128);
-
 	protected int mDisplayDPI;
-	private int mLayoutEM;      // read from prefs
+	private int mLayoutEM;
 	private int mLayoutW = 312;
 	private int mLayoutH = 504;
 	private int mTitleWidth = 0;
 	private int mButtonWidth = 0;
-	private int mPlacement = -1; // -1: toolbar top, 1: toolbar bottom
+	private int mPlacement;                         // -1: toolbar top, 1: toolbar bottom
 	private int mPageSliderHeight;
 	private int mTopBarSwitcherHeight;
+	private Boolean mFullscreenG = true;
+	private Integer mPlacementG = -1;               // -1: toolbar top, 1: toolbar bottom
+	private Boolean mFlipVerticalG = false;
+	private List<ColorItem> itemList;
+	private ColorAdapter adapter;
+	private int mBlack;
+	private int mWhite;
+	private Integer mBlackG;
+	private Integer mWhiteG;
+	private boolean mBlack_def;
+	private Integer mLayoutEMG = 14;
+	private boolean mLayoutEM_def;
 
 	protected View mLayoutButton;
 	protected PopupMenu mLayoutPopupMenu;
@@ -244,6 +255,10 @@ public class DocumentActivity extends AppCompatActivity
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
 		Tool.cutout(getWindow(), false);
+
+		// default
+		mBlackG = ContextCompat.getColor(this, R.color.black1);
+		mWhiteG = ContextCompat.getColor(this, R.color.white1);
 
 		DisplayMetrics metrics = getResources().getDisplayMetrics();
 		// DisplayMetrics metrics = new DisplayMetrics();
@@ -612,7 +627,7 @@ public class DocumentActivity extends AppCompatActivity
 
         mFlipVerticalButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                toggleFlipVerticalHighlight(false);
+                toggleFlipVerticalHighlight(false, 1);
             }
         });
 
@@ -649,6 +664,20 @@ public class DocumentActivity extends AppCompatActivity
 
         mColorButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                itemList.set(0, new ColorItem("Default", mBlackG, mWhiteG));
+
+                for (int mi = 0; mi < itemList.size(); mi++) {
+                    ColorItem item = itemList.get(mi);
+                    item.selected = false;
+
+                    if (mBlack_def) {
+                        if (mi == 0) item.selected = true;
+                    }
+                    else {
+                        if (mi != 0 && item.black == mBlack && item.white == mWhite) item.selected = true;
+                    }
+                }
+                adapter.notifyDataSetChanged();
                 mColorPopupWindow.setAnchorView(v);
                 mColorPopupWindow.show();
             }
@@ -678,6 +707,21 @@ public class DocumentActivity extends AppCompatActivity
                     }
                     else if (id == R.id.action_toolbar_bottom) {
                         item.setChecked(mPlacement == 1);
+                    }
+                    else if (id == R.id.action_fullscreen_g) {
+                        item.setChecked(mFullscreenG);
+                    }
+                    else if (id == R.id.action_toolbar_bottom_g) {
+                        item.setChecked(mPlacementG == 1);
+                    }
+                    else if (id == R.id.action_flip_vertical_g) {
+                        item.setChecked(mFlipVerticalG);
+                    }
+                    else if (id == R.id.action_color_palette_g) {
+                        item.setChecked(mBlack == mBlackG && mWhite == mWhiteG);
+                    }
+                    else if (id == R.id.action_font_size_g) {
+                        item.setChecked(mLayoutEM == mLayoutEMG);
                     }
                 }
                 mOptionsPopupMenu.show();
@@ -798,7 +842,13 @@ public class DocumentActivity extends AppCompatActivity
 				public boolean onMenuItemClick(MenuItem item) {
 					float oldLayoutEM = mLayoutEM;
 					int id = item.getItemId();
-					if (id == R.id.action_layout_8pt) mLayoutEM = 8;
+					boolean emdef = false;
+
+					if (id == R.id.action_layout_default) {
+						emdef = true;
+						mLayoutEM = mLayoutEMG;
+					}
+					else if (id == R.id.action_layout_8pt) mLayoutEM = 8;
 					else if (id == R.id.action_layout_10pt) mLayoutEM = 10;
 					else if (id == R.id.action_layout_12pt) mLayoutEM = 12;
 					else if (id == R.id.action_layout_14pt) mLayoutEM = 14;
@@ -807,13 +857,19 @@ public class DocumentActivity extends AppCompatActivity
 					else if (id == R.id.action_layout_20pt) mLayoutEM = 20;
 					else if (id == R.id.action_layout_22pt) mLayoutEM = 22;
 					else if (id == R.id.action_layout_24pt) mLayoutEM = 24;
+					else return true;
+
+					mLayoutEM_def = emdef;
+
+					if (mLayoutEM_def) {
+						saveKey("layoutem" + mDocKey, null);
+					}
+					else {
+						saveKey("layoutem" + mDocKey, (Integer)mLayoutEM);
+					}
 					if (oldLayoutEM != mLayoutEM) {
 						relayoutDocument();
-			            SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-			            SharedPreferences.Editor edit = prefs.edit();
-                        edit.putInt("layoutem"+mDocKey, mLayoutEM);
-			            edit.apply();
-                    }
+					}
 					return true;
 				}
 			});
@@ -823,9 +879,20 @@ public class DocumentActivity extends AppCompatActivity
                     for (int mi = 0; mi < menu.size(); mi++) {
                         MenuItem item = menu.getItem(mi);
                         item.setCheckable(false);
-                        String title = item.getTitle().toString();
-                        if (title.equals(String.valueOf(mLayoutEM) + "pt")) {
-                            item.setCheckable(true).setChecked(true);
+
+                        if (mi == 0) {
+                            item.setTitle("Default (" + String.valueOf(mLayoutEMG) + "pt)");
+                        }
+                        if (mLayoutEM_def) {
+                            if (mi == 0) {
+                                item.setCheckable(true).setChecked(true);
+                            }
+                        }
+                        else {
+                            String title = item.getTitle().toString();
+                            if (title.equals(String.valueOf(mLayoutEM) + "pt")) {
+                                item.setCheckable(true).setChecked(true);
+                            }
                         }
                     }
 					mLayoutPopupMenu.show();
@@ -853,13 +920,25 @@ public class DocumentActivity extends AppCompatActivity
 
 		// Reenstate last state if it was recorded
 		SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-		Tool.mFullscreen = prefs.getBoolean("fullscreen" + mDocKey, true);
-		mPlacement = prefs.getInt("placement"+mDocKey, -1);
-		mLayoutEM = prefs.getInt("layoutem"+mDocKey, 14);
+		mFullscreenG = prefs.getBoolean("fullscreen", mFullscreenG);
+		Tool.mFullscreen = prefs.getBoolean("fullscreen" + mDocKey, mFullscreenG);
+		mPlacementG = prefs.getInt("placement", mPlacementG);
+		mPlacement = prefs.getInt("placement" + mDocKey, mPlacementG);
+		mLayoutEMG = prefs.getInt("layoutem", mLayoutEMG);
+		mLayoutEM = prefs.getInt("layoutem" + mDocKey, 0);
+
+		if (mLayoutEM == 0) {
+			mLayoutEM = mLayoutEMG;
+			mLayoutEM_def = true;
+		}
+		else {
+			mLayoutEM_def = false;
+		}
 		lastPage = prefs.getInt("page" + mDocKey, -1);
 		boolean single = prefs.getBoolean("single" + mDocKey, false);
 		boolean leftText = prefs.getBoolean("lefttext" + mDocKey, false);
-		boolean vertical = prefs.getBoolean("vertical" + mDocKey, false);
+		mFlipVerticalG = prefs.getBoolean("vertical", mFlipVerticalG);
+		boolean vertical = prefs.getBoolean("vertical" + mDocKey, mFlipVerticalG);
 		boolean lock = prefs.getBoolean("lock" + mDocKey, false);
 		boolean crop = prefs.getBoolean("crop" + mDocKey, false);
 		boolean focus = prefs.getBoolean("focus" + mDocKey, false);
@@ -868,18 +947,29 @@ public class DocumentActivity extends AppCompatActivity
 		int left = prefs.getInt("left" + mDocKey, 0);
 		int top = prefs.getInt("top" + mDocKey, 0);
 		float scale = prefs.getFloat("scale" + mDocKey, 1.0f);
-		int black = prefs.getInt("black" + mDocKey, ContextCompat.getColor(this, R.color.black1));
-		int white = prefs.getInt("white" + mDocKey, ContextCompat.getColor(this, R.color.white1));
+		mBlackG = prefs.getInt("black", mBlackG);
+		mWhiteG = prefs.getInt("white", mWhiteG);
+		mBlack = prefs.getInt("black" + mDocKey, 0);
+		mWhite = prefs.getInt("white" + mDocKey, 0);
+
+        if (mBlack == 0 && mWhite == 0) {
+            mBlack = mBlackG;
+            mWhite = mWhiteG;
+            mBlack_def = true;
+        }
+        else {
+            mBlack_def = false;
+        }
 
         mDocView.mPrevLeft = left;
         mDocView.mPrevTop = top;
         mDocView.mScale = scale;
         mDocView.mResetLayout = true;
-		core.setTintColor(black, white);
+        core.setTintColor(mBlack, mWhite);
 
         if (vertical) {
             vertical = false;
-            toggleFlipVerticalHighlight(true);
+            toggleFlipVerticalHighlight(true, 0);
         }
 
         if (lock) {
@@ -944,9 +1034,9 @@ public class DocumentActivity extends AppCompatActivity
 	}
 
     private void makeColorPopupWindow() {
-        List<ColorItem> itemList = new ArrayList<>();
-
-        itemList.add(new ColorItem("Default", ContextCompat.getColor(this, R.color.black1), ContextCompat.getColor(this, R.color.white1)));
+        itemList = new ArrayList<>();
+        itemList.add(new ColorItem("Default", 0, 0));
+        itemList.add(new ColorItem("Day", ContextCompat.getColor(this, R.color.black1), ContextCompat.getColor(this, R.color.white1)));
         itemList.add(new ColorItem("Night", ContextCompat.getColor(this, R.color.black2), ContextCompat.getColor(this, R.color.white2)));
         itemList.add(new ColorItem("Moon", ContextCompat.getColor(this, R.color.black21), ContextCompat.getColor(this, R.color.white21)));
         itemList.add(new ColorItem("Paper", ContextCompat.getColor(this, R.color.black3), ContextCompat.getColor(this, R.color.white3)));
@@ -954,17 +1044,30 @@ public class DocumentActivity extends AppCompatActivity
         itemList.add(new ColorItem("Twilight", ContextCompat.getColor(this, R.color.black5), ContextCompat.getColor(this, R.color.white5)));
         itemList.add(new ColorItem("Console", ContextCompat.getColor(this, R.color.black6), ContextCompat.getColor(this, R.color.white6)));
 
-        ColorAdapter adapter = new ColorAdapter(this, itemList, new ColorAdapter.OnItemClickListener() {
+        adapter = new ColorAdapter(this, itemList, new ColorAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {
-                ColorItem item =  itemList.get(position);
-                if (core.setTintColor(item.black, item.white)) {
+                for (int mi = 0; mi < itemList.size(); mi++) {
+                    itemList.get(mi).selected = false;
+                }
+                ColorItem item = itemList.get(position);
+                item.selected = true;
+                adapter.notifyDataSetChanged();
+                mBlack = item.black;
+                mWhite = item.white;
+
+                if (position == 0) {
+                    mBlack_def = true;
+                    saveKey("black" + mDocKey, null);
+                    saveKey("white" + mDocKey, null);
+                }
+                else {
+                    mBlack_def = false;
+                    saveKey("black" + mDocKey, (Integer)mBlack);
+                    saveKey("white" + mDocKey, (Integer)mWhite);
+                }
+                if (core.setTintColor(mBlack, mWhite)) {
                     mDocView.refresh(false);
-                    SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-                    SharedPreferences.Editor edit = prefs.edit();
-                    edit.putInt("black"+mDocKey, item.black);
-                    edit.putInt("white"+mDocKey, item.white);
-                    edit.apply();
                 }
                 // mColorPopupWindow.dismiss();
             }
@@ -982,24 +1085,96 @@ public class DocumentActivity extends AppCompatActivity
         mOptionsPopupMenu.getMenuInflater().inflate(R.menu.options_menu, mOptionsPopupMenu .getMenu());
         Menu menu = mOptionsPopupMenu.getMenu();
 
+        if (!core.isReflowable()) {
+            menu.removeItem(R.id.action_font_size_g);
+        }
         for (int mi = 0; mi < menu.size(); mi++) {
             MenuItem item = menu.getItem(mi);
-            item.setCheckable(true);
+            int id = item.getItemId();
+            if (id == R.id.group_document_title || id == R.id.group_global_title) {
+                SpannableString sps = new SpannableString(item.getTitle().toString());
+                sps.setSpan(new ForegroundColorSpan(Tool.HIGHLIGHT_BUTTON), 0, sps.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                sps.setSpan(new StyleSpan(Typeface.BOLD), 0, sps.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                item.setTitle(sps);
+            }
         }
         mOptionsPopupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
             public boolean onMenuItemClick(MenuItem item) {
                 int id = item.getItemId();
                 if (id == R.id.action_fullscreen) {
                     item.setChecked(!Tool.mFullscreen);
-                    toggleFullscreen();
+                    toggleFullscreen(1);
                 }
                 else if (id == R.id.action_toolbar_bottom) {
                     item.setChecked(mPlacement == -1);
-                    togglePlacement();
+                    togglePlacement(1);
+                }
+                else if (id == R.id.action_fullscreen_g) {
+                    item.setChecked(!mFullscreenG);
+
+                    if (mFullscreenG == Tool.mFullscreen) {
+                        mOptionsPopupMenu.getMenu().findItem(R.id.action_fullscreen).setChecked(!mFullscreenG);
+                        toggleFullscreen(-1);
+                    }
+                    mFullscreenG = !mFullscreenG;
+                    saveKey("fullscreen", mFullscreenG);
+                }
+                else if (id == R.id.action_toolbar_bottom_g) {
+                    item.setChecked(mPlacementG == -1);
+
+                    if (mPlacementG == mPlacement) {
+                        mOptionsPopupMenu.getMenu().findItem(R.id.action_toolbar_bottom).setChecked(mPlacementG == -1);
+                        togglePlacement(-1);
+                    }
+                    mPlacementG = -mPlacementG;
+                    saveKey("placement", mPlacementG);
+                }
+                else if (id == R.id.action_flip_vertical_g) {
+                    item.setChecked(!mFlipVerticalG);
+
+                    if (mFlipVerticalG == mFlipVerticalHighlight) {
+                        toggleFlipVerticalHighlight(false, -1);
+                    }
+                    mFlipVerticalG = !mFlipVerticalG;
+                    saveKey("vertical", mFlipVerticalG);
+                }
+                else if (id == R.id.action_color_palette_g) {
+                    if (!item.isChecked()) {
+                        item.setChecked(true);
+                        mBlackG = mBlack;
+                        mWhiteG = mWhite;
+                        saveKey("black", mBlackG);
+                        saveKey("white", mWhiteG);
+                    }
+                }
+                else if (id == R.id.action_font_size_g) {
+                    if (!item.isChecked()) {
+                        item.setChecked(true);
+                        mLayoutEMG = mLayoutEM;
+                        saveKey("layoutem", mLayoutEMG);
+                    }
                 }
                 return true;
             }
         });
+    }
+
+    private void saveKey(String key, Object obj) {
+        SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences.Editor edit = prefs.edit();
+        if (obj == null) {
+            edit.remove(key);
+        }
+        else if (obj instanceof Integer) {
+            edit.putInt(key, (Integer)obj);
+        }
+        else if (obj instanceof Boolean) {
+            edit.putBoolean(key, (Boolean)obj);
+        }
+        else {
+            return;
+        }
+        edit.apply();
     }
 
     private ActivityResultLauncher<Intent> activityLauncher = registerForActivityResult(
@@ -1023,7 +1198,7 @@ public class DocumentActivity extends AppCompatActivity
 
 	private void setButtonEnabled(ImageButton button, boolean enabled) {
 		button.setEnabled(enabled);
-		button.setColorFilter(enabled ? enabledColor : disabledColor);
+		button.setColorFilter(enabled ? Tool.ENABLED_BUTTON: Tool.DISABLED_BUTTON);
 	}
 
     @SuppressWarnings("deprecation")
@@ -1122,7 +1297,6 @@ public class DocumentActivity extends AppCompatActivity
 		edit.putInt("page" + mDocKey, mDocView.getDisplayedViewIndex());
 		edit.putBoolean("single" + mDocKey, mSingleColumnHighlight);
 		edit.putBoolean("lefttext" + mDocKey, mTextLeftHighlight);
-		edit.putBoolean("vertical" + mDocKey, mFlipVerticalHighlight);
 		edit.putBoolean("lock" + mDocKey, mLockHighlight);
 		edit.putBoolean("crop" + mDocKey, mCropMarginHighlight);
 		edit.putBoolean("focus" + mDocKey, mFocusHighlight);
@@ -1163,7 +1337,7 @@ public class DocumentActivity extends AppCompatActivity
 		int index;
 		mSingleColumnHighlight = !mSingleColumnHighlight;
 		// COLOR tint
-		mSingleColumnButton.setColorFilter(mSingleColumnHighlight ? highlightColor : highunlightColor);
+		mSingleColumnButton.setColorFilter(mSingleColumnHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
 		// Inform pages of the change.
 		core.toggleSingleColumn();
 		mDocView.toggleSingleColumn(init);
@@ -1179,7 +1353,7 @@ public class DocumentActivity extends AppCompatActivity
     private void toggleTextLeftHighlight(boolean init) {
 		mTextLeftHighlight = !mTextLeftHighlight;
 		// COLOR tint
-		mTextLeftButton.setColorFilter(mTextLeftHighlight ? highlightColor : highunlightColor);
+		mTextLeftButton.setColorFilter(mTextLeftHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
 		// Inform pages of the change.
 		core.toggleTextLeft();
 		mDocView.toggleTextLeft(init);
@@ -1188,18 +1362,23 @@ public class DocumentActivity extends AppCompatActivity
 		updatePageSlider(index);
 	}
 
-    private void toggleFlipVerticalHighlight(boolean init) {
+    private void toggleFlipVerticalHighlight(boolean init, int save) {
 		mFlipVerticalHighlight = !mFlipVerticalHighlight;
 		// COLOR tint
-		mFlipVerticalButton.setColorFilter(mFlipVerticalHighlight ? highlightColor : highunlightColor);
+		mFlipVerticalButton.setColorFilter(mFlipVerticalHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
 		// Inform pages of the change.
 		mDocView.toggleFlipVertical(init);
+
+		if (save == 1)
+			saveKey("vertical" + mDocKey, (Boolean)mFlipVerticalHighlight);
+		else if (save == -1)
+			saveKey("vertical" + mDocKey, null);
 	}
 
     private void toggleLock() {
 		mLockHighlight = !mLockHighlight ;
 		// COLOR tint
-		mLockButton.setColorFilter(mLockHighlight ? highlightColor : highunlightColor);
+		mLockButton.setColorFilter(mLockHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
 		// Inform pages of the change.
 		mDocView.toggleLock();
     }
@@ -1207,7 +1386,7 @@ public class DocumentActivity extends AppCompatActivity
     private void toggleCropMargin(boolean init) {
 		mCropMarginHighlight = !mCropMarginHighlight;
 		// COLOR tint
-		mCropMarginButton.setColorFilter(mCropMarginHighlight ? highlightColor : highunlightColor);
+		mCropMarginButton.setColorFilter(mCropMarginHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
 		// Inform pages of the change.
 		core.toggleCropMargin();
 		mDocView.toggleCropMargin(init);
@@ -1216,7 +1395,7 @@ public class DocumentActivity extends AppCompatActivity
     private void toggleFocus(boolean init) {
 		mFocusHighlight = !mFocusHighlight;
 		// COLOR tint
-		mFocusButton.setColorFilter(mFocusHighlight ? highlightColor : highunlightColor);
+		mFocusButton.setColorFilter(mFocusHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
 		// Inform pages of the change.
 		mDocView.toggleFocus(core.isReflowable(), init);
     }
@@ -1224,7 +1403,7 @@ public class DocumentActivity extends AppCompatActivity
     private void toggleSmartFocus() {
 		mSmartFocusHighlight = !mSmartFocusHighlight;
 		// COLOR tint
-		mSmartFocusButton.setColorFilter(mSmartFocusHighlight ? highlightColor : highunlightColor);
+		mSmartFocusButton.setColorFilter(mSmartFocusHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
 		// Inform pages of the change.
 		mDocView.toggleSmartFocus();
     }
@@ -1240,28 +1419,30 @@ public class DocumentActivity extends AppCompatActivity
 	private void setLinkHighlight(boolean highlight, boolean init) {
 		mLinkHighlight = highlight;
 		// LINK_COLOR tint
-		mLinkButton.setColorFilter(highlight ? highlightColor : highunlightColor);
+		mLinkButton.setColorFilter(highlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
 		// Inform pages of the change.
 		mDocView.setLinksEnabled(highlight, init);
 	}
 
-    private void togglePlacement() {
+    private void togglePlacement(int save) {
         mPlacement = -mPlacement;
         updateBars(true);
-        SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor edit = prefs.edit();
-        edit.putInt("placement"+mDocKey, mPlacement);
-        edit.apply();
+
+        if (save == 1)
+            saveKey("placement" + mDocKey, (Integer)mPlacement);
+        else if (save == -1)
+            saveKey("placement" + mDocKey, null);
 	}
 
-    private void toggleFullscreen() {
+    private void toggleFullscreen(int save) {
         Tool.mFullscreen = !Tool.mFullscreen;
         Tool.fullScreen(getWindow());
         updateBars(false);
-        SharedPreferences prefs = getPreferences(Context.MODE_PRIVATE);
-        SharedPreferences.Editor edit = prefs.edit();
-        edit.putBoolean("fullscreen"+mDocKey, Tool.mFullscreen);
-        edit.apply();
+
+        if (save == 1)
+            saveKey("fullscreen" + mDocKey, (Boolean)Tool.mFullscreen);
+        else if (save == -1)
+            saveKey("fullscreen" + mDocKey, null);
     }
 
     private void updateBars(boolean placeChange) {
@@ -1478,7 +1659,7 @@ public class DocumentActivity extends AppCompatActivity
 
 				if (mPlacement == 1) {
 					mPlacement = -1;
-					togglePlacement();
+					togglePlacement(0);
 				}
 				else {
 					updateBars(false);

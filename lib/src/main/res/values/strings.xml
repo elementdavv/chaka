@@ -31,6 +31,8 @@
     <string name="options">Options</string>
     <string name="fullscreen">Full Screen</string>
     <string name="toolbar_bottom">Toolbar on Bottom</string>
+    <string name="group_document">DOCUMENT</string>
+    <string name="group_global">GLOBAL</string>
 
     <string name="contents">Contents</string>
     <string name="bookmarks">Bookmarks</string>

@@ -32,10 +32,14 @@ public class Tool
     public final static String PALLETBUNDLE = "PalleteBundle";
     public final static String PAGETOGO = "pagetogo";
     public static Context mContext;
-    public static boolean mFullscreen = true;
+    public static boolean mFullscreen;
     public static int HIGHLIGHT_COLOR;
     public static int LINK_COLOR;
     public static int SELECTION_COLOR;
+    public static int HIGHLIGHT_BUTTON;
+    public static int HIGHUNLIGHT_BUTTON;
+    public static int ENABLED_BUTTON;
+    public static int DISABLED_BUTTON;
     public static int SWIPE_MIN_DISTANCE = 240;
     public static int SWIPE_MAX_OFF_PATH = 240;
     public static int SWIPE_THRESHOLD_VELOCITY = 200;
@@ -45,6 +49,10 @@ public class Tool
         HIGHLIGHT_COLOR = getThemeColor(R.attr.highlight);
         LINK_COLOR = getThemeColor(R.attr.link);
         SELECTION_COLOR = getThemeColor(R.attr.selection);
+        HIGHLIGHT_BUTTON = getThemeColor(R.attr.highlight_button);
+        HIGHUNLIGHT_BUTTON = getThemeColor(R.attr.highunlight_button);
+        ENABLED_BUTTON = getThemeColor(R.attr.enabled_button);
+        DISABLED_BUTTON = getThemeColor(R.attr.disabled_button);
     }
 
     public final static <T> void i(T v) {

@@ -94,33 +94,25 @@ public final class MarkedView extends WebView {
     }
 
     /** load Markdown text from file path. **/
-    public void loadMDFilePath(String filePath){
+    public void loadMDFilePath(String filePath) throws IOException {
         loadMDFile(new File(filePath));
     }
 
     /** load Markdown text from file. **/
-    public void loadMDFile(File file){
+    public void loadMDFile(File file) throws IOException {
         String mdText = "";
-        try {
-            FileInputStream fileInputStream = new FileInputStream(file);
+        FileInputStream fileInputStream = new FileInputStream(file);
+        InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+        String readText = "";
+        StringBuilder stringBuilder = new StringBuilder();
 
-            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-
-            String readText = "";
-            StringBuilder stringBuilder = new StringBuilder();
-            while ((readText = bufferedReader.readLine()) != null) {
-                stringBuilder.append(readText);
-                stringBuilder.append("\n");
-            }
-            fileInputStream.close();
-            mdText = stringBuilder.toString();
-
-        } catch(FileNotFoundException e) {
-            Tool.e("FileNotFoundException:" + e);
-        } catch(IOException e) {
-            Tool.e("IOException:" + e);
+        while ((readText = bufferedReader.readLine()) != null) {
+            stringBuilder.append(readText);
+            stringBuilder.append("\n");
         }
+        fileInputStream.close();
+        mdText = stringBuilder.toString();
         setMDText(mdText);
     }
 
@@ -140,7 +132,7 @@ public final class MarkedView extends WebView {
         } else {
             previewText = String.format("preview('%s', %b)", escMdText, isCodeScrollDisable());
         }
-        sendScriptAction();
+        // sendScriptAction();
     }
 
     private String escapeForText(String mdText){
