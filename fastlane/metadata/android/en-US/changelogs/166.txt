@@ -1,0 +1,6 @@
+· add fullscreen option
+· add toolbar on bottom option
+· add global default options
+· add left/right swipe gestures support in contents/help window
+· use double tap to make bookmarks instead of long press
+· fix a bug with extreme long txt file

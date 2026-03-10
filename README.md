@@ -64,6 +64,10 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
   Currenet font size can be changed in **Font Size** menu.
 
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/option.png"> Options
+
+  Document Options are applied to current document. Global Options are applied to all documents.
+
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/contents.png"> Contents
 
   **Contents** menu includes following two functions:
@@ -74,7 +78,7 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/bookmark.png"> Bookmarks
 
-  **Bookmarks** works across reading sessions. To bookmark a page, just long press on blank area.
+  **Bookmarks** works across reading sessions. Double tap on a page to make a bookmark.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/link.png"> Activate Links
 
@@ -111,7 +115,9 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 - Under the combination of **Flip Horizontal and not Rtl Text** mode, or of **Flip Vertical and Rtl Text** mode, when pages are leaved between two pages, it will slide slowly into the near page that guarantees any page contents will not be cut off.
 - Under the combination of **Flip Horizontal and Rtl Text** mode, or of **Flip Vertical and not Rtl Text** mode, pages can stay at any position which will never cut off page contents that makes reading across two pages comfortably.
 - Long press one finger on text, to trigger a text selection session. Then press on left/right handles and move, to change selection area. Tap in selection area, to show/hide **Toolbar**. Then tap **Copy Selection** button, to copy the selected text to system clipboard and end the selection session. Tap out of selection area, to cancel the selection session.
-- Double tap in middle to **Bookmark** current page.
+- Double tap to **Bookmark** current page.
+- In **Contents** window, swipe left/right to swich/close.
+- In **Help** window, swipe right to close.
 - All reading status as of page scale, position, last read page number, as well as all enable button states will be remembered across reading sessions for per book.
 - In general, to get the best reading experience mutiple function modes can be employed, adding appropriate screen orientation if needed.
 
