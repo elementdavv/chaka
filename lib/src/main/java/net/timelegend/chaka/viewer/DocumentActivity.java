@@ -40,6 +40,7 @@ import android.view.ViewConfiguration;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowInsets;
+import android.view.WindowInsetsController;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -162,6 +163,7 @@ public class DocumentActivity extends AppCompatActivity
 	protected PopupMenu mLayoutPopupMenu;
 	protected PopupMenu mOptionsPopupMenu;
 	protected ListPopupWindow mColorPopupWindow;
+	protected RelativeLayout layout;                // UI layout
 
 	private MuPDFCore openBuffer(byte buffer[], String magic)
 	{
@@ -1023,15 +1025,39 @@ public class DocumentActivity extends AppCompatActivity
 			searchModeOn();
 
 		// Stick the document view and the buttons overlay into a parent view
-		RelativeLayout layout = new RelativeLayout(this);
+		layout = new RelativeLayout(this);
 		// layout.setBackgroundColor(Color.DKGRAY);
-		layout.setBackgroundColor(ContextCompat.getColor(this, R.color.toolbar));
 		layout.addView(mDocView);
 		layout.addView(mButtonsView);
 		setContentView(layout);
 
-        watchNavigationBar();
+		onColorChange();
+		watchNavigationBar();
 	}
+
+    private void onColorChange() {
+        // update UI layout background
+        layout.setBackgroundColor(mWhite);
+
+        // android 11 (api30)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            // update statusbar
+            WindowInsetsController controller = getWindow().getInsetsController();
+
+            if (controller != null) {
+                if ((mWhite & 0xff) < 0x80 && (mWhite & 0xff00) < 0x8000 && (mWhite & 0xff0000) < 0x800000) {
+                    controller.setSystemBarsAppearance(
+                            0,
+                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+                }
+                else {
+                    controller.setSystemBarsAppearance(
+                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
+                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+                }
+            }
+        }
+    }
 
     private void makeColorPopupWindow() {
         itemList = new ArrayList<>();
@@ -1068,6 +1094,7 @@ public class DocumentActivity extends AppCompatActivity
                 }
                 if (core.setTintColor(mBlack, mWhite)) {
                     mDocView.refresh(false);
+                    onColorChange();
                 }
                 // mColorPopupWindow.dismiss();
             }

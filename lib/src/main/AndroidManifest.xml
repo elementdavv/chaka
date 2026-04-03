@@ -11,7 +11,7 @@
 			android:name=".DocumentActivity"
 			android:configChanges="keyboard|keyboardHidden|screenSize|smallestScreenSize|screenLayout|orientation|uiMode"
 			android:windowSoftInputMode="stateHidden|adjustNothing"
-			android:documentLaunchMode="always"
+			android:documentLaunchMode="intoExisting"
 			android:exported="true"
 			android:theme="@style/Theme.MyApp"
 			>

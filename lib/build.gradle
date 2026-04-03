@@ -12,16 +12,16 @@ dependencies {
 	if (file('../jni/build.gradle').isFile())
 		api project(':jni')
 	else
-	    api 'net.timelegend.mupdf:fitz:1.24.9.6'
+	    api 'net.timelegend.mupdf:fitz:1.24.9.7'
 }
 
 android {
-	compileSdkVersion 34
-	buildToolsVersion '34.0.0'
+	compileSdkVersion 35
+
 	defaultConfig {
-        namespace 'net.timelegend.chaka.viewer'
+		namespace 'net.timelegend.chaka.viewer'
 		minSdkVersion 21
-		targetSdkVersion 34
+		targetSdkVersion 35
 		versionName '1.24.9a.20'
 		versionCode 166
 		buildConfigField "String", "VERSION_NAME", "\"${defaultConfig.versionName}\""
