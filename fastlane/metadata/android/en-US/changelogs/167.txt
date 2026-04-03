@@ -1,0 +1,4 @@
+· support android 15(sdk 35)
+· support 16KB page size
+· same document opened in same window in recent apps view
+· improve display experience
