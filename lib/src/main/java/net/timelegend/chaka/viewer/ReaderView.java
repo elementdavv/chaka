@@ -9,9 +9,11 @@ import android.content.ClipData;
 import android.content.Context;
 import android.graphics.Point;
 import android.graphics.Rect;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.SparseArray;
+import android.view.ActionMode;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -20,11 +22,15 @@ import android.view.ViewConfiguration;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.Scroller;
+import android.window.OnBackInvokedCallback;
+import android.window.OnBackInvokedDispatcher;
+
+import androidx.activity.OnBackPressedCallback;
 
 public class ReaderView
 		extends AdapterView<Adapter>
 		implements GestureDetector.OnGestureListener, ScaleGestureDetector.OnScaleGestureListener, Runnable {
-	private Context mContext;
+	protected DocumentActivity mContext;
 	private boolean mLinksEnabled = false;
 	private boolean tapDisabled = false;
 	private int tapPageMargin;
@@ -87,6 +93,16 @@ public class ReaderView
     private SELECT        mSelecting = SELECT.NO_SELECT;    // text select state
     private int           mSelectLeftView;                  // view pageNumber with text select left handle
     private int           mSelectRightView;                 // view pageNumber with text select right handle
+    private ActionMode      mTextActionMode;
+    private boolean         mBeginSelect = false;
+    private OnBackInvokedCallback mBackCallback = this::endSelect;
+    private OnBackPressedCallback mBackCallback2 = new OnBackPressedCallback(true) {
+        @Override
+        public void handleOnBackPressed() {
+            endSelect();
+        }
+    };
+    private boolean         mBackCallbackRegistered = false;
     private boolean       mLongPress = false;               // as longpress
     private MotionEvent   mLongPressEvent;
     private Runnable      mLongPressRunnable;;
@@ -117,7 +133,7 @@ public class ReaderView
 
 	private void setup(Context context)
 	{
-		mContext = context;
+		mContext = (DocumentActivity)context;
 		mGestureDetector = new GestureDetector(context, this);
 		mGestureDetector.setIsLongpressEnabled(false);
 		mScaleGestureDetector = new ScaleGestureDetector(context, this);
@@ -479,7 +495,11 @@ public class ReaderView
                 if (pv.beginSelect(x, y)) {
                     mSelecting = SELECT.SELECTING;
                     mSelectLeftView = mSelectRightView = mChildViews.keyAt(i);
-                    ((DocumentActivity)mContext).showCopyButton(View.VISIBLE);
+                    mContext.showCopyButton(View.VISIBLE);
+                    ActionMode.Callback actionModeCallback = new TextActionModeCallback(this);
+                    mTextActionMode = startActionMode(actionModeCallback, ActionMode.TYPE_FLOATING);
+                    registerOnBackInvokedCallback();
+                    mBeginSelect = true;
                     return;
                 }
             }
@@ -570,20 +590,26 @@ public class ReaderView
         mMoveTime = System.currentTimeMillis();
     }
 
-    public void copy() {
-        if (mSelecting != SELECT.SELECTING) return;
+    public String getSelectedText() {
+        if (mSelecting != SELECT.SELECTING) return "";
 
         StringBuffer buffer = new StringBuffer("");
         for (int i = mSelectLeftView; i <= mSelectRightView; i++) {
 		    PageView pv = (PageView)getDisplayedView();
             buffer.append(pv.copy(i)).append("\n");
         }
+        return buffer.toString();
+    }
+
+    public void copy() {
         ClipboardManager cm = (ClipboardManager) mContext.getSystemService(Context.CLIPBOARD_SERVICE);
-        cm.setPrimaryClip(ClipData.newPlainText(null, buffer.toString()));
+        cm.setPrimaryClip(ClipData.newPlainText(null, getSelectedText()));
         endSelect();
     }
 
-    private void endSelect() {
+    protected void endSelect() {
+        if (mSelecting == SELECT.NO_SELECT) return;
+
         int minv = 1000, maxv = 0;
         for (int i = 0; i < mChildViews.size(); i++) {
             int key = mChildViews.keyAt(i);
@@ -601,8 +627,94 @@ public class ReaderView
                 pv.unSelect(i);
             }
         }
-        ((DocumentActivity)mContext).showCopyButton(View.GONE);
+        mContext.showCopyButton(View.GONE);
+
+        if (mTextActionMode != null) {
+            mTextActionMode.finish();
+            mTextActionMode = null;
+        }
+        unregisterOnBackInvokedCallback();
         mSelecting = SELECT.NO_SELECT;
+    }
+
+    public void share() {
+    }
+
+    public void selectAll() {
+    }
+
+    private void unregisterOnBackInvokedCallback() {
+        if (mBackCallbackRegistered) {
+            // android 13, api33
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                mContext.getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(mBackCallback);
+            }
+            else {
+                mBackCallback2.remove();
+            }
+            mBackCallbackRegistered = false;
+        }
+    }
+
+    private void registerOnBackInvokedCallback() {
+        if (!mBackCallbackRegistered) {
+            // android 13, api33
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                mContext.getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+                        OnBackInvokedDispatcher.PRIORITY_DEFAULT, mBackCallback);
+            }
+            else {
+                mContext.getOnBackPressedDispatcher().addCallback(
+                        mContext, mBackCallback2);
+            }
+            mBackCallbackRegistered = true;
+        }
+    }
+
+    private Runnable mShowFloatingToolbar = new Runnable() {
+        @Override
+        public void run() {
+            if (mTextActionMode != null) {
+                mTextActionMode.hide(0);  // hide off.
+            }
+        }
+    };
+
+    private void hideFloatingToolbar(int duration) {
+        if (mTextActionMode != null) {
+            removeCallbacks(mShowFloatingToolbar);
+            mTextActionMode.hide(duration);
+        }
+    }
+
+    private void showFloatingToolbar() {
+        if (mTextActionMode != null) {
+            // Delay "show" so it doesn't interfere with click confirmations
+            // or double-clicks that could "dismiss" the floating toolbar.
+            int delay = ViewConfiguration.getDoubleTapTimeout();
+            postDelayed(mShowFloatingToolbar, delay);
+        }
+    }
+
+    private void updateFloatingToolbarVisibility(MotionEvent event) {
+        if (mTextActionMode != null) {
+            int eventaction = event.getActionMasked();
+
+            if (mBeginSelect) {
+                if (eventaction == MotionEvent.ACTION_UP || eventaction == MotionEvent.ACTION_CANCEL) {
+                    mBeginSelect = false;
+                }
+                return;
+            }
+            switch (eventaction) {
+            case MotionEvent.ACTION_MOVE:
+                hideFloatingToolbar(ActionMode.DEFAULT_HIDE_DURATION);
+                break;
+            case MotionEvent.ACTION_UP:  // fall through
+            case MotionEvent.ACTION_CANCEL:
+                showFloatingToolbar();
+            }
+        }
     }
 
 	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
@@ -734,7 +846,7 @@ public class ReaderView
 		{
 			tapDisabled = false;
 		}
-
+		updateFloatingToolbarVisibility(event);
 		mScaleGestureDetector.onTouchEvent(event);
 		mGestureDetector.onTouchEvent(event);
 
@@ -1694,7 +1806,7 @@ public class ReaderView
         if (mCurrent == ((PageView) v).getPage() && !mAdapter.isReflowable()) {
             boolean vis = mCurrent > 0
                     && mCurrent < (mAdapter.getCount() - 1);
-            ((DocumentActivity)mContext).showSingleColumnButton(vis ? View.VISIBLE : View.GONE);
+            mContext.showSingleColumnButton(vis ? View.VISIBLE : View.GONE);
         }
         if (mCurrent > 0) {
             View v1 = mChildViews.get(mCurrent - 1);
