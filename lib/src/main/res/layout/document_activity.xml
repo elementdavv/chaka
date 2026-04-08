@@ -49,15 +49,15 @@
 				android:textColor="@android:color/white"
 				/>
 
-			<ImageButton
-				android:id="@+id/copyButton"
-				android:layout_width="wrap_content"
-				android:layout_height="wrap_content"
-				android:background="@drawable/button"
-				android:src="@drawable/ic_copy_white_24dp"
-				android:visibility="gone"
-				android:tooltipText="@string/copy"
-				/>
+			<!-- <ImageButton -->
+			<!-- 	android:id="@+id/copyButton" -->
+			<!-- 	android:layout_width="wrap_content" -->
+			<!-- 	android:layout_height="wrap_content" -->
+			<!-- 	android:background="@drawable/button" -->
+			<!-- 	android:src="@drawable/ic_copy_white_24dp" -->
+			<!-- 	android:visibility="gone" -->
+			<!-- 	android:tooltipText="@string/copy" -->
+			<!-- 	/> -->
 
 			<ImageButton
 				android:id="@+id/outlineButton"

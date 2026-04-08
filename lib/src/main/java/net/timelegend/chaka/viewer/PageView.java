@@ -774,9 +774,52 @@ public class PageView extends ViewGroup {
         return sel;
     }
 
+    public void selectAll(int dir) {
+        selectAll(dir, 0);
+    }
+
+    /**
+    *  dir: 1: left handle, 2: right handle, 3: both handle, 0: no handle
+    *  end: when dir = 1/2, 1: handle extend to top left/right bottom
+    */
+    public void selectAll(int dir, int end) {
+        MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(mPageNumber, true);
+        PointF p1, p2;
+
+        if (dir == Tool.LEFT_HANDLE) {
+            if (end == Tool.HANDLE_EXTEND) {
+                p1 = view2Src(getLeft() + 1, getTop() + 1);
+            }
+            else {
+                p1 = tsmodel.boundries[0];
+            }
+            p2 = view2Src(getRight() - 1, getBottom() - 1);
+        }
+        else if (dir == Tool.RIGHT_HANDLE) {
+            if (end == Tool.HANDLE_EXTEND) {
+                p2 = view2Src(getRight() - 1, getBottom() - 1);
+            }
+            else {
+                p2 = tsmodel.boundries[1];
+            }
+            p1 = view2Src(getLeft() + 1, getTop() + 1);
+        }
+        else if (dir == Tool.BOTH_HANDLE || dir == Tool.NO_HANDLE) {
+            p1 = view2Src(getLeft() + 1, getTop() + 1);
+            p2 = view2Src(getRight() - 1, getBottom() - 1);
+        }
+        else
+            return;
+
+        tsmodel.rectHandles[0] = null;
+        tsmodel.rectHandles[1] = null;
+        onSelect(dir, p1, p2);
+    }
+
     public void moveSelect(int dir, Float x, Float y) {
         MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(mPageNumber, true);
         PointF p1, p2;
+
         if (dir == 1) {                 // left handle
             if (x != null)
                 p1 = view2Src(x, y);
@@ -786,6 +829,7 @@ public class PageView extends ViewGroup {
         }
         else if (dir == 2) {            // right handle
             p1 = view2Src(getLeft() + 1, getTop() + 1);
+
             if (x != null)
                 p2 = view2Src(x, y);
             else
@@ -798,6 +842,7 @@ public class PageView extends ViewGroup {
         else {                          // both handle
             p1 = view2Src(x, y);
             p2 = tsmodel.boundries[dir - 3];
+
             if (p1.y > p2.y) {
                 PointF pt = p1;
                 p1 = p2;
@@ -805,6 +850,11 @@ public class PageView extends ViewGroup {
             }
             dir = 3;
         }
+        onSelect(dir, p1, p2);
+    }
+
+    private void onSelect(int dir, PointF p1, PointF p2) {
+        MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(mPageNumber, true);
         com.artifex.mupdf.fitz.Point fp1 = new com.artifex.mupdf.fitz.Point(p1.x, p1.y);
         com.artifex.mupdf.fitz.Point fp2 = new com.artifex.mupdf.fitz.Point(p2.x, p2.y);
         Quad[] qs = tsmodel.sText.highlight(fp1, fp2);
@@ -839,8 +889,15 @@ public class PageView extends ViewGroup {
         return tsmodel.sText.copy(fp1, fp2);
     }
 
+    public Rect getSelectionRect(int position) {
+        MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(position);
+        PointF p1 = src2View(tsmodel.boundries[0].x, tsmodel.boundries[0].y - (tsmodel.textHandles[0].y - tsmodel.boundries[0].y) * 2);
+        PointF p2 = src2View(tsmodel.boundries[1].x, tsmodel.boundries[1].y + (tsmodel.textHandles[1].y - tsmodel.boundries[1].y) * 2);
+        return new Rect((int)p1.x, (int)p1.y, (int)p2.x, (int)p2.y);
+    }
+
     public void unSelect() {
-        mCore.rmTSModel(mPageNumber);
+        unSelect(mPageNumber);
         mSearchView.invalidate();
     }
 
@@ -852,7 +909,12 @@ public class PageView extends ViewGroup {
         float x1 = x - getLeft();
         float y1 = y - getTop();
         MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(mPageNumber);
-        return tsmodel.rectHandles[ind].contains((int)x1, (int)y1);
+        Rect h = tsmodel.rectHandles[ind];
+
+        if (h != null) {
+            return h.contains((int)x1, (int)y1);
+        }
+        return false;
     }
 
     public boolean isOnBox(float x, float y) {

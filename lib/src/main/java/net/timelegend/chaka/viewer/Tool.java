@@ -43,6 +43,12 @@ public class Tool
     public static int SWIPE_MIN_DISTANCE = 240;
     public static int SWIPE_MAX_OFF_PATH = 240;
     public static int SWIPE_THRESHOLD_VELOCITY = 200;
+    public static int LEFT_HANDLE = 1;
+    public static int RIGHT_HANDLE = 2;
+    public static int BOTH_HANDLE = 3;
+    public static int NO_HANDLE = 0;
+    public static int HANDLE_EXTEND = 1;
+    public static int HANDLE_NO_EXTEND = 0;
 
     public static void create(Context context) {
         mContext = context;

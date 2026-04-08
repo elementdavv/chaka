@@ -81,7 +81,7 @@ public class DocumentActivity extends AppCompatActivity
 	private SeekBar      mPageSlider;
 	private int          mPageSliderRes;
 	private TextView     mPageNumberView;
-	private ImageButton  mCopyButton;
+	// private ImageButton  mCopyButton;
 	private ImageButton  mSingleColumnButton;
 	private ImageButton  mTextLeftButton;
 	private ImageButton  mFlipVerticalButton;
@@ -541,7 +541,7 @@ public class DocumentActivity extends AppCompatActivity
 
         // below android 8 (api26)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            TooltipCompat.setTooltipText(mCopyButton, getString(R.string.copy));
+            // TooltipCompat.setTooltipText(mCopyButton, getString(R.string.copy));
             TooltipCompat.setTooltipText(mSingleColumnButton, getString(R.string.single_column));
             TooltipCompat.setTooltipText(mTextLeftButton, getString(R.string.text_left));
             TooltipCompat.setTooltipText(mFlipVerticalButton, getString(R.string.flip_vertical));
@@ -599,11 +599,11 @@ public class DocumentActivity extends AppCompatActivity
             }
         });
 
-        mCopyButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                copy();
-            }
-        });
+        // mCopyButton.setOnClickListener(new View.OnClickListener() {
+        //     public void onClick(View v) {
+        //         copy();
+        //     }
+        // });
 
         if (core.isReflowable()) {
             mSingleColumnButton.setVisibility(View.GONE);
@@ -692,7 +692,7 @@ public class DocumentActivity extends AppCompatActivity
                 shareIntent.setType(mMimeType);
                 shareIntent.putExtra(Intent.EXTRA_STREAM, uri);
                 shareIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivity(Intent.createChooser(shareIntent, getString(R.string.share_to)));
+                startActivity(Intent.createChooser(shareIntent, getString(R.string.sharing_book)));
             }
         });
 
@@ -1356,9 +1356,9 @@ public class DocumentActivity extends AppCompatActivity
         finish();
     }
 
-    private void copy() {
-        mDocView.copy();
-    }
+    // private void copy() {
+    //     mDocView.copy();
+    // }
 
     private void toggleSingleColumnHighlight(boolean init) {
 		int index;
@@ -1649,7 +1649,7 @@ public class DocumentActivity extends AppCompatActivity
 		mPageSlider = (SeekBar)mButtonsView.findViewById(R.id.pageSlider);
 		mPageNumberView = (TextView)mButtonsView.findViewById(R.id.pageNumber);
 		mSearchButton = (ImageButton)mButtonsView.findViewById(R.id.searchButton);
-        mCopyButton = (ImageButton)mButtonsView.findViewById(R.id.copyButton);
+        // mCopyButton = (ImageButton)mButtonsView.findViewById(R.id.copyButton);
         mSingleColumnButton = (ImageButton)mButtonsView.findViewById(R.id.singleColumnButton);
         mTextLeftButton = (ImageButton)mButtonsView.findViewById(R.id.textLeftButton);
         mFlipVerticalButton = (ImageButton)mButtonsView.findViewById(R.id.flipVerticalButton);
@@ -1745,12 +1745,12 @@ public class DocumentActivity extends AppCompatActivity
         mDocNameView.setWidth(tw);
     }
 
-    public void showCopyButton(int vis) {
-        if (mCopyButton.getVisibility() != vis) {
-            mCopyButton.setVisibility(vis);
-            updateTopBar();
-        }
-    }
+    // public void showCopyButton(int vis) {
+    //     if (mCopyButton.getVisibility() != vis) {
+    //         mCopyButton.setVisibility(vis);
+    //         updateTopBar();
+    //     }
+    // }
 
     public void showSingleColumnButton(int vis) {
         if (mOrientationChanged) {

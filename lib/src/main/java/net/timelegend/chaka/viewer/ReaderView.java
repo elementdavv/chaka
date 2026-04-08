@@ -7,6 +7,7 @@ import java.util.Stack;
 import android.content.ClipboardManager;
 import android.content.ClipData;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.os.Build;
@@ -22,7 +23,6 @@ import android.view.ViewConfiguration;
 import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.Scroller;
-import android.window.OnBackInvokedCallback;
 import android.window.OnBackInvokedDispatcher;
 
 import androidx.activity.OnBackPressedCallback;
@@ -46,8 +46,6 @@ public class ReaderView
 
 	private static final float MIN_SCALE        = 1.0f;
 	private static final float MAX_SCALE        = 64.0f;
-
-    // private static final boolean HORIZONTAL_SCROLLING = true;
 
     private static final int MOVE_DELAY         = 100;
 
@@ -95,8 +93,7 @@ public class ReaderView
     private int           mSelectRightView;                 // view pageNumber with text select right handle
     private ActionMode      mTextActionMode;
     private boolean         mBeginSelect = false;
-    private OnBackInvokedCallback mBackCallback = this::endSelect;
-    private OnBackPressedCallback mBackCallback2 = new OnBackPressedCallback(true) {
+    private OnBackPressedCallback mBackCallback = new OnBackPressedCallback(true) {
         @Override
         public void handleOnBackPressed() {
             endSelect();
@@ -430,8 +427,8 @@ public class ReaderView
 		return mChildViews.get(i);
 	}
 
-	public View getDisplayedView() {
-		return mChildViews.get(mCurrent);
+	public PageView getDisplayedView() {
+		return (PageView) mChildViews.get(mCurrent);
 	}
 
 	public void run() {
@@ -449,6 +446,9 @@ public class ReaderView
 		else if (!mUserInteracting) {
 			// End of an inertial scroll and the user is not interacting.
 			// The layout is stable
+
+			// best time to show floating toolbar
+			updateFloatingToolbarInPage();
 			View v = mChildViews.get(mCurrent);
 
 			if (v != null) {
@@ -495,7 +495,7 @@ public class ReaderView
                 if (pv.beginSelect(x, y)) {
                     mSelecting = SELECT.SELECTING;
                     mSelectLeftView = mSelectRightView = mChildViews.keyAt(i);
-                    mContext.showCopyButton(View.VISIBLE);
+                    // mContext.showCopyButton(View.VISIBLE);
                     ActionMode.Callback actionModeCallback = new TextActionModeCallback(this);
                     mTextActionMode = startActionMode(actionModeCallback, ActionMode.TYPE_FLOATING);
                     registerOnBackInvokedCallback();
@@ -593,10 +593,14 @@ public class ReaderView
     public String getSelectedText() {
         if (mSelecting != SELECT.SELECTING) return "";
 
+        PageView pv = getDisplayedView();
         StringBuffer buffer = new StringBuffer("");
+
         for (int i = mSelectLeftView; i <= mSelectRightView; i++) {
-		    PageView pv = (PageView)getDisplayedView();
-            buffer.append(pv.copy(i)).append("\n");
+            if (i > mSelectLeftView) {
+                buffer.append("\n");
+            }
+            buffer.append(pv.copy(i));
         }
         return buffer.toString();
     }
@@ -607,27 +611,18 @@ public class ReaderView
         endSelect();
     }
 
-    protected void endSelect() {
+    public void endSelect() {
         if (mSelecting == SELECT.NO_SELECT) return;
 
-        int minv = 1000, maxv = 0;
-        for (int i = 0; i < mChildViews.size(); i++) {
-            int key = mChildViews.keyAt(i);
-            if (key < minv) minv = key;
-            if (key > maxv) maxv = key;
-        }
         for (int i = mSelectLeftView; i <= mSelectRightView; i++) {
-            PageView pv;
-            if (i >= minv && i <= maxv) {
-                pv = (PageView) mChildViews.get(i);
-                pv.unSelect();
-            }
-            else {
-		        pv = (PageView)getDisplayedView();
-                pv.unSelect(i);
-            }
+            PageView v = (PageView) mChildViews.get(i);
+
+            if (v != null)
+                v.unSelect();
+            else
+                getDisplayedView().unSelect(i);
         }
-        mContext.showCopyButton(View.GONE);
+        // mContext.showCopyButton(View.GONE);
 
         if (mTextActionMode != null) {
             mTextActionMode.finish();
@@ -638,19 +633,72 @@ public class ReaderView
     }
 
     public void share() {
+        Intent intent = new Intent();
+        intent.setAction(Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(Intent.EXTRA_TEXT, getSelectedText());
+        mContext.startActivity(Intent.createChooser(intent, Tool.getResourceString(R.string.sharing_text)));
+        endSelect();
     }
 
     public void selectAll() {
+        if (mCurrent == mSelectLeftView && mCurrent == mSelectRightView) {
+            getDisplayedView().selectAll(Tool.BOTH_HANDLE);
+        }
+        else if (mCurrent == mSelectLeftView - 1) {
+            getDisplayedView().selectAll(Tool.LEFT_HANDLE, Tool.HANDLE_EXTEND);
+            PageView view = (PageView)mChildViews.get(mSelectLeftView);
+
+            if (mSelectLeftView == mSelectRightView) {
+                view.selectAll(Tool.RIGHT_HANDLE, Tool.HANDLE_NO_EXTEND);
+            }
+            else {
+                view.selectAll(Tool.NO_HANDLE);
+            }
+            mSelectLeftView = mCurrent;
+        }
+        else if (mCurrent == mSelectLeftView) {
+            getDisplayedView().selectAll(Tool.LEFT_HANDLE, Tool.HANDLE_EXTEND);
+        }
+        else if (mCurrent == mSelectRightView + 1) {
+            getDisplayedView().selectAll(Tool.RIGHT_HANDLE, Tool.HANDLE_EXTEND);
+            PageView view = (PageView)mChildViews.get(mSelectRightView);
+
+            if (mSelectLeftView == mSelectRightView) {
+                view.selectAll(Tool.LEFT_HANDLE, Tool.HANDLE_NO_EXTEND);
+            }
+            else {
+                view.selectAll(Tool.NO_HANDLE);
+            }
+            mSelectRightView = mCurrent;
+        }
+        else if (mCurrent == mSelectRightView) {
+            getDisplayedView().selectAll(Tool.RIGHT_HANDLE, Tool.HANDLE_EXTEND);
+        }
+    }
+
+    public Rect getSelectionRect() {
+        int i = 0;
+        if (mCurrent >= mSelectLeftView && mCurrent <= mSelectRightView) {
+            i = mCurrent;
+        }
+        else if (mCurrent < mSelectLeftView) {
+            i = mSelectLeftView;
+        }
+        else if (mCurrent > mSelectRightView) {
+            i = mSelectRightView;
+        }
+        return getDisplayedView().getSelectionRect(i);
     }
 
     private void unregisterOnBackInvokedCallback() {
         if (mBackCallbackRegistered) {
             // android 13, api33
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                mContext.getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(mBackCallback);
+                mContext.getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(this::endSelect);
             }
             else {
-                mBackCallback2.remove();
+                mBackCallback.remove();
             }
             mBackCallbackRegistered = false;
         }
@@ -661,38 +709,47 @@ public class ReaderView
             // android 13, api33
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 mContext.getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
-                        OnBackInvokedDispatcher.PRIORITY_DEFAULT, mBackCallback);
+                        OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::endSelect);
             }
             else {
                 mContext.getOnBackPressedDispatcher().addCallback(
-                        mContext, mBackCallback2);
+                        mContext, mBackCallback);
             }
             mBackCallbackRegistered = true;
         }
     }
 
-    private Runnable mShowFloatingToolbar = new Runnable() {
+    private Runnable mHideFloatingToolbar = new Runnable() {
         @Override
         public void run() {
             if (mTextActionMode != null) {
-                mTextActionMode.hide(0);  // hide off.
+                hideFloatingToolbar(10000);
+                postDelayed(this, 1000);
             }
         }
     };
 
     private void hideFloatingToolbar(int duration) {
         if (mTextActionMode != null) {
-            removeCallbacks(mShowFloatingToolbar);
             mTextActionMode.hide(duration);
         }
     }
 
     private void showFloatingToolbar() {
         if (mTextActionMode != null) {
-            // Delay "show" so it doesn't interfere with click confirmations
-            // or double-clicks that could "dismiss" the floating toolbar.
-            int delay = ViewConfiguration.getDoubleTapTimeout();
-            postDelayed(mShowFloatingToolbar, delay);
+            mTextActionMode.invalidateContentRect();
+            mTextActionMode.hide(0);
+        }
+    }
+
+    private void updateFloatingToolbarInPage() {
+        if (mTextActionMode != null) {
+            if (mCurrent >= mSelectLeftView - 1 && mCurrent <= mSelectRightView + 1) {
+                showFloatingToolbar();
+            }
+            else {
+                post(mHideFloatingToolbar);
+            }
         }
     }
 
@@ -708,11 +765,14 @@ public class ReaderView
             }
             switch (eventaction) {
             case MotionEvent.ACTION_MOVE:
+                removeCallbacks(mHideFloatingToolbar);
                 hideFloatingToolbar(ActionMode.DEFAULT_HIDE_DURATION);
                 break;
             case MotionEvent.ACTION_UP:  // fall through
             case MotionEvent.ACTION_CANCEL:
-                showFloatingToolbar();
+                if (mSelecting == SELECT.MOVE_LEFT || mSelecting == SELECT.MOVE_RIGHT) {
+                    showFloatingToolbar();
+                }
             }
         }
     }
@@ -1380,11 +1440,14 @@ public class ReaderView
             endSelect();
             return true;
         }
-        if (mSelecting != SELECT.NO_SELECT)
+        if (mSelecting != SELECT.NO_SELECT) {
+            // MOVE_LEFT, MOVE_RIGHT, MOVE_IN
+            showFloatingToolbar();
             mSelecting = SELECT.SELECTING;
+        }
 
 		if (!tapDisabled) {
-			PageView pageView = (PageView) getDisplayedView();
+			PageView pageView = getDisplayedView();
 			if (mLinksEnabled && pageView != null) {
 				int page = pageView.hitLink(e.getX(), e.getY());
 				if (page > -1) {
@@ -1673,7 +1736,7 @@ public class ReaderView
         endSelect();
         postDelayed(new Runnable(){
             public void run() {
-                PageView pv = (PageView) getDisplayedView();
+                PageView pv = getDisplayedView();
                 if (mTextLeft) {
                     int del = getWidth() - pv.getRight();
 		            mScrollerLastX = mScrollerLastY = 0;
@@ -1715,7 +1778,7 @@ public class ReaderView
         if (isReflowable || init) return;
 
         mPrevLeft = mPrevTop = 0;
-        PageView pv = (PageView) getDisplayedView();
+        PageView pv = getDisplayedView();
         float pvwidth = (float)pv.getWidth();
         float pvheight = (float)pv.getHeight();
         float rx = getWidth() / pvwidth;
