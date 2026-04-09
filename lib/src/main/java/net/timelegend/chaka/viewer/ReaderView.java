@@ -22,6 +22,7 @@ import android.view.View;
 import android.view.ViewConfiguration;
 import android.widget.Adapter;
 import android.widget.AdapterView;
+import android.widget.Magnifier;
 import android.widget.Scroller;
 import android.window.OnBackInvokedDispatcher;
 
@@ -92,6 +93,9 @@ public class ReaderView
     private int           mSelectLeftView;                  // view pageNumber with text select left handle
     private int           mSelectRightView;                 // view pageNumber with text select right handle
     private ActionMode      mTextActionMode;
+    private ActionMode.Callback actionModeCallback;
+    private boolean         mActionModeVisible;
+    private Magnifier       mMagnifier;
     private boolean         mBeginSelect = false;
     private OnBackPressedCallback mBackCallback = new OnBackPressedCallback(true) {
         @Override
@@ -137,6 +141,13 @@ public class ReaderView
 		mScroller = new Scroller(context);
 		mStepper = new Stepper(this, this);
 		mHistory = new Stack<Integer>();
+		actionModeCallback = new TextActionModeCallback(this);
+		// android 9, api28
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+			mMagnifier = new Magnifier.Builder(this)
+					.setDefaultSourceToMagnifierOffset(0, -200)
+					.build();
+		}
 
 		// Get the screen size etc to customise tap margins.
 		// We calculate the size of 1 inch of the screen for tapping.
@@ -496,8 +507,8 @@ public class ReaderView
                     mSelecting = SELECT.SELECTING;
                     mSelectLeftView = mSelectRightView = mChildViews.keyAt(i);
                     // mContext.showCopyButton(View.VISIBLE);
-                    ActionMode.Callback actionModeCallback = new TextActionModeCallback(this);
                     mTextActionMode = startActionMode(actionModeCallback, ActionMode.TYPE_FLOATING);
+                    mActionModeVisible = false;
                     registerOnBackInvokedCallback();
                     mBeginSelect = true;
                     return;
@@ -730,13 +741,16 @@ public class ReaderView
     };
 
     private void hideFloatingToolbar(int duration) {
+        mActionModeVisible = false;
+
         if (mTextActionMode != null) {
             mTextActionMode.hide(duration);
         }
     }
 
     private void showFloatingToolbar() {
-        if (mTextActionMode != null) {
+        if (mTextActionMode != null && mActionModeVisible == false) {
+            mActionModeVisible = true;
             mTextActionMode.invalidateContentRect();
             mTextActionMode.hide(0);
         }
@@ -771,6 +785,10 @@ public class ReaderView
             case MotionEvent.ACTION_UP:  // fall through
             case MotionEvent.ACTION_CANCEL:
                 if (mSelecting == SELECT.MOVE_LEFT || mSelecting == SELECT.MOVE_RIGHT) {
+                    // android 9, api28
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        mMagnifier.dismiss();
+                    }
                     showFloatingToolbar();
                 }
             }
@@ -832,6 +850,12 @@ public class ReaderView
             mLongPress = false;
         if (mSelecting == SELECT.MOVE_LEFT || mSelecting == SELECT.MOVE_RIGHT) {
             moveSelect(e2.getX(), e2.getY());
+            // android 9, api28
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                final int[] viewPosition = new int[2];
+                this.getLocationOnScreen(viewPosition);
+                mMagnifier.show(e2.getRawX() - viewPosition[0], e2.getRawY() - viewPosition[1]);
+            }
             return true;
         }
         if (mSelecting != SELECT.NO_SELECT)

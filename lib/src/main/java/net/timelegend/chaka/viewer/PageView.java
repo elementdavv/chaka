@@ -891,8 +891,8 @@ public class PageView extends ViewGroup {
 
     public Rect getSelectionRect(int position) {
         MuPDFCore.TextSelectionModel tsmodel = mCore.getTSModel(position);
-        PointF p1 = src2View(tsmodel.boundries[0].x, tsmodel.boundries[0].y - (tsmodel.textHandles[0].y - tsmodel.boundries[0].y) * 2);
-        PointF p2 = src2View(tsmodel.boundries[1].x, tsmodel.boundries[1].y + (tsmodel.textHandles[1].y - tsmodel.boundries[1].y) * 2);
+        PointF p1 = src2View2(tsmodel.boundries[0].x, tsmodel.boundries[0].y - (tsmodel.textHandles[0].y - tsmodel.boundries[0].y) * 2);
+        PointF p2 = src2View2(tsmodel.boundries[1].x, tsmodel.boundries[1].y + (tsmodel.textHandles[1].y - tsmodel.boundries[1].y) * 2);
         return new Rect((int)p1.x, (int)p1.y, (int)p2.x, (int)p2.y);
     }
 
@@ -995,6 +995,17 @@ public class PageView extends ViewGroup {
     public PointF src2View(float x, float y) {
         float x1 = (x - mRenderOff.x) * mScale;
         float y1 = (y - mRenderOff.y) * mScale;
+        if (mCore.isSplitPage(mPageNumber)) {
+            if (mCore.isRightPage(mPageNumber)) {
+                x1 -= mViewWidth;
+            }
+        }
+        return new PointF(x1, y1);
+    }
+
+    public PointF src2View2(float x, float y) {
+        float x1 = (x - mRenderOff.x) * mScale + getLeft();
+        float y1 = (y - mRenderOff.y) * mScale + getTop();
         if (mCore.isSplitPage(mPageNumber)) {
             if (mCore.isRightPage(mPageNumber)) {
                 x1 -= mViewWidth;
