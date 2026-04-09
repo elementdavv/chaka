@@ -9,8 +9,6 @@ PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX,XLSX,PPTX) and ZIP/GZIP a
 
 Or download the latest APK from the [Releases Section](https://github.com/elementdavv/chaka/releases/latest).
 
-### Note: Join Chaka test program for Play Store <a href="https://github.com/elementdavv/chaka/issues/62">see details</a>
-
 ### Features
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/flip_vertical.png"> Flip Vertical
 
