@@ -54,6 +54,18 @@ android {
         // Disables dependency metadata when building Android App Bundles.
         includeInBundle = false
     }
+    flavorDimensions 'store'
+
+    productFlavors {
+        fdroid {
+            dimension 'store'
+        }
+        playstore {
+            dimension 'store'
+            applicationIdSuffix '.v2'
+            versionNameSuffix '-(playstore)'
+        }
+    }
 	if (project.hasProperty('release_storeFile')) {
 		signingConfigs {
 			release {

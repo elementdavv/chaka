@@ -214,9 +214,6 @@ public class HelpActivity extends ComponentActivity
             sb.append(")```");
             res = sb.toString();
         }
-        else if (cp > 0) {
-            res = "```unknown release```";
-        }
         return res;
     }
 

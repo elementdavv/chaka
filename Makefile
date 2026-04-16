@@ -7,17 +7,29 @@ debug:
 r:
 	./gradlew --warning-mode=all assembleRelease
 bundle:
-	./gradlew --warning-mode=all bundle
+	./gradlew --warning-mode=all bundlePlaystore
 i:
 	./gradlew --warning-mode=all installDebug
+if:
+	./gradlew --warning-mode=all installFdroidDebug
+ip:
+	./gradlew --warning-mode=all installPlaystoreDebug
 ir:
 	./gradlew --warning-mode=all installRelease
+ifr:
+	./gradlew --warning-mode=all installFdroidRelease
+ipr:
+	./gradlew --warning-mode=all installPlaystoreRelease
 run: install
 	adb shell am start -n net.timelegend.chaka.viewer.app/.LibraryActivity
 runRelease: installRelease
 	adb shell am start -n net.timelegend.chaka.viewer.app/.LibraryActivity
 ui:
 	./gradlew --warning-mode=all uninstallDebug
+uif:
+	./gradlew --warning-mode=all uninstallFdroidDebug
+uip:
+	./gradlew --warning-mode=all uninstallPlaystoreDebug
 uninstallRelease:
 	./gradlew --warning-mode=all uninstallRelease
 lint:
