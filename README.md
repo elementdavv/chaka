@@ -1,7 +1,8 @@
-## Chaka Book Reader
+# <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/ic_chaka_hippo_white_48.png"> Chaka Book Reader
+
 An Android reader app committed to improving reading experience.
 
-PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX,XLSX,PPTX) and ZIP/GZIP are supported.
+PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX,XLSX,PPTX), and ZIP/GZIP package of previous documents are supported.
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
@@ -14,10 +15,11 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 [![Github latest releases](https://img.shields.io/github/downloads/elementdavv/chaka/latest/total.svg?logo=github&label=Latest%20Downloads&color=darkgreen)](https://GitHub.com/elementdavv/chaka/releases/latest)
 [![Github all releases](https://img.shields.io/github/downloads/elementdavv/chaka/total.svg?logo=github&label=Total%20Downloads&color=darkgreen)](https://GitHub.com/elementdavv/chaka/releases/)
 
-### Features
+## Features
+
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/flip_vertical.png"> Flip Vertical
 
-  **Flip Vertical** and **Flip Horizontal** modes are supported.
+  **Flip Vertical** and **Flip Horizontal** modes are both supported.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/text_left.png"> RtL Text
 
@@ -67,11 +69,11 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/format.png"> Font Size
 
-  Currenet font size can be changed in **Font Size** menu.
+  **Font Size** function works in flowable documents, like EPUBs.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/option.png"> Options
 
-  Document Options are applied to current document. Global Options are applied to all documents.
+  Document Options are applied to current document. Global Options are applied to all documents. Document Options priorizes over Global Options.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/contents.png"> Contents
 
@@ -83,7 +85,7 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/bookmark.png"> Bookmarks
 
-  **Bookmarks** works across reading sessions. Double tap on a page to make a bookmark.
+  **Bookmarks** works across reading sessions. Double tap on a page to create a bookmark.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/link.png"> Activate Links
 
@@ -91,11 +93,11 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/search.png"> Search
 
-  **Search** text and navigate through search goals.
+  Full text **Search** and navigate through search results.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/share.png"> Share Book
 
-  Call Android **Share** menu.
+  **Share** current book to Contacts or other apps.
 
 - Scrollable Toobar
 
@@ -105,10 +107,12 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
   In case of big books(thousands of pages), PDFs were opened very quick, and EPUBs badly slow.
 
-### Introduction in Youtube
+## Introduction in Youtube
+
 [![Chaka Book Reader](https://img.youtube.com/vi/KkB2vlDj_6g/0.jpg)](https://www.youtube.com/watch?v=KkB2vlDj_6g)
 
-### Usage
+## Usage tips
+
 - A function button will show up in **Toolbar** when the corresponding function is applicable, otherwise it will be hidden.
 - Long press a **Toolbar** button, to show it's tooltip.
 - Tap in left/top side, to move a page backward (when in **not RtL Text** mode)
@@ -126,15 +130,18 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 - All reading status as of page scale, position, last read page number, as well as all enable button states will be remembered across reading sessions for per book.
 - In general, to get the best reading experience mutiple function modes can be employed, adding appropriate screen orientation if needed.
 
-### Credits
+## Credits
+
 - [MuPDF Android Viewer](https://github.com/ArtifexSoftware/mupdf-android-viewer) and developers
 - [MarkedView](https://github.com/mittsu333/MarkedView-for-Android) for help document rendering
 
-### Contacts
+## Contacts
+
 - GitHub repo: [https://github.com/elementdavv/chaka](https://github.com/elementdavv/chaka)
 - Email: elementdavv@hotmail.com
 - Telegram: [@elementdavv](https://t.me/elementdavv)
 - X(Twitter): [@elementdavv](https://x.com/elementdavv)
 
-### Support
+## Support
+
 If you love Chaka, consider supporting or hiring the maintainer [@elementdavv](https://x.com/elementdavv) [![donate](https://raw.githubusercontent.com/elementdavv/chaka/master/resources/paypal-logo.png)](https://paypal.me/timelegend)
