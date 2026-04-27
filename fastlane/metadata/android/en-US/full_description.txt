@@ -1,7 +1,7 @@
 Read fluently and comfortably, with simple and clear interface.
 
 Supported Document Types:
-PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX) and ZIP/GZIP
+PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), and ZIP/GZIP packages of previous documents are suppoted.
 
 Features:
 · Horizontal / Vertical Flip
@@ -14,12 +14,12 @@ Features:
 · Single Column: Support scanned dual-spread PDF page
 · Color Palette
 · Font Size selectable
-· Text Copy
+· Text Select and more operations
 · Table of Contents
 · Bookmarks
 · Links
 · Search
-· Share a book
-· Remember reading status
+· Share book
+· Remember reading states
 
 The project is under active development.

@@ -2,7 +2,7 @@
 
 An Android reader app committed to improving reading experience.
 
-PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX,XLSX,PPTX), and ZIP/GZIP package of previous documents are supported.
+PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), and ZIP/GZIP package of previous documents are supported.
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
      alt="Get it on F-Droid"
@@ -23,13 +23,13 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/text_left.png"> RtL Text
 
-  In top-to-bottom, right-to-left script (TB-RL or vertical), writing starts from the top of the page and continues to the bottom, proceeding from right to left for new lines, pages numbered from right to left (from Wikipedia). The **RtL Text** mode can be applied to some traditional Chinese, Japanese and Korean books.
+  In top-to-bottom, right-to-left script (TB-RL or vertical), writing starts from the top of the page and continues to the bottom, proceeding from right to left for new lines, pages numbered from right to left (from Wikipedia). The **RtL Text** mode can be applied to books of East Asian languages, including classical Chinese, Japanese and Korean.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/single_column.png"> Single Column
 
   Some PDF books were scanned in a way that left and right pages were put in one image, resulting in a so called dual-spread page. In the scenario, **Single Column** mode plays a role. It splits a dual-spread page into two pages.
 
-  **Single Column** mode can also be a conveniency for magazines and scientific papers that have two columns in a page.
+  **Single Column** mode can also be a conveniency for magazines and scientific papers with two columns in a page.
 
   In **Single Column** mode, all pages except first and last page are splitted.
 
@@ -47,7 +47,7 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/focus.png"> Focus
 
-  **Focus** mode will keep page position across zoomed pages. On moving to a definite page, eg. tapping to next/prev page, choosing on Toc/bookmark table, navigating through links or searching text, and skimming on page slider, it will present visible content area of new page in same position as the old one. Note that scroll/fling operation is an exception.
+  **Focus** mode will keep page position across zoomed pages. On moving to a definite page, that is, tapping to next/prev page, choosing on Toc/bookmark table, navigating through links or text search, and skimming on page slider, it will present visible content area of new page in same position as the old one. Note that scroll/fling operation is an exception.
 
   On entering **Focus** mode, current page will zoom automatically to match screen in shorter dimension and center itself.
 
@@ -57,11 +57,11 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
   **Smart Focus** must work with **Focus** mode to make sense.
 
-- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/copy.png"> Copy Text
+- Text Select
 
-  Text copy can be accomplished by selecting text and tap **Copy Selection** button. In **Vertical Flip** mode, text selection can cross page boundary.
+  **Text Select** toolbar is implemented, along with select point magnifier. Operations of copy, share, translate, and more are supported.
 
-  During text selecting, page navigation operations still work.
+  During text selecting, page navigation operations still work as ever.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/color.png"> Color Palette
 
@@ -101,7 +101,7 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
 - Scrollable Toobar
 
-  Scrollable **Toolbar** can accommodate more buttons for extended funtions.
+  Scrollable **Toolbar** can accommodate more buttons for extended funtions. To avoid overlapped with status bar, the **Toolbar** can be moved to bottom.
 
 - Pros and Cons
 
@@ -114,20 +114,19 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 ## Usage tips
 
 - A function button will show up in **Toolbar** when the corresponding function is applicable, otherwise it will be hidden.
-- Long press a **Toolbar** button, to show it's tooltip.
-- Tap in left/top side, to move a page backward (when in **not RtL Text** mode)
-- Tap in right/bottom side, to move a page forward (when in **not RtL Text** mode)
+- Long press on a **Toolbar** button, to show function tooltip.
+- Tap in left/top/right/bottom side, to move a page forward or backward.
 - Tap in middle, to show/hide **Toolbar** and **Page Indicator**
-- Press down one finger and move in any direction, to scrol a page
-- Press down two fingers and move one, to zoom in/out pages
+- Press down and move, to scrol page view
+- Press down two fingers and move one, to zoom in/out page view
 - Fling horizontally/vertically, to **Scroll Continuously**
-- Under the combination of **Flip Horizontal and not Rtl Text** mode, or of **Flip Vertical and Rtl Text** mode, when pages are leaved between two pages, it will slide slowly into the near page that guarantees any page contents will not be cut off.
-- Under the combination of **Flip Horizontal and Rtl Text** mode, or of **Flip Vertical and not Rtl Text** mode, pages can stay at any position which will never cut off page contents that makes reading across two pages comfortably.
-- Long press one finger on text, to trigger a text selection session. Then press on left/right handles and move, to change selection area. Tap in selection area, to show/hide **Toolbar**. Then tap **Copy Selection** button, to copy the selected text to system clipboard and end the selection session. Tap out of selection area, to cancel the selection session.
+- Under the combination of **Flip Horizontal and not Rtl Text** mode, or of **Flip Vertical and Rtl Text** mode, and scroll to where between two pages, it will slide slowly into the near page. This behavior guarantees that any page contents will not be cut off.
+- Under the combination of **Flip Horizontal and Rtl Text** mode, or of **Flip Vertical and not Rtl Text** mode, pages can stay at any position which will never cut off page contents. This behavior makes reading across two pages comfortably.
+- Long press one finger on text, to begin **text select**.
 - Double tap to **Bookmark** current page.
-- In **Contents** window, swipe left/right to swich/close.
+- In **Contents** window, swipe left/right to swich or close.
 - In **Help** window, swipe right to close.
-- All reading status as of page scale, position, last read page number, as well as all enable button states will be remembered across reading sessions for per book.
+- All reading status as of page scale, position, last read page number, as well as all enable button states are remembered across reading sessions for per book.
 - In general, to get the best reading experience mutiple function modes can be employed, adding appropriate screen orientation if needed.
 
 ## Credits
@@ -144,4 +143,4 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 
 ## Support
 
-If you love Chaka, consider supporting or hiring the maintainer [@elementdavv](https://x.com/elementdavv) [![donate](https://raw.githubusercontent.com/elementdavv/chaka/master/resources/paypal-logo.png)](https://paypal.me/timelegend)
+If you enjoy Chaka, consider supporting or hiring the maintainer [@elementdavv](https://x.com/elementdavv) [![donate](https://raw.githubusercontent.com/elementdavv/chaka/master/resources/paypal-logo.png)](https://paypal.me/timelegend)

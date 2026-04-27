@@ -1,0 +1,1 @@
+· text select toolbar implemented. operations of copy, share, translate and more are supported.
