@@ -7,8 +7,6 @@ PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), and ZIP/GZI
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/net.timelegend.chaka.viewer.app/)
 [<img src="https://raw.githubusercontent.com/vadret/android/master/assets/get-github.png" alt="Get it on GitHub" height="80">](https://github.com/elementdavv/chaka/releases)
 
-Or download the latest APK from the [Releases Section](https://github.com/elementdavv/chaka/releases/latest).
-
 [![Downloads last month](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgithub.com%2Fkitswas%2Ffdroid-metrics-dashboard%2Fraw%2Frefs%2Fheads%2Fmain%2Fprocessed%2Fmonthly%2Fnet.timelegend.chaka.viewer.app.json&query=%24.total_downloads&logo=fdroid&label=Downloads%20last%20month)](https://f-droid.org/packages/net.timelegend.chaka.viewer.app/)
 [![Total Downloads](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgithub.com%2Fkitswas%2Ffdroid-metrics-dashboard%2Fraw%2Frefs%2Fheads%2Fmain%2Fprocessed%2Ftotal%2Fnet.timelegend.chaka.viewer.app.json&query=%24.total_downloads&logo=fdroid&label=Total%20Downloads)](https://f-droid.org/packages/net.timelegend.chaka.viewer.app/)
 [![Github latest releases](https://img.shields.io/github/downloads/elementdavv/chaka/latest/total.svg?logo=github&label=Latest%20Downloads&color=darkgreen)](https://GitHub.com/elementdavv/chaka/releases/latest)
