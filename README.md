@@ -4,9 +4,8 @@ An Android reader app committed to improving reading experience.
 
 PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), and ZIP/GZIP package of previous documents are supported.
 
-[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png"
-     alt="Get it on F-Droid"
-     height="80">](https://f-droid.org/packages/net.timelegend.chaka.viewer.app/)
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/net.timelegend.chaka.viewer.app/)
+[<img src="https://raw.githubusercontent.com/vadret/android/master/assets/get-github.png" alt="Get it on GitHub" height="80">](https://github.com/elementdavv/chaka/releases)
 
 Or download the latest APK from the [Releases Section](https://github.com/elementdavv/chaka/releases/latest).
 
@@ -122,11 +121,11 @@ Or download the latest APK from the [Releases Section](https://github.com/elemen
 - Fling horizontally/vertically, to **Scroll Continuously**
 - Under the combination of **Flip Horizontal and not Rtl Text** mode, or of **Flip Vertical and Rtl Text** mode, and scroll to where between two pages, it will slide slowly into the near page. This behavior guarantees that any page contents will not be cut off.
 - Under the combination of **Flip Horizontal and Rtl Text** mode, or of **Flip Vertical and not Rtl Text** mode, pages can stay at any position which will never cut off page contents. This behavior makes reading across two pages comfortably.
-- Long press one finger on text, to begin **text select**.
-- Double tap to **Bookmark** current page.
-- In **Contents** window, swipe left/right to swich or close.
+- Long press on text, to begin **text select**.
+- Double tap to create a **Bookmark** on current page.
+- In **Contents** window, swipe left/right to switch **Contents** view or close.
 - In **Help** window, swipe right to close.
-- All reading status as of page scale, position, last read page number, as well as all enable button states are remembered across reading sessions for per book.
+- All reading states as of page scale, position, last read page number, as well as all enable button states are remembered across reading sessions for per book.
 - In general, to get the best reading experience mutiple function modes can be employed, adding appropriate screen orientation if needed.
 
 ## Credits
