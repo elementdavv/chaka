@@ -1,0 +1,6 @@
+· include Common Vulnerabilities and Exposures(CVE) 1.25-1.27
+· improve html table render
+· decrease page margin for reflowable documents to get more render space
+· same document opened in same window in recent apps overview when opened through same route
+· improve transparent system bars display both in new Android version and older versions
+· improve page display effect
