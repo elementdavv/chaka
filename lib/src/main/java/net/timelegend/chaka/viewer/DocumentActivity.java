@@ -58,6 +58,8 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.TooltipCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -399,7 +401,7 @@ public class DocumentActivity extends AppCompatActivity
 
 	private void setUserCss() {
 		StringBuilder sb = new StringBuilder();
-		sb.append("@page{margin:2em}");
+		sb.append("@page{margin:1em}");
 		sb.append("body{margin:0;padding:0;overflow-wrap:break-word;}");
 		sb.append("p{margin:0.6em 0;}");
 		sb.append("table{border-collapse:collapse;}");
@@ -1048,13 +1050,26 @@ public class DocumentActivity extends AppCompatActivity
                 if ((mWhite & 0xff) < 0x80 && (mWhite & 0xff00) < 0x8000 && (mWhite & 0xff0000) < 0x800000) {
                     controller.setSystemBarsAppearance(
                             0,
-                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
+                            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
                 }
                 else {
                     controller.setSystemBarsAppearance(
-                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS,
-                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS);
+                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
+                            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS,
+                            WindowInsetsController.APPEARANCE_LIGHT_STATUS_BARS |
+                            WindowInsetsController.APPEARANCE_LIGHT_NAVIGATION_BARS);
                 }
+            }
+        }
+        else {
+            WindowInsetsControllerCompat controller = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+            if (controller != null) {
+                // boolean isDarkMode = (getResources().getConfiguration().uiMode &
+                //         Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+                boolean isDarkMode = (mWhite & 0xff) < 0x80 && (mWhite & 0xff00) < 0x8000 && (mWhite & 0xff0000) < 0x800000;
+                controller.setAppearanceLightStatusBars(!isDarkMode );
+                controller.setAppearanceLightNavigationBars(!isDarkMode );
             }
         }
     }
@@ -1353,7 +1368,11 @@ public class DocumentActivity extends AppCompatActivity
 	}
 
     private void exit() {
-        finish();
+        finishAndRemoveTask();
+        if (mReturnToLibraryActivity) {
+            Intent intent = getPackageManager().getLaunchIntentForPackage(getComponentName().getPackageName());
+            startActivity(intent);
+        }
     }
 
     // private void copy() {
@@ -1473,32 +1492,15 @@ public class DocumentActivity extends AppCompatActivity
     }
 
     private void updateBars(boolean placeChange) {
-        int htop = 0, hdown = 0;
-
-        // android 9 (api28)
-        if (!Tool.mFullscreen && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            hdown = Tool.getNavigationBarHeight(mOrientation);
-            if (mPlacement == -1) {
-                htop = Tool.getStatusBarHeight();
-            }
-            else {
-                htop = hdown;
-            }
-        }
-        int dp16px = Tool.dp2px(16);
+        int htop, hdown, dp16px;
         RelativeLayout.LayoutParams param0, param1, param2;
-        param0 = (RelativeLayout.LayoutParams)mPageSlider.getLayoutParams();
 
-        if (Tool.mFullscreen) {
-            param0.height = mPageSliderHeight;
-            mPageSlider.setPadding(mPageSlider.getPaddingLeft(), mPageSlider.getPaddingTop(), mPageSlider.getPaddingRight(), dp16px);
-        }
-        else {
-            // keep mPageSlider from overlap
-            param0.height = mPageSliderHeight + hdown;
-            // offset seek line
-            mPageSlider.setPadding(mPageSlider.getPaddingLeft(), mPageSlider.getPaddingTop(), mPageSlider.getPaddingRight(), dp16px + hdown);
-        }
+        hdown = Tool.getNavigationBarHeight(mOrientation);
+        htop = mPlacement == -1 ? Tool.getStatusBarHeight() : hdown;
+        dp16px = Tool.dp2px(16);
+
+        param0 = (RelativeLayout.LayoutParams)mPageSlider.getLayoutParams();
+        param0.bottomMargin = hdown;
         mPageSlider.setLayoutParams(param0);
 
         if (mPlacement == -1) {
@@ -1556,7 +1558,8 @@ public class DocumentActivity extends AppCompatActivity
 			});
 			mTopBarSwitcher.startAnimation(anim);
 
-			anim = new TranslateAnimation(0, 0, mPageSlider.getHeight(), 0);
+			int hdown = Tool.getNavigationBarHeight(mOrientation);
+			anim = new TranslateAnimation(0, 0, mPageSlider.getHeight() + hdown, 0);
 			anim.setDuration(200);
 			anim.setAnimationListener(new Animation.AnimationListener() {
 				public void onAnimationStart(Animation animation) {
@@ -1587,7 +1590,8 @@ public class DocumentActivity extends AppCompatActivity
 			});
 			mTopBarSwitcher.startAnimation(anim);
 
-			anim = new TranslateAnimation(0, 0, 0, mPageSlider.getHeight());
+			int hdown = Tool.getNavigationBarHeight(mOrientation);
+			anim = new TranslateAnimation(0, 0, 0, mPageSlider.getHeight() + hdown);
 			anim.setDuration(200);
 			anim.setAnimationListener(new Animation.AnimationListener() {
 				public void onAnimationStart(Animation animation) {
@@ -1811,11 +1815,7 @@ public class DocumentActivity extends AppCompatActivity
 	@Override
 	public void onBackPressed() {
 		if (mDocView == null || (mDocView != null && !mDocView.popHistory())) {
-			super.onBackPressed();
-			if (mReturnToLibraryActivity) {
-				Intent intent = getPackageManager().getLaunchIntentForPackage(getComponentName().getPackageName());
-				startActivity(intent);
-			}
+			exit();
 		}
 	}
 }

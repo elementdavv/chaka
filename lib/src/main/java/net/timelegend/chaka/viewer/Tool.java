@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.util.Log;
@@ -143,6 +144,20 @@ public class Tool
     }
 
     public static void cutout(Window window, boolean hasActionBar) {
+        // manual edge2edge
+        // stretch contents underneath system bars, for all api versions from 21
+        WindowCompat.setDecorFitsSystemWindows(window, false);
+        window.setStatusBarColor(Color.TRANSPARENT);
+
+        // On API < 29, the navigation bar may need a semi-transparent scrim
+        // for contrast if not using gesture navigation.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.setNavigationBarColor(Color.TRANSPARENT);
+            window.setNavigationBarContrastEnforced(false);
+        } else {
+            window.setNavigationBarColor(Color.parseColor("#80000000")); // Translucent
+        }
+
         // android 9 (api28)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             if (hasActionBar) {
@@ -151,13 +166,16 @@ public class Tool
             }
             else {
                 // setDecorFitsSystemWindows conflict with actionbar
-                WindowCompat.setDecorFitsSystemWindows(window, false);
+                // WindowCompat.setDecorFitsSystemWindows(window, false);
             }
             window.getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
         }
     }
 
     public static int getStatusBarHeight() {
+        if (mFullscreen)
+            return 0;
+
         int resId = mContext.getResources().getIdentifier("status_bar_height", "dimen", "android");
         if (resId > 0) {
             return mContext.getResources().getDimensionPixelSize(resId);
@@ -168,6 +186,9 @@ public class Tool
     }
 
     public static int getNavigationBarHeight(int orientation) {
+        if (mFullscreen)
+            return 0;
+
         String resName = (orientation == Configuration.ORIENTATION_PORTRAIT) ? "navigation_bar_height" : "navigation_bar_height_landscape";
         int resId = mContext.getResources().getIdentifier(resName, "dimen", "android");
         if (resId > 0) {

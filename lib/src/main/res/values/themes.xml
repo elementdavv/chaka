@@ -22,8 +22,12 @@
 
         <!-- for menu text -->
         <item name="android:textColor">@android:color/white</item>
-        <!-- for status bar -->
+        <!-- for system bars -->
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- on Android 10+ for true transparency -->
+        <item name="android:enforceStatusBarContrast">false</item>
+        <item name="android:enforceNavigationBarContrast">false</item>
 
         <!-- for pageview -->
         <item name="highlight">@color/highlight</item>
