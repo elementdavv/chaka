@@ -506,7 +506,6 @@ public class ReaderView
                 if (pv.beginSelect(x, y)) {
                     mSelecting = SELECT.SELECTING;
                     mSelectLeftView = mSelectRightView = mChildViews.keyAt(i);
-                    // mContext.showCopyButton(View.VISIBLE);
                     mTextActionMode = startActionMode(actionModeCallback, ActionMode.TYPE_FLOATING);
                     mActionModeVisible = false;
                     registerOnBackInvokedCallback();
@@ -633,7 +632,6 @@ public class ReaderView
             else
                 getDisplayedView().unSelect(i);
         }
-        // mContext.showCopyButton(View.GONE);
 
         if (mTextActionMode != null) {
             mTextActionMode.finish();

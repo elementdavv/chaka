@@ -1,3 +1,6 @@
 [submodule "jni"]
 	path = jni
 	url = ../../elementdavv/mupdf-android-fitz.git
+[submodule "libarchive"]
+	path = libarchive
+	url = ../../elementdavv/libarchive-android.git
