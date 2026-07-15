@@ -1,0 +1,1 @@
+· add document type support of cbr, cbt, and package of rar, tar, 7-zip

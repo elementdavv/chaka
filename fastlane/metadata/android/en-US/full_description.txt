@@ -1,7 +1,7 @@
 Read fluently and comfortably, with simple and clear interface.
 
 Supported Document Types:
-PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), and ZIP/GZIP packages of previous documents are suppoted.
+PDF, EPUB, MOBI, CBZ, CBR, CBT, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), and ZIP/GZIP/RAR/TAR/7-ZIP packages of previous documents.
 
 Features:
 · Horizontal / Vertical Flip

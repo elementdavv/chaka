@@ -33,6 +33,8 @@ public class LibraryActivity extends Activity
 				"application/vnd.ms-xpsdocument",
 				"application/oxps",
 				"application/x-cbz",
+				"application/x-cbt",
+				"application/x-cbr",
 				"application/vnd.comicbook+zip",
 				"application/epub+zip",
 				"application/x-fictionbook",
@@ -46,6 +48,11 @@ public class LibraryActivity extends Activity
 				"application/x-gzip",
 				"application/x-gzip-compressed",
 				"application/zip",
+				"application/x-tar",
+				"application/x-rar-compressed",
+				"application/vnd.rar",
+				"application/x-rar",
+				"application/x-7z-compressed",
 				// ... and the ones android doesn't know about
 				"application/octet-stream"
 			});

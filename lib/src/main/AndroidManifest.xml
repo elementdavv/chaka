@@ -25,6 +25,8 @@
 				<data android:mimeType="application/oxps" />
 				<data android:mimeType="application/vnd.comicbook+zip" />
 				<data android:mimeType="application/x-cbz" />
+				<data android:mimeType="application/x-cbt" />
+				<data android:mimeType="application/x-cbr" />
 				<data android:mimeType="application/epub+zip" />
 				<data android:mimeType="application/x-fictionbook" />
 				<data android:mimeType="application/x-mobipocket-ebook" />
@@ -37,6 +39,11 @@
 				<data android:mimeType="application/x-gzip" />
 				<data android:mimeType="application/x-gzip-compressed" />
 				<data android:mimeType="application/zip" />
+				<data android:mimeType="application/x-tar" />
+				<data android:mimeType="application/x-rar-compressed" />
+				<data android:mimeType="application/vnd.rar" />
+				<data android:mimeType="application/x-rar" />
+				<data android:mimeType="application/x-7z-compressed" />
 				<!-- list application/octet-stream to catch the ones android doesn't recognize -->
 				<data android:mimeType="application/octet-stream" />
 			</intent-filter>

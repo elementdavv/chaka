@@ -2,7 +2,7 @@
 
 An Android reader app committed to improving reading experience.
 
-PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), and ZIP/GZIP package of previous documents are supported.
+PDF, EPUB, MOBI, CBZ, CBR, CBT, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), as well as ZIP/GZIP/RAR/TAR/7-ZIP packages of previous documents are supported.
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/net.timelegend.chaka.viewer.app/)
 [<img src="https://raw.githubusercontent.com/vadret/android/master/assets/get-github.png" alt="Get it on GitHub" height="80">](https://github.com/elementdavv/chaka/releases)
@@ -16,7 +16,7 @@ PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), and ZIP/GZI
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/flip_vertical.png"> Flip Vertical
 
-  **Flip Vertical** and **Flip Horizontal** modes are both supported.
+  Both **Flip Vertical** and **Flip Horizontal** modes are supported.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/text_left.png"> RtL Text
 
@@ -112,15 +112,16 @@ PDF, EPUB, MOBI, CBZ, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), and ZIP/GZI
 
 - A function button will show up in **Toolbar** when the corresponding function is applicable, otherwise it will be hidden.
 - Long press on a **Toolbar** button, to show function tooltip.
+- Double tap the title area on **Toolbar** to close immediatly.
 - Tap in left/top/right/bottom side, to move a page forward or backward.
 - Tap in middle, to show/hide **Toolbar** and **Page Indicator**
 - Press down and move, to scrol page view
 - Press down two fingers and move one, to zoom in/out page view
-- Fling horizontally/vertically, to **Scroll Continuously**
+- Fling to **Scroll Continuously**. Under **Lock Stray** mode, a zoomed page always scroll in horizontal/vertical straight line.
 - Under the combination of **Flip Horizontal and not Rtl Text** mode, or of **Flip Vertical and Rtl Text** mode, and scroll to where between two pages, it will slide slowly into the near page. This behavior guarantees that any page contents will not be cut off.
 - Under the combination of **Flip Horizontal and Rtl Text** mode, or of **Flip Vertical and not Rtl Text** mode, pages can stay at any position which will never cut off page contents. This behavior makes reading across two pages comfortably.
 - Long press on text, to begin **text select**.
-- Double tap to create a **Bookmark** on current page.
+- Double tap any area on page to create a **Bookmark** on current page.
 - In **Contents** window, swipe left/right to switch **Contents** view or close.
 - In **Help** window, swipe right to close.
 - All reading states as of page scale, position, last read page number, as well as all enable button states are remembered across reading sessions for per book.

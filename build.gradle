@@ -40,4 +40,8 @@ subprojects {
     if (project.hasProperty('ABI_FILTERS')) {
         ext.ABI_FILTERS = ABI_FILTERS;
     }
+    if (project.hasProperty('USE_LIBARCHIVE')) {
+        ext.USE_LIBARCHIVE = USE_LIBARCHIVE;
+        ext.LIBARCHIVE_DIR = "${rootDir}/libarchive";
+    }
 }

@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'maven-publish'
 
 group = 'net.timelegend.chaka'
-version = '1.27.1a.23'
+version = '1.27.1a.24'
 
 dependencies {
     implementation 'com.google.android.material:material:1.8.0'
@@ -12,7 +12,7 @@ dependencies {
 	if (file('../jni/build.gradle').isFile())
 		api project(':jni')
 	else
-	    api 'net.timelegend.mupdf:fitz:1.27.1.8'
+	    api 'net.timelegend.mupdf:fitz:1.27.1.9'
 }
 
 android {
@@ -22,8 +22,8 @@ android {
 		namespace 'net.timelegend.chaka.viewer'
 		minSdkVersion 21
 		targetSdkVersion 35
-		versionName '1.27.1a.23'
-		versionCode 169
+		versionName '1.27.1a.24'
+		versionCode 170
 		buildConfigField "String", "VERSION_NAME", "\"${defaultConfig.versionName}\""
 		buildConfigField "long", "VERSION_CODE", "${defaultConfig.versionCode}"
 	}

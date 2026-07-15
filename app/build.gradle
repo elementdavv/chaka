@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 group = 'net.timelegend.chaka'
-version = '1.27.1a.23'
+version = '1.27.1a.24'
 
 dependencies {
 	if (file('../lib/build.gradle').isFile())
 		api project(':lib')
 	else
-		api 'net.timelegend.chaka:viewer:1.27.1a.23'
+		api 'net.timelegend.chaka:viewer:1.27.1a.24'
 }
 
 ext {
@@ -23,8 +23,8 @@ android {
 		namespace 'net.timelegend.chaka.viewer.app'
 		minSdkVersion 21
 		targetSdkVersion 35
-		versionName '1.27.1a.23'
-		versionCode 169
+		versionName '1.27.1a.24'
+		versionCode 170
 
         if (!project.hasProperty('noSplits')) {
 	        splits {
@@ -93,4 +93,19 @@ android {
 			}
 		}
 	}
+}
+
+afterEvaluate {
+    tasks.named('preBuild').configure{ preBuildTask ->
+        def buildType = gradle.startParameter.taskRequests.toString().toLowerCase()
+
+        if (project.hasProperty('USE_LIBARCHIVE') && file('../jni/build.gradle').isFile()) {
+            if (buildType.contains("release")) {
+                preBuildTask.dependsOn project(':libarchive').tasks.named('externalNativeBuildRelease')
+            }
+            else {
+                preBuildTask.dependsOn project(':libarchive').tasks.named('externalNativeBuildDebug')
+            }
+        }
+    }
 }
