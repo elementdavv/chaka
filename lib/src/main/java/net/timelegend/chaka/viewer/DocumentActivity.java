@@ -1,5 +1,6 @@
 package net.timelegend.chaka.viewer;
 
+import com.artifex.mupdf.fitz.Document;
 import com.artifex.mupdf.fitz.SeekableInputStream;
 
 import android.app.AlertDialog;
@@ -227,6 +228,9 @@ public class DocumentActivity extends AppCompatActivity
 			is.close();
 		}
 
+		if (mimetype.indexOf("djvu") > -1) {
+			Document.setDjvuCachePath(getFilesDir().getAbsolutePath());
+		}
 		if (buf != null) {
 			Tool.i("  Opening document from memory buffer of size " + buf.length);
 			return openBuffer(buf, mimetype);

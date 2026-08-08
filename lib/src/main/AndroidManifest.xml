@@ -44,6 +44,9 @@
 				<data android:mimeType="application/vnd.rar" />
 				<data android:mimeType="application/x-rar" />
 				<data android:mimeType="application/x-7z-compressed" />
+				<data android:mimeType="image/vnd.djvu" />
+				<data android:mimeType="image/x.djvu" />
+				<data android:mimeType="image/x-djvu" />
 				<!-- list application/octet-stream to catch the ones android doesn't recognize -->
 				<data android:mimeType="application/octet-stream" />
 			</intent-filter>
