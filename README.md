@@ -2,7 +2,7 @@
 
 An Android reader app committed to improving reading experience.
 
-PDF, EPUB, MOBI, CBZ, CBR, CBT, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), as well as ZIP/GZIP/RAR/TAR/7-ZIP packages of previous documents are supported.
+PDF, EPUB, DJVU, MOBI, CBZ, CBR, CBT, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), as well as ZIP/GZIP/RAR/TAR/7-ZIP packages of previous documents are supported.
 
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/net.timelegend.chaka.viewer.app/)
 [<img src="https://raw.githubusercontent.com/vadret/android/master/assets/get-github.png" alt="Get it on GitHub" height="80">](https://github.com/elementdavv/chaka/releases)
