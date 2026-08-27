@@ -56,6 +56,7 @@ public class LibraryActivity extends Activity
 				"image/vnd.djvu",
 				"image/x.djvu",
 				"image/x-djvu",
+				"image/tiff",
 				// ... and the ones android doesn't know about
 				"application/octet-stream"
 			});

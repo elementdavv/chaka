@@ -2,8 +2,6 @@
 
 An Android reader app committed to improving reading experience.
 
-PDF, EPUB, DJVU, MOBI, CBZ, CBR, CBT, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PPTX), as well as ZIP/GZIP/RAR/TAR/7-ZIP packages of previous documents are supported.
-
 [<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" alt="Get it on F-Droid" height="80">](https://f-droid.org/packages/net.timelegend.chaka.viewer.app/)
 [<img src="https://raw.githubusercontent.com/vadret/android/master/assets/get-github.png" alt="Get it on GitHub" height="80">](https://github.com/elementdavv/chaka/releases)
 
@@ -11,6 +9,14 @@ PDF, EPUB, DJVU, MOBI, CBZ, CBR, CBT, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PP
 [![Total Downloads](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgithub.com%2Fkitswas%2Ffdroid-metrics-dashboard%2Fraw%2Frefs%2Fheads%2Fmain%2Fprocessed%2Ftotal%2Fnet.timelegend.chaka.viewer.app.json&query=%24.total_downloads&logo=fdroid&label=Total%20Downloads)](https://f-droid.org/packages/net.timelegend.chaka.viewer.app/)
 [![Github latest releases](https://img.shields.io/github/downloads/elementdavv/chaka/latest/total.svg?logo=github&label=Latest%20Downloads&color=darkgreen)](https://GitHub.com/elementdavv/chaka/releases/latest)
 [![Github all releases](https://img.shields.io/github/downloads/elementdavv/chaka/total.svg?logo=github&label=Total%20Downloads&color=darkgreen)](https://GitHub.com/elementdavv/chaka/releases/)
+
+## Supported Files:
+
+- Documents: PDF, EPUB, DJVU, MOBI, FB2, XPS, TXT, HTML
+- Comics: CBZ, CBR, CBT
+- Office files: DOCX, XLSX, PPTX
+- Multi-Page images: TIFF
+- Archives: ZIP, GZIP, RAR, TAR, 7-ZIP packages of above files
 
 ## Features
 
@@ -110,21 +116,22 @@ PDF, EPUB, DJVU, MOBI, CBZ, CBR, CBT, FB2, XPS, TXT, HTML, OFFICE(DOCX, XLSX, PP
 
 ## Usage tips
 
-- A function button will show up in **Toolbar** when the corresponding function is applicable, otherwise it will be hidden.
-- Long press on a **Toolbar** button, to show function tooltip.
-- Double tap the title area on **Toolbar** to close immediatly.
-- Tap in left/top/right/bottom side, to move a page forward or backward.
+- Launch Chaka, from file picker choose a file to open. Or, launch your favorite file manager, open a file with Chaka.
+- Function buttons will show up in **Toolbar** when the corresponding functions are applicable.
+- Long press on a **Toolbar** button, to show its function tooltip.
+- Double tap the book title on **Toolbar** to close immediatly.
+- Tap in left/top/right/bottom side, to move forward/backward one page.
 - Tap in middle, to show/hide **Toolbar** and **Page Indicator**
-- Press down and move, to scrol page view
-- Press down two fingers and move one, to zoom in/out page view
-- Fling to **Scroll Continuously**. Under **Lock Stray** mode, a zoomed page always scroll in horizontal/vertical straight line.
+- Tap and move to scrol view
+- Pinch to zoom in/out view
+- Fling to **Scroll Continuously**. Under **Lock Stray** mode, a zoomed page will scroll in straight direction.
 - Under the combination of **Flip Horizontal and not Rtl Text** mode, or of **Flip Vertical and Rtl Text** mode, and scroll to where between two pages, it will slide slowly into the near page. This behavior guarantees that any page contents will not be cut off.
 - Under the combination of **Flip Horizontal and Rtl Text** mode, or of **Flip Vertical and not Rtl Text** mode, pages can stay at any position which will never cut off page contents. This behavior makes reading across two pages comfortably.
-- Long press on text, to begin **text select**.
-- Double tap any area on page to create a **Bookmark** on current page.
+- Long press on text, to begin **text select** operation.
+- Double tap on page to create a **Bookmark**.
 - In **Contents** window, swipe left/right to switch **Contents** view or close.
 - In **Help** window, swipe right to close.
-- All reading states as of page scale, position, last read page number, as well as all enable button states are remembered across reading sessions for per book.
+- All reading states as of page scale, position, last read page, as well as all enable button states are remembered across reading sessions for per book.
 - In general, to get the best reading experience mutiple function modes can be employed, adding appropriate screen orientation if needed.
 
 ## Credits

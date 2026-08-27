@@ -47,6 +47,7 @@
 				<data android:mimeType="image/vnd.djvu" />
 				<data android:mimeType="image/x.djvu" />
 				<data android:mimeType="image/x-djvu" />
+				<data android:mimeType="image/tiff" />
 				<!-- list application/octet-stream to catch the ones android doesn't recognize -->
 				<data android:mimeType="application/octet-stream" />
 			</intent-filter>

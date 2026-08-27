@@ -1,0 +1,1 @@
+· add supports of outline, text select/search and hyperlinks for djvu document
