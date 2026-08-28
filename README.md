@@ -1,4 +1,4 @@
-# <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/ic_chaka_hippo_white_48.png"> Chaka Book Reader
+# <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/chaka_hippo_96x72.png" width="72px"> Chaka Book Reader
 
 An Android reader app committed to improving reading experience.
 
