@@ -2,10 +2,14 @@ package com.mittsu.markedview;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Build;
 import android.util.AttributeSet;
 import android.util.Base64;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -57,6 +61,34 @@ public final class MarkedView extends WebView {
                 super.onPageFinished(view, url);
                 sendScriptAction();
                 chStyle();
+            }
+
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                return openExternalLink(view, request.getUrl());
+            }
+
+            @Override
+            @SuppressWarnings("deprecation")
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                return openExternalLink(view, Uri.parse(url));
+            }
+
+            private boolean openExternalLink(WebView view, Uri uri) {
+                String scheme = uri.getScheme();
+                if (scheme == null) {
+                    return false;
+                }
+                scheme = scheme.toLowerCase();
+                if (!scheme.equals("http") && !scheme.equals("https") && !scheme.equals("mailto")) {
+                    return false;
+                }
+                try {
+                    view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                    return true;
+                } catch (ActivityNotFoundException e) {
+                    return false;
+                }
             }
         });
 
