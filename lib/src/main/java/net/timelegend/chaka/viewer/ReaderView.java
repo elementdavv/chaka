@@ -87,6 +87,7 @@ public class ReaderView
     private boolean       mFocus = false;
     private boolean       mSmartFocus = false;
     private boolean       mLock = false;
+    private boolean       mFitScreen = false;
     protected int           mPrevLeft;
     protected int           mPrevTop;
     private SELECT        mSelecting = SELECT.NO_SELECT;    // text select state
@@ -406,12 +407,12 @@ public class ReaderView
 	}
 
 	public void refresh(boolean full) {
+		endSelect();
 		mResetLayout = true;
 
 		if (full) {
 			mScale = 1.0f;
-			mPrevLeft = 0;
-			mPrevLeft = 0;
+			initPosition();
 		}
 		else {
 			savePosition(mCurrent);
@@ -1347,10 +1348,10 @@ public class ReaderView
         float sx = (float)getWidth()/(float)v.getMeasuredWidth();
         float sy = (float)getHeight()/(float)v.getMeasuredHeight();
         float scale;
-        if ((mHorizontalScrolling && !mTextLeft) || (!mHorizontalScrolling && mTextLeft))
-		    scale = Math.min(sx,sy);
+        if ((mHorizontalScrolling && !mTextLeft) || (!mHorizontalScrolling && mTextLeft || mFitScreen))
+            scale = Math.min(sx,sy);
         else if (mHorizontalScrolling)
-		    scale = sy;
+            scale = sy;
         else
             scale = sx;
 		// Use the fitting values scaled by our current scale factor
@@ -1526,6 +1527,37 @@ public class ReaderView
         return (x > v.getLeft() && x < v.getRight() && y > v.getTop() && y < v.getBottom());
     }
 
+    private void initPosition() {
+        mPrevLeft = 0;
+        mPrevTop = 0;
+        PageView pv = getDisplayedView();
+
+        if (pv != null) {
+            float pvwidth = (float)pv.getWidth();
+            float pvheight = (float)pv.getHeight();
+            float rx = getWidth() / pvwidth;
+            float ry = getHeight() / pvheight;
+
+            // center the view
+            if (ry > rx) {
+                mPrevTop = Math.round((getHeight() - pvheight) / 2);
+            }
+            else if (rx > ry) {
+                mPrevLeft = Math.round((getWidth() - pvwidth) / 2);
+            }
+            if (!mFitScreen) {
+                // center the view
+                if (mHorizontalScrolling && mTextLeft && ry > rx) {
+                    mPrevLeft = Math.round((getWidth() - ry * pvwidth) / 2);
+                    mPrevTop = 0;
+                }
+                else if (!mHorizontalScrolling && !mTextLeft && rx > ry) {
+                    mPrevLeft = 0;
+                    mPrevTop = Math.round((getHeight() - rx * pvheight) / 2);
+                }
+            }
+        }
+    }
 
     /**
      * before go to absolute view, save current position
@@ -1756,38 +1788,30 @@ public class ReaderView
         mTextLeft = !mTextLeft;
         if (mChildViews.size() == 0 || init) return;
         endSelect();
-        postDelayed(new Runnable(){
-            public void run() {
-                PageView pv = getDisplayedView();
-                if (mTextLeft) {
-                    int del = getWidth() - pv.getRight();
-		            mScrollerLastX = mScrollerLastY = 0;
-                    mScroller.startScroll(0,0,del,0,1000);
-		            mStepper.prod();
-                }
-                else {
-                    // to make slide work
-                    mYScroll = 1;
-                    slideViewOntoScreen(pv);
-				    if (mScroller.isFinished())
-				        postSettle(pv);
-                }
-            }
-        }, 200);
+        requestLayout();
+        amendment();
     }
 
     public void toggleFlipVertical(boolean init) {
         mHorizontalScrolling = !mHorizontalScrolling;
         if (mChildViews.size() == 0 || init) return;
-		requestLayout();
+        endSelect();
+        requestLayout();
+        amendment();
     }
 
     public void toggleLock() {
         mLock = !mLock;
     }
 
+    public void toggleFitScreen(boolean init) {
+        mFitScreen = !mFitScreen;
+        if (mChildViews.size() == 0 || init) return;
+        refresh(true);
+    }
+
     public void toggleCropMargin(boolean init) {
-        if (init) return;
+        if (mChildViews.size() == 0 || init) return;
         refresh(true);
     }
 
@@ -1795,9 +1819,10 @@ public class ReaderView
     int xScrollStep, yScrollStep, step;
     Stepper focusStepper;
 
-    public void toggleFocus(boolean isReflowable, boolean init) {
+    public void toggleFocus(boolean init) {
         mFocus = !mFocus;
-        if (isReflowable || init) return;
+        if (mChildViews.size() == 0 || init) return;
+        endSelect();
 
         mPrevLeft = mPrevTop = 0;
         PageView pv = getDisplayedView();
@@ -1832,7 +1857,7 @@ public class ReaderView
         /*
          * scroll:value < 0 when page move toward left/top off screen
          */
-        step = 10;
+        step = 20;
         scaleStep = (scaleTo - mScale) / step;
         xScrollStep = (xScrollTo - pv.getLeft()) / step;
         yScrollStep = (yScrollTo - pv.getTop()) / step;

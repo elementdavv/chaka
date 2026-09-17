@@ -1,7 +1,6 @@
 package com.mittsu.markedview;
 
 import android.annotation.SuppressLint;
-import android.annotation.TargetApi;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -52,10 +51,8 @@ public final class MarkedView extends WebView {
         super(context, attrs, defStyleAttr);
     }
 
-    @TargetApi(11)
     @SuppressLint("SetJavaScriptEnabled")
     public void init(){
-        // default browser is not called.
         setWebViewClient(new WebViewClient(){
             public void onPageFinished(WebView view, String url){
                 super.onPageFinished(view, url);
@@ -69,7 +66,6 @@ public final class MarkedView extends WebView {
             }
 
             @Override
-            @SuppressWarnings("deprecation")
             public boolean shouldOverrideUrlLoading(WebView view, String url) {
                 return openExternalLink(view, Uri.parse(url));
             }
@@ -84,6 +80,7 @@ public final class MarkedView extends WebView {
                     return false;
                 }
                 try {
+                    // call default browser
                     view.getContext().startActivity(new Intent(Intent.ACTION_VIEW, uri));
                     return true;
                 } catch (ActivityNotFoundException e) {

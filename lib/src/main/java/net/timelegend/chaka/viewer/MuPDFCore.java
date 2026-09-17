@@ -52,6 +52,7 @@ public class MuPDFCore
     private boolean singleColumnMode = false;
     private boolean textLeftMode = false;
     private boolean cropMarginMode = false;
+    private boolean imgFollowPal = false;
 
 	/* Default to "A Format" pocket book size. */
 	private int layoutW = 312;
@@ -276,13 +277,26 @@ public class MuPDFCore
             patchY += bbox.y0 * yscale;
         }
 
-		AndroidDrawDevice dev = new AndroidDrawDevice(bm, patchX, patchY);
+		AndroidDrawDevice dev = null;
+
+		if (imgFollowPal) {
+			dev = new AndroidDrawDevice(bm, patchX, patchY);
+		}
+		else {
+			if (tint_black != 0xff000000 || tint_white != 0xffffffff)
+				dev = new AndroidDrawDevice(tint_black, tint_white, bm, patchX, patchY);
+			else
+				dev = new AndroidDrawDevice(bm, patchX, patchY);
+		}
+
 		try {
 			displayList.run(dev, ctm, cookie);
-			// correspond to default mode
-			if (tint_black != 0xff000000 || tint_white != 0xffffffff) {
-				dev.tint(tint_black, tint_white);
-            }
+			if (imgFollowPal) {
+				// correspond to default mode
+				if (tint_black != 0xff000000 || tint_white != 0xffffffff) {
+					dev.tint(tint_black, tint_white);
+				}
+			}
 			dev.close();
 		} finally {
 			dev.destroy();
@@ -325,6 +339,10 @@ public class MuPDFCore
         // prevent display distort when uncrop margin after a page scale
         currentPage = -1;
         cropMarginMode = !cropMarginMode;
+    }
+
+    public void toggleImgFollowPal() {
+        imgFollowPal = !imgFollowPal;
     }
 
 	public synchronized Link[] getPageLinks(int pageNum) {

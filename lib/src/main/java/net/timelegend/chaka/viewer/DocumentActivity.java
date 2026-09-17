@@ -8,6 +8,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
+import android.content.pm.ActivityInfo;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.SharedPreferences;
@@ -84,10 +85,12 @@ public class DocumentActivity extends AppCompatActivity
 	private SeekBar      mPageSlider;
 	private int          mPageSliderRes;
 	private TextView     mPageNumberView;
+	private ImageButton  mLandscapeButton;
 	private ImageButton  mSingleColumnButton;
 	private ImageButton  mTextLeftButton;
 	private ImageButton  mFlipVerticalButton;
 	private ImageButton  mLockButton;
+	private ImageButton  mfitScreenButton;
 	private ImageButton  mCropMarginButton;
 	private ImageButton  mFocusButton;
 	private ImageButton  mSmartFocusButton;
@@ -109,10 +112,12 @@ public class DocumentActivity extends AppCompatActivity
 	private EditText     mSearchText;
 	private SearchTask   mSearchTask;
 	private AlertDialog.Builder mAlertBuilder;
+    private boolean    mLandscapeHighlight = false;
     private boolean    mSingleColumnHighlight = false;
     private boolean    mTextLeftHighlight = false;
     private boolean    mFlipVerticalHighlight = false;
     private boolean    mLockHighlight = false;
+    private boolean    mfitScreenHighlight = false;
     private boolean    mCropMarginHighlight = false;
     private boolean    mFocusHighlight = false;
     private boolean    mSmartFocusHighlight = false;
@@ -150,6 +155,8 @@ public class DocumentActivity extends AppCompatActivity
 	private int mTopBarSwitcherHeight;
 	private Boolean mFullscreenG = true;
 	private Integer mPlacementG = -1;               // -1: toolbar top, 1: toolbar bottom
+	private boolean mImgFollowPal;
+	private Boolean mImgFollowPalG = false;
 	private Boolean mFlipVerticalG = false;
 	private List<ColorItem> itemList;
 	private ColorAdapter adapter;
@@ -546,10 +553,12 @@ public class DocumentActivity extends AppCompatActivity
 
         // below android 8 (api26)
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            TooltipCompat.setTooltipText(mLandscapeButton, getString(R.string.landscape));
             TooltipCompat.setTooltipText(mSingleColumnButton, getString(R.string.single_column));
             TooltipCompat.setTooltipText(mTextLeftButton, getString(R.string.text_left));
             TooltipCompat.setTooltipText(mFlipVerticalButton, getString(R.string.flip_vertical));
             TooltipCompat.setTooltipText(mLockButton, getString(R.string.lock));
+            TooltipCompat.setTooltipText(mfitScreenButton, getString(R.string.fit_screen));
             TooltipCompat.setTooltipText(mCropMarginButton, getString(R.string.crop_margin));
             TooltipCompat.setTooltipText(mFocusButton, getString(R.string.focus));
             TooltipCompat.setTooltipText(mSmartFocusButton, getString(R.string.smart_focus));
@@ -603,6 +612,12 @@ public class DocumentActivity extends AppCompatActivity
             }
         });
 
+        mLandscapeButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                toggleLandscapeHighlight();
+            }
+        });
+
         if (core.isReflowable()) {
             mSingleColumnButton.setVisibility(View.GONE);
         }
@@ -634,6 +649,12 @@ public class DocumentActivity extends AppCompatActivity
         mLockButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 toggleLock();
+            }
+        });
+
+        mfitScreenButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                toggleFitScreen(false);
             }
         });
 
@@ -708,11 +729,17 @@ public class DocumentActivity extends AppCompatActivity
                     else if (id == R.id.action_toolbar_bottom) {
                         item.setChecked(mPlacement == 1);
                     }
+                    else if (id == R.id.action_img_follow_pal) {
+                        item.setChecked(mImgFollowPal);
+                    }
                     else if (id == R.id.action_fullscreen_g) {
                         item.setChecked(mFullscreenG);
                     }
                     else if (id == R.id.action_toolbar_bottom_g) {
                         item.setChecked(mPlacementG == 1);
+                    }
+                    else if (id == R.id.action_img_follow_pal_g) {
+                        item.setChecked(mImgFollowPalG);
                     }
                     else if (id == R.id.action_flip_vertical_g) {
                         item.setChecked(mFlipVerticalG);
@@ -924,6 +951,8 @@ public class DocumentActivity extends AppCompatActivity
 		Tool.mFullscreen = prefs.getBoolean("fullscreen" + mDocKey, mFullscreenG);
 		mPlacementG = prefs.getInt("placement", mPlacementG);
 		mPlacement = prefs.getInt("placement" + mDocKey, mPlacementG);
+		mImgFollowPalG = prefs.getBoolean("imgfollowpal", mImgFollowPalG);
+		mImgFollowPal = prefs.getBoolean("imgfollowpal" + mDocKey, mImgFollowPalG);
 		mLayoutEMG = prefs.getInt("layoutem", mLayoutEMG);
 		mLayoutEM = prefs.getInt("layoutem" + mDocKey, 0);
 
@@ -940,6 +969,7 @@ public class DocumentActivity extends AppCompatActivity
 		mFlipVerticalG = prefs.getBoolean("vertical", mFlipVerticalG);
 		boolean vertical = prefs.getBoolean("vertical" + mDocKey, mFlipVerticalG);
 		boolean lock = prefs.getBoolean("lock" + mDocKey, false);
+		boolean fitScreen = prefs.getBoolean("fitscreen" + mDocKey, false);
 		boolean crop = prefs.getBoolean("crop" + mDocKey, false);
 		boolean focus = prefs.getBoolean("focus" + mDocKey, false);
 		boolean smart = prefs.getBoolean("smart" + mDocKey, false);
@@ -967,6 +997,11 @@ public class DocumentActivity extends AppCompatActivity
         mDocView.mResetLayout = true;
         core.setTintColor(mBlack, mWhite);
 
+        if (mImgFollowPal) {
+            mImgFollowPal = false;
+            toggleImgFollowPal(0);
+        }
+
         if (vertical) {
             vertical = false;
             toggleFlipVerticalHighlight(true, 0);
@@ -975,6 +1010,11 @@ public class DocumentActivity extends AppCompatActivity
         if (lock) {
             lock = false;
             toggleLock();
+        }
+
+        if (fitScreen) {
+            fitScreen = false;
+            toggleFitScreen(true);
         }
 
         if (crop) {
@@ -1147,6 +1187,10 @@ public class DocumentActivity extends AppCompatActivity
                     item.setChecked(mPlacement == -1);
                     togglePlacement(1);
                 }
+                else if (id == R.id.action_img_follow_pal) {
+                    item.setChecked(!mImgFollowPal);
+                    toggleImgFollowPal(1);
+                }
                 else if (id == R.id.action_fullscreen_g) {
                     item.setChecked(!mFullscreenG);
 
@@ -1166,6 +1210,16 @@ public class DocumentActivity extends AppCompatActivity
                     }
                     mPlacementG = -mPlacementG;
                     saveKey("placement", mPlacementG);
+                }
+                else if (id == R.id.action_img_follow_pal_g) {
+                    item.setChecked(!mImgFollowPalG);
+
+                    if (mImgFollowPalG == mImgFollowPal) {
+                        mOptionsPopupMenu.getMenu().findItem(R.id.action_img_follow_pal).setChecked(!mImgFollowPalG);
+                        toggleImgFollowPal(-1);
+                    }
+                    mImgFollowPalG = !mImgFollowPalG;
+                    saveKey("imgfollowpal", mImgFollowPalG);
                 }
                 else if (id == R.id.action_flip_vertical_g) {
                     item.setChecked(!mFlipVerticalG);
@@ -1336,6 +1390,7 @@ public class DocumentActivity extends AppCompatActivity
 		edit.putBoolean("single" + mDocKey, mSingleColumnHighlight);
 		edit.putBoolean("lefttext" + mDocKey, mTextLeftHighlight);
 		edit.putBoolean("lock" + mDocKey, mLockHighlight);
+		edit.putBoolean("fitscreen" + mDocKey, mfitScreenHighlight);
 		edit.putBoolean("crop" + mDocKey, mCropMarginHighlight);
 		edit.putBoolean("focus" + mDocKey, mFocusHighlight);
 		edit.putBoolean("smart" + mDocKey, mSmartFocusHighlight);
@@ -1371,6 +1426,17 @@ public class DocumentActivity extends AppCompatActivity
         }
     }
 
+    private void toggleLandscapeHighlight() {
+        mLandscapeHighlight = !mLandscapeHighlight;
+        // COLOR tint
+        mLandscapeButton.setColorFilter(mLandscapeHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
+
+        if (mLandscapeHighlight)
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        else
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+    }
+
     private void toggleSingleColumnHighlight(boolean init) {
 		int index;
 		mSingleColumnHighlight = !mSingleColumnHighlight;
@@ -1392,6 +1458,15 @@ public class DocumentActivity extends AppCompatActivity
 		mTextLeftHighlight = !mTextLeftHighlight;
 		// COLOR tint
 		mTextLeftButton.setColorFilter(mTextLeftHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
+
+		if (!core.isReflowable()) {
+			if (mfitScreenButton.getVisibility() == View.GONE) {
+				mfitScreenButton.setVisibility(View.VISIBLE);
+			}
+			else {
+				mfitScreenButton.setVisibility(View.GONE);
+			}
+		}
 		// Inform pages of the change.
 		core.toggleTextLeft();
 		mDocView.toggleTextLeft(init);
@@ -1404,6 +1479,15 @@ public class DocumentActivity extends AppCompatActivity
 		mFlipVerticalHighlight = !mFlipVerticalHighlight;
 		// COLOR tint
 		mFlipVerticalButton.setColorFilter(mFlipVerticalHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
+
+		if (!core.isReflowable()) {
+			if (mfitScreenButton.getVisibility() == View.GONE) {
+				mfitScreenButton.setVisibility(View.VISIBLE);
+			}
+			else {
+				mfitScreenButton.setVisibility(View.GONE);
+			}
+		}
 		// Inform pages of the change.
 		mDocView.toggleFlipVertical(init);
 
@@ -1421,6 +1505,14 @@ public class DocumentActivity extends AppCompatActivity
 		mDocView.toggleLock();
     }
 
+	private void toggleFitScreen(boolean init) {
+		mfitScreenHighlight = !mfitScreenHighlight;
+		// COLOR tint
+		mfitScreenButton.setColorFilter(mfitScreenHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
+		// Inform pages of the change.
+		mDocView.toggleFitScreen(init);
+	}
+
     private void toggleCropMargin(boolean init) {
 		mCropMarginHighlight = !mCropMarginHighlight;
 		// COLOR tint
@@ -1435,7 +1527,7 @@ public class DocumentActivity extends AppCompatActivity
 		// COLOR tint
 		mFocusButton.setColorFilter(mFocusHighlight ? Tool.HIGHLIGHT_BUTTON : Tool.HIGHUNLIGHT_BUTTON);
 		// Inform pages of the change.
-		mDocView.toggleFocus(core.isReflowable(), init);
+		mDocView.toggleFocus(init);
     }
 
     private void toggleSmartFocus() {
@@ -1481,6 +1573,22 @@ public class DocumentActivity extends AppCompatActivity
             saveKey("fullscreen" + mDocKey, (Boolean)Tool.mFullscreen);
         else if (save == -1)
             saveKey("fullscreen" + mDocKey, null);
+    }
+
+    private void toggleImgFollowPal(int save) {
+        mImgFollowPal = !mImgFollowPal;
+        core.toggleImgFollowPal();
+
+        if (save == 1)
+            saveKey("imgfollowpal" + mDocKey, (Boolean)mImgFollowPal);
+        else if (save == -1)
+            saveKey("imgfollowpal" + mDocKey, null);
+        else
+            return;
+
+        if (mBlack != 0xff000000 || mWhite != 0xffffffff) {
+            mDocView.refresh(false);
+        }
     }
 
     private void updateBars(boolean placeChange) {
@@ -1645,11 +1753,13 @@ public class DocumentActivity extends AppCompatActivity
 		mPageSlider = (SeekBar)mButtonsView.findViewById(R.id.pageSlider);
 		mPageNumberView = (TextView)mButtonsView.findViewById(R.id.pageNumber);
 		mSearchButton = (ImageButton)mButtonsView.findViewById(R.id.searchButton);
+        mLandscapeButton = (ImageButton)mButtonsView.findViewById(R.id.landscapeButton);
         mSingleColumnButton = (ImageButton)mButtonsView.findViewById(R.id.singleColumnButton);
         mTextLeftButton = (ImageButton)mButtonsView.findViewById(R.id.textLeftButton);
         mFlipVerticalButton = (ImageButton)mButtonsView.findViewById(R.id.flipVerticalButton);
         mFocusButton = (ImageButton)mButtonsView.findViewById(R.id.focusButton);
         mLockButton = (ImageButton)mButtonsView.findViewById(R.id.lockButton);
+        mfitScreenButton = (ImageButton)mButtonsView.findViewById(R.id.fitScreenButton);
         mCropMarginButton = (ImageButton)mButtonsView.findViewById(R.id.cropMarginButton);
         mSmartFocusButton = (ImageButton)mButtonsView.findViewById(R.id.smartFocusButton);
         mColorButton = (ImageButton)mButtonsView.findViewById(R.id.colorButton);

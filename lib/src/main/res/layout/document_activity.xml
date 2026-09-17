@@ -86,6 +86,16 @@
 				/>
 
 			<ImageButton
+				android:id="@+id/fitScreenButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="@drawable/button"
+				android:src="@drawable/ic_fit_screen_white_24dp"
+				android:visibility="gone"
+				android:tooltipText="@string/fit_screen"
+				/>
+
+			<ImageButton
 				android:id="@+id/lockButton"
 				android:layout_width="wrap_content"
 				android:layout_height="wrap_content"
@@ -165,6 +175,15 @@
 				android:background="@drawable/button"
 				android:src="@drawable/ic_search_white_24dp"
                 android:tooltipText="@string/text_search"
+				/>
+
+			<ImageButton
+				android:id="@+id/landscapeButton"
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:background="@drawable/button"
+				android:src="@drawable/ic_landscape_white_24dp"
+				android:tooltipText="@string/landscape"
 				/>
 
 			<ImageButton

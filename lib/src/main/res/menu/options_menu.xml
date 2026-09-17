@@ -15,6 +15,9 @@
         <item
             android:id="@+id/action_toolbar_bottom"
             android:title="@string/toolbar_bottom" />
+        <item
+            android:id="@+id/action_img_follow_pal"
+            android:title="@string/img_follow_pal" />
     </group>
     <group
         android:id="@+id/group_global"
@@ -30,6 +33,9 @@
         <item
             android:id="@+id/action_toolbar_bottom_g"
             android:title="@string/toolbar_bottom" />
+        <item
+            android:id="@+id/action_img_follow_pal_g"
+            android:title="@string/img_follow_pal" />
         <item
             android:id="@+id/action_flip_vertical_g"
             android:title="@string/flip_vertical" />
