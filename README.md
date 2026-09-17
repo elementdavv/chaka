@@ -40,6 +40,10 @@ An Android reader app committed to improving reading experience.
 
   **Continuous scroll** has been perfectly implemented in all scenarios.
 
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/fit_screen.png"> Fit Screen
+
+  In **Flip Horizontal and RtL Text** mode, or **Flip Vertical and Not RtL Text** mode, default minimum scale of non reflowable documents(eg PDFs) is increased to fit the page height or width to the window which is the best reading practise. But if the page size exceeds the window, this function may be used.
+
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/lock.png"> Lock Stray
 
   When flinging or scrolling a zoomed page, it can hardly move in straight horizontal/vertical direction, and be annoying reading experience. Here the **Lock Stray** mode will make a help.
@@ -97,6 +101,10 @@ An Android reader app committed to improving reading experience.
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/search.png"> Search
 
   Full text **Search** and navigate through search results.
+
+- <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/landscape.png"> Landscape
+
+  Change to **Landscape** view manually.
 
 - <img src="https://raw.githubusercontent.com/elementdavv/chaka/master/resources/share.png"> Share Book
 

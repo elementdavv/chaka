@@ -1,13 +1,13 @@
 apply plugin: 'com.android.application'
 
 group = 'net.timelegend.chaka'
-version = '1.27.1a.26'
+version = '1.27.1a.27'
 
 dependencies {
 	if (file('../lib/build.gradle').isFile())
 		api project(':lib')
 	else
-		api 'net.timelegend.chaka:viewer:1.27.1a.26'
+		api 'net.timelegend.chaka:viewer:1.27.1a.27'
 }
 
 ext {
@@ -23,8 +23,8 @@ android {
 		namespace 'net.timelegend.chaka.viewer.app'
 		minSdkVersion 21
 		targetSdkVersion 35
-		versionName '1.27.1a.26'
-		versionCode 172
+		versionName '1.27.1a.27'
+		versionCode 173
 
         if (!project.hasProperty('noSplits')) {
 	        splits {

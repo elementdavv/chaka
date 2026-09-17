@@ -1,0 +1,6 @@
+· vertical scrollers are added to content windows
+· links in help window are opened with default browser instead of in place
+· a button titled “Landscape” is added to change landscape/portrait view manually
+· in flip horizontal and rtl text mode, or flip vertical and not rtl text mode, default minimum scale of non reflowable documents(eg. PDFs) is increased to fit the page height or width to the window, now a button titled “Fit Screen” is added to view the whole page
+· under some dark palettes, images may looks horrible, now an option named “Image Follow Palette” is added which makes all images remain unchanged if the option is cleared.
+· other improvements
