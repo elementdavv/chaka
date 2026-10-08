@@ -60,7 +60,10 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.TooltipCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 
 import java.io.IOException;
@@ -126,6 +129,7 @@ public class DocumentActivity extends AppCompatActivity
 	private ArrayList<TocItem> mFlatOutline;
 	private boolean mReturnToLibraryActivity = false;
     private boolean mNavigationBar;
+    private WindowInsetsCompat mReaderInsets;
 
     /**
      * if navigation bar is hidden. ime will bring it up, cause docview resize,
@@ -1065,12 +1069,20 @@ public class DocumentActivity extends AppCompatActivity
 		// Stick the document view and the buttons overlay into a parent view
 		layout = new RelativeLayout(this);
 		// layout.setBackgroundColor(Color.DKGRAY);
-		layout.addView(mDocView);
-		layout.addView(mButtonsView);
+		layout.addView(mDocView, new RelativeLayout.LayoutParams(
+				RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
+		layout.addView(mButtonsView, new RelativeLayout.LayoutParams(
+				RelativeLayout.LayoutParams.MATCH_PARENT, RelativeLayout.LayoutParams.MATCH_PARENT));
+        ViewCompat.setOnApplyWindowInsetsListener(layout, (v, insets) -> {
+            mReaderInsets = insets;
+            applyReaderInsets();
+            return insets;
+        });
 		setContentView(layout);
 
 		onColorChange();
 		watchNavigationBar();
+        ViewCompat.requestApplyInsets(layout);
 	}
 
     private void onColorChange() {
@@ -1566,7 +1578,12 @@ public class DocumentActivity extends AppCompatActivity
 
     private void toggleFullscreen(int save) {
         Tool.mFullscreen = !Tool.mFullscreen;
+        // This viewport change is intentional, not a keyboard resize.
+        mKeyboardChanged = false;
+        mKeyboardChanged3 = false;
         Tool.fullScreen(getWindow());
+        applyReaderInsets();
+        ViewCompat.requestApplyInsets(layout);
         updateBars(false);
 
         if (save == 1)
@@ -1591,16 +1608,45 @@ public class DocumentActivity extends AppCompatActivity
         }
     }
 
+    private void applyReaderInsets() {
+        if (mReaderInsets == null)
+            return;
+
+        int safeTypes = WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout();
+        Insets safeInsets = Tool.mFullscreen
+                ? mReaderInsets.getInsets(safeTypes)
+                : mReaderInsets.getInsetsIgnoringVisibility(safeTypes);
+        Insets documentInsets = Tool.mFullscreen ? Insets.NONE : safeInsets;
+        Insets buttonInsets = Tool.mFullscreen ? safeInsets : Insets.NONE;
+
+        boolean widthChanged = layout.getPaddingLeft() != documentInsets.left
+                || layout.getPaddingRight() != documentInsets.right
+                || mButtonsView.getPaddingLeft() != buttonInsets.left
+                || mButtonsView.getPaddingRight() != buttonInsets.right;
+        // Only resize the document for nonfullscreen mode, never for the IME or transient bars.
+        layout.setPadding(documentInsets.left, documentInsets.top, documentInsets.right, documentInsets.bottom);
+        mButtonsView.setPadding(buttonInsets.left, buttonInsets.top, buttonInsets.right, buttonInsets.bottom);
+        if (widthChanged)
+            mButtonsView.post(this::updateTopBar);
+    }
+
+    private int getControlsBottomInset() {
+        return layout == null ? 0 : layout.getPaddingBottom() + mButtonsView.getPaddingBottom();
+    }
+
+    private int getToolbarAnimationOffset() {
+        int inset = mPlacement == -1
+                ? (layout == null ? 0 : layout.getPaddingTop() + mButtonsView.getPaddingTop())
+                : getControlsBottomInset();
+        return (mTopBarSwitcher.getHeight() + inset) * mPlacement;
+    }
+
     private void updateBars(boolean placeChange) {
-        int htop, hdown, dp16px;
+        int dp16px = Tool.dp2px(16);
         RelativeLayout.LayoutParams param0, param1, param2;
 
-        hdown = Tool.getNavigationBarHeight(mOrientation);
-        htop = mPlacement == -1 ? Tool.getStatusBarHeight() : hdown;
-        dp16px = Tool.dp2px(16);
-
         param0 = (RelativeLayout.LayoutParams)mPageSlider.getLayoutParams();
-        param0.bottomMargin = hdown;
+        param0.bottomMargin = 0;
         mPageSlider.setLayoutParams(param0);
 
         if (mPlacement == -1) {
@@ -1610,7 +1656,7 @@ public class DocumentActivity extends AppCompatActivity
                 param1.addRule(RelativeLayout.ALIGN_PARENT_TOP);
                 mTopBarSwitcher.setLayoutParams(param1);
             }
-            mTopBarSwitcher.setPadding(0, htop, 0, 0);
+            mTopBarSwitcher.setPadding(0, 0, 0, 0);
             param2 = (RelativeLayout.LayoutParams)mPageNumberView.getLayoutParams();
             param2.bottomMargin = dp16px;
             mPageNumberView.setLayoutParams(param2);
@@ -1622,7 +1668,7 @@ public class DocumentActivity extends AppCompatActivity
                 param1.addRule(RelativeLayout.ALIGN_PARENT_BOTTOM);
                 mTopBarSwitcher.setLayoutParams(param1);
             }
-            mTopBarSwitcher.setPadding(0, 0, 0, mPageSliderHeight + htop);
+            mTopBarSwitcher.setPadding(0, 0, 0, mPageSliderHeight);
             param2 = (RelativeLayout.LayoutParams)mPageNumberView.getLayoutParams();
             param2.bottomMargin = mTopBarSwitcherHeight + dp16px;
             mPageNumberView.setLayoutParams(param2);
@@ -1647,7 +1693,7 @@ public class DocumentActivity extends AppCompatActivity
                 }
 			}
 
-			Animation anim = new TranslateAnimation(0, 0, mTopBarSwitcher.getHeight() * mPlacement, 0);
+			Animation anim = new TranslateAnimation(0, 0, getToolbarAnimationOffset(), 0);
 			anim.setDuration(200);
 			anim.setAnimationListener(new Animation.AnimationListener() {
 				public void onAnimationStart(Animation animation) {
@@ -1658,7 +1704,7 @@ public class DocumentActivity extends AppCompatActivity
 			});
 			mTopBarSwitcher.startAnimation(anim);
 
-			int hdown = Tool.getNavigationBarHeight(mOrientation);
+			int hdown = getControlsBottomInset();
 			anim = new TranslateAnimation(0, 0, mPageSlider.getHeight() + hdown, 0);
 			anim.setDuration(200);
 			anim.setAnimationListener(new Animation.AnimationListener() {
@@ -1679,7 +1725,7 @@ public class DocumentActivity extends AppCompatActivity
 			mButtonsVisible = false;
 			hideKeyboard();
 
-			Animation anim = new TranslateAnimation(0, 0, 0, mTopBarSwitcher.getHeight() * mPlacement);
+			Animation anim = new TranslateAnimation(0, 0, 0, getToolbarAnimationOffset());
 			anim.setDuration(200);
 			anim.setAnimationListener(new Animation.AnimationListener() {
 				public void onAnimationStart(Animation animation) {}
@@ -1690,7 +1736,7 @@ public class DocumentActivity extends AppCompatActivity
 			});
 			mTopBarSwitcher.startAnimation(anim);
 
-			int hdown = Tool.getNavigationBarHeight(mOrientation);
+			int hdown = getControlsBottomInset();
 			anim = new TranslateAnimation(0, 0, 0, mPageSlider.getHeight() + hdown);
 			anim.setDuration(200);
 			anim.setAnimationListener(new Animation.AnimationListener() {
