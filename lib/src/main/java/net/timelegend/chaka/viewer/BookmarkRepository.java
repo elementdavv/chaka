@@ -142,6 +142,10 @@ public class BookmarkRepository {
         if (bookmarks == null) {
             File dir = Tool.getDataDir(BOOKMARK_FOLDER_NAME);
             File f = new File(dir, docKey);
+            if (!f.exists()) {
+                bookmarks = new HashMap<>();
+                return bookmarks;
+            }
             try (ObjectInputStream os = new ObjectInputStream(new FileInputStream(f))) {
                 int pageCount = os.readInt();
                 boolean isSingleColumn = os.readBoolean();

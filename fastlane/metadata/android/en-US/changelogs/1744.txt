@@ -1,0 +1,3 @@
+· improve implementation of Image Follow Palette function when text on image
+· add subfolder support for CBZ file, folders and files are transformed to Table of Contents
+· other improvements

@@ -52,7 +52,24 @@ public class MuPDFCore
     private boolean singleColumnMode = false;
     private boolean textLeftMode = false;
     private boolean cropMarginMode = false;
+    /**
+     * if image follow palette
+     * true: tint page after render complete
+     */
     private boolean imgFollowPal = false;
+    /**
+     * text follow palette mode
+     * 0: filter color during text render
+     * 1: tint page except images after render complete(all text on images will remain unchanged)
+     */
+    private int txtFollowPalMode = 0;
+    /**
+     * text distinguish mode when txtFollowPalMode = 0
+     * when text sits on images, it should be check if visible
+     * 0: figure out best text color
+     * 1: draw underneath box
+     */
+    private int txtDistinguishMode = 0;
 
 	/* Default to "A Format" pocket book size. */
 	private int layoutW = 312;
@@ -279,27 +296,30 @@ public class MuPDFCore
 
 		AndroidDrawDevice dev = null;
 
-		if (imgFollowPal) {
-			dev = new AndroidDrawDevice(bm, patchX, patchY);
-		}
-		else {
-			if (tint_black != 0xff000000 || tint_white != 0xffffffff)
-				dev = new AndroidDrawDevice(tint_black, tint_white, bm, patchX, patchY);
-			else
-				dev = new AndroidDrawDevice(bm, patchX, patchY);
-		}
-
 		try {
-			displayList.run(dev, ctm, cookie);
-			if (imgFollowPal) {
-				// correspond to default mode
-				if (tint_black != 0xff000000 || tint_white != 0xffffffff) {
-					dev.tint(tint_black, tint_white);
-				}
+			if (tint_black == 0xff000000 && tint_white == 0xffffffff) {
+				dev = new AndroidDrawDevice(bm, patchX, patchY);
+				displayList.run(dev, ctm, cookie);
 			}
-			dev.close();
+			else if (imgFollowPal) {
+				dev = new AndroidDrawDevice(bm, patchX, patchY);
+				displayList.run(dev, ctm, cookie);
+				dev.tint(tint_black, tint_white);
+			}
+			else if (txtFollowPalMode == 0) {
+				dev = new AndroidDrawDevice(bm, patchX, patchY, false);     // false: do not clear background
+				dev.filterColor(tint_black, tint_white, txtDistinguishMode);
+				displayList.run(dev, ctm, cookie);
+			}
+			else if (txtFollowPalMode == 1) {
+				dev = new AndroidDrawDevice(bm, patchX, patchY);
+				dev.maskImage();
+				displayList.run(dev, ctm, cookie);
+				dev.tintMask(tint_black, tint_white);
+			}
+			if (dev != null) dev.close();
 		} finally {
-			dev.destroy();
+			if (dev != null) dev.destroy();
 		}
 	}
 

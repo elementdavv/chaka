@@ -127,7 +127,7 @@ An Android reader app committed to improving reading experience.
 - Launch Chaka, from file picker choose a file to open. Or, launch your favorite file manager, open a file with Chaka.
 - Function buttons will show up in **Toolbar** when the corresponding functions are applicable.
 - Long press on a **Toolbar** button, to show its function tooltip.
-- Double tap the book title on **Toolbar** to close immediatly.
+- Double tap the book title on **Toolbar** to close Chaka immediatly.
 - Tap in left/top/right/bottom side, to move forward/backward one page.
 - Tap in middle, to show/hide **Toolbar** and **Page Indicator**
 - Tap and move to scrol view
@@ -137,8 +137,8 @@ An Android reader app committed to improving reading experience.
 - Under the combination of **Flip Horizontal and Rtl Text** mode, or of **Flip Vertical and not Rtl Text** mode, pages can stay at any position which will never cut off page contents. This behavior makes reading across two pages comfortably.
 - Long press on text, to begin **text select** operation.
 - Double tap on page to create a **Bookmark**.
-- In **Contents** window, swipe left/right to switch **Contents** view or close.
-- In **Help** window, swipe right to close.
+- In **Contents** window, swipe left/right to switch **Contents** view or close window.
+- In **Help** window, swipe right to close window.
 - All reading states as of page scale, position, last read page, as well as all enable button states are remembered across reading sessions for per book.
 - In general, to get the best reading experience mutiple function modes can be employed, adding appropriate screen orientation if needed.
 
