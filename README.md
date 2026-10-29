@@ -12,7 +12,7 @@ An Android reader app committed to improving reading experience.
 
 ## Supported Files:
 
-- Documents: PDF, EPUB, DJVU, MOBI, FB2, XPS, TXT, HTML
+- Documents: PDF, EPUB, DJVU, MOBI, FB2, XPS, MD, TXT, HTML
 - Comics: CBZ, CBR, CBT
 - Office files: DOCX, XLSX, PPTX
 - Multi-Page images: TIFF

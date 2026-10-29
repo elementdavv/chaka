@@ -35,6 +35,7 @@
 				<data android:mimeType="application/vnd.openxmlformats-officedocument.presentationml.presentation" />
 				<data android:mimeType="text/html" />
 				<data android:mimeType="text/plain" />
+				<data android:mimeType="text/markdown" />
 				<data android:mimeType="application/gzip" />
 				<data android:mimeType="application/x-gzip" />
 				<data android:mimeType="application/x-gzip-compressed" />

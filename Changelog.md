@@ -1,3 +1,27 @@
+## v1.27.1a.29
+- add support of webp image type
+- add support of markdown file type
+
+## v1.27.1a.28
+- improve implementation of Image Follow Palette function when text on image
+- add subfolder support for CBZ file, folders and files are transformed to Table of Contents
+
+## v1.27.1a.27
+- vertical scrollers are added to content windows
+- links in help window are opened with default browser instead of in place
+- a button titled “Landscape” is added to change landscape/portrait view manually
+- in flip horizontal and rtl text mode, or flip vertical and not rtl text mode, default minimum scale of non reflowable documents(eg. PDFs) is increased to fit the page height or width to the window, now a button titled “Fit Screen” is added to view the whole page
+- under some dark palettes, images may looks horrible, now an option named “Image Follow Palette” is added which makes all images remain unchanged if the option is cleared
+
+## v1.27.1a.26
+- add supports of outline, text select/search and hyperlinks for djvu document
+
+## v1.27.1a.25
+- add document type support of djvu
+
+## v1.27.1a.24
+- add document type support of cbr, cbt, and packages of rar, tar, 7-zip
+
 ## v1.27.1a.23
 - include Common Vulnerabilities and Exposures(CVE) 1.25-1.27
 - improve html table render

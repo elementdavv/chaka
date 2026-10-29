@@ -10,6 +10,7 @@ rm -rf ../jni/libmupdf/thirdparty/lcms2/utils/delphi/
 rm -rf ../jni/libmupdf/thirdparty/harfbuzz/test/fuzzing
 rm -rf ../jni/libmupdf/thirdparty/harfbuzz/test/api/fonts/clusterfuzz-testcase-minimized-hb-shape-fuzzer-5753845452636160
 rm -rf ../jni/libmupdf/thirdparty/extract/test
+rm -rf ../jni/libmupdf/thirdparty/libwebp/swig/libwebp.jar
 rm -rf ../libarchive/src/main/jni/external/libarchive/contrib/oss-fuzz/corpus.zip
 rm -rf ../libarchive/src/main/jni/external/mbedtls/framework/data_files/
 rm -rf ../libarchive/src/main/jni/external/mbedtls/programs/fuzz/corpuses/

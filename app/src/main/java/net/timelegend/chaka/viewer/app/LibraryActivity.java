@@ -44,6 +44,7 @@ public class LibraryActivity extends Activity
 				"application/vnd.openxmlformats-officedocument.presentationml.presentation",
 				"text/html",
 				"text/plain",
+				"text/markdown",
 				"application/gzip",
 				"application/x-gzip",
 				"application/x-gzip-compressed",
